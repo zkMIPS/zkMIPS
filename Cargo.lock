@@ -8066,6 +8066,7 @@ dependencies = [
  "p3-koala-bear",
  "p3-matrix",
  "p3-symmetric",
+ "p3-uni-stark",
  "p3-util",
  "rayon",
  "serde",

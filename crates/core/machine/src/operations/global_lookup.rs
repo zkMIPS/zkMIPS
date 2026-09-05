@@ -11,10 +11,14 @@ use zkm_pcs::{
     septic_extension::{SepticBlock, SepticExtension, RECEIVE_Y6_MAX, SEND_Y6_MIN},
 };
 
-/// Upper bound (exclusive) of the witnessed `y6_value`; equals `RECEIVE_Y6_MAX`.
-pub const Y6_RANGE_BOUND: u32 = RECEIVE_Y6_MAX;
+/// Upper bound (exclusive) of the witnessed `y6_value`; equals `RECEIVE_Y6_MAX`
+/// (spelled as a literal: cbindgen copies the initialiser into the C++ header).
+pub const Y6_RANGE_BOUND: u32 = 1056964608;
 /// `Y6_RANGE_BOUND >> 24` — the bound on the top limb checked by `LTU`.
-pub const Y6_TOP_BOUND: u8 = (Y6_RANGE_BOUND >> 24) as u8;
+pub const Y6_TOP_BOUND: u8 = 63;
+const _: () = assert!(Y6_RANGE_BOUND == RECEIVE_Y6_MAX);
+const _: () = assert!((Y6_RANGE_BOUND >> 24) == Y6_TOP_BOUND as u32);
+const _: () = assert!(Y6_RANGE_BOUND == 63 << 24);
 
 /// A set of columns needed to compute the global interaction elliptic curve digest.
 ///
