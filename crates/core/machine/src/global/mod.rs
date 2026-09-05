@@ -279,6 +279,12 @@ impl<F: PrimeField32> MachineAir<F> for GlobalChip {
                 |x: F| x.as_canonical_u32(),
             )),
         );
+        // Padding rows carry the shard digest in their trailing columns (see
+        // `GlobalAccumulationOperation::populate_dummy`).
+        let final_digest = match cumulative_sum.last() {
+            Some(digest) => digest.point(),
+            None => SepticCurve::<F>::dummy(),
+        };
 
         let chunk_size = std::cmp::max(padded_nb_rows / num_cpus::get(), 0) + 1;
         values.chunks_mut(chunk_size * NUM_GLOBAL_COLS).enumerate().par_bridge().for_each(
@@ -289,9 +295,8 @@ impl<F: PrimeField32> MachineAir<F> for GlobalChip {
                     if idx < nb_rows {
                         cols.accumulation.populate_real(&cumulative_sum[idx..idx + 2]);
                     } else {
-                        // Padding: `(dummy, dummy, dummy)` — see `populate_dummy`.
                         cols.lookup.populate_dummy();
-                        cols.accumulation.populate_dummy();
+                        cols.accumulation.populate_dummy(final_digest);
                     }
                 });
             },
@@ -436,3 +441,4 @@ mod tests {
         }
     }
 }
+

@@ -49,11 +49,8 @@ impl<F: PrimeField32, const N: usize> GlobalAccumulationOperation<F, N> {
                 y: SepticExtension(global_lookup_cols[i].y_coordinate.0),
             };
             assert!(is_real[i] == F::ONE || is_real[i] == F::ZERO);
-            // A padding slot must still satisfy the unconditional x-check
-            // `sum_checker_x(current, point, next) == 0`; with `point == dummy` it
-            // does so for `current == dummy` (chord through equal x vanishes), which
-            // is how `populate_dummy` lays out padding rows.  Within a real row a
-            // padding slot (N > 1) keeps the running sum.
+            // Within a real row a padding slot (N > 1) keeps the running sum; whole
+            // padding rows are laid out by `populate_dummy`.
             let sum_point = if is_real[i] == F::ONE {
                 point_cur.add_incomplete(*initial_digest)
             } else {
@@ -65,17 +62,21 @@ impl<F: PrimeField32, const N: usize> GlobalAccumulationOperation<F, N> {
         }
     }
 
-    /// Lay out a padding row: `initial_digest == cumulative_sum == dummy`, which is on
-    /// the curve and makes the unconditional `sum_checker_x(dummy, dummy, dummy) == 0`
-    /// hold.  Padding rows are outside the `GlobalAccumulation` bus chain (multiplicity
-    /// `is_real == 0`), so nothing else constrains them.
-    pub fn populate_dummy(&mut self) {
+    /// Lay out a padding row as a GENUINE addition `final_digest = (final_digest - dummy) +
+    /// dummy`: `initial_digest = final_digest - dummy`, `cumulative_sum = final_digest`, with the
+    /// lookup point set to `dummy` by `GlobalLookupOperation::populate_dummy`.  This keeps the
+    /// unconditional `sum_checker_x == 0` true without a witness column, and keeps the shard's
+    /// digest in the LAST row's trailing 14 columns, which is where the prover reads the chip's
+    /// global cumulative sum from and what `permutation.rs` pins with `when_last_row`.  Padding
+    /// rows are outside the `GlobalAccumulation` bus chain (multiplicity `is_real == 0`).
+    pub fn populate_dummy(&mut self, final_digest: SepticCurve<F>) {
         let dummy = SepticCurve::<F>::dummy();
-        self.initial_digest[0] = SepticBlock::from(dummy.x.0);
-        self.initial_digest[1] = SepticBlock::from(dummy.y.0);
+        let initial = final_digest.add_incomplete(dummy.neg());
+        self.initial_digest[0] = SepticBlock::from(initial.x.0);
+        self.initial_digest[1] = SepticBlock::from(initial.y.0);
         for i in 0..N {
-            self.cumulative_sum[i][0] = SepticBlock::from(dummy.x.0);
-            self.cumulative_sum[i][1] = SepticBlock::from(dummy.y.0);
+            self.cumulative_sum[i][0] = SepticBlock::from(final_digest.x.0);
+            self.cumulative_sum[i][1] = SepticBlock::from(final_digest.y.0);
         }
     }
 
@@ -169,9 +170,9 @@ impl<F: Field, const N: usize> GlobalAccumulationOperation<F, N> {
             let next_sum = ith_cumulative_sum(i);
             assert_on_curve(builder, next_sum.clone());
             // `sum_checker_x` is degree 3 and is asserted UNCONDITIONALLY (SP1-hypercube
-            // shape): padding rows are laid out as `(dummy, dummy, dummy)`, where the
-            // chord through two equal x-coordinates makes it vanish identically, so no
-            // witnessed copy is needed.  `sum_checker_y` is degree 2 and gated by
+            // shape): padding rows are laid out as the genuine addition
+            // `(final - dummy) + dummy == final` (`populate_dummy`), so no witnessed copy
+            // is needed.  `sum_checker_y` is degree 2 and gated by
             // `is_real` (degree 3).  Together, on a real row, `next_sum == current_sum +
             // point_to_add` (incomplete addition, as before).
             let sum_checker_x = SepticCurve::<AB::Expr>::sum_checker_x(

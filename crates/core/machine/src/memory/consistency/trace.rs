@@ -158,7 +158,7 @@ impl<F: PrimeField32> MemoryWriteCols<F> {
             timestamp: record.prev_timestamp,
         };
         self.prev_value = prev_record.value.into();
-        self.access.populate_access(current_record, prev_record, output);
+        self.access.populate_access(current_record, prev_record, false, output);
     }
 }
 
@@ -171,7 +171,7 @@ impl<F: PrimeField32> MemoryReadCols<F> {
             shard: record.prev_shard,
             timestamp: record.prev_timestamp,
         };
-        self.access.populate_access(current_record, prev_record, output);
+        self.access.populate_access(current_record, prev_record, true, output);
     }
 }
 
@@ -192,7 +192,7 @@ impl<F: PrimeField32> MemoryReadWriteCols<F> {
             timestamp: record.prev_timestamp,
         };
         self.prev_value = prev_record.value.into();
-        self.access.populate_access(current_record, prev_record, output);
+        self.access.populate_access(current_record, prev_record, false, output);
     }
 
     pub fn populate_read(&mut self, record: MemoryReadRecord, output: &mut impl ByteRecord) {
@@ -204,7 +204,7 @@ impl<F: PrimeField32> MemoryReadWriteCols<F> {
             timestamp: record.prev_timestamp,
         };
         self.prev_value = prev_record.value.into();
-        self.access.populate_access(current_record, prev_record, output);
+        self.access.populate_access(current_record, prev_record, false, output);
     }
 }
 
@@ -213,13 +213,17 @@ impl<F: PrimeField32> MemoryAccessCols<F> {
         &mut self,
         current_record: MemoryRecord,
         prev_record: MemoryRecord,
+        prev_value_aliased: bool,
         output: &mut impl ByteRecord,
     ) {
         self.value = current_record.value.into();
 
-        // Match the byte range checks emitted by `eval_memory_access` for both the previous and
-        // current memory words.
-        output.add_u8_range_checks(&prev_record.value.to_le_bytes());
+        // Match the byte range checks emitted by `eval_memory_access`: one per memory word, and
+        // for a read-only access (`MemoryReadCols`, whose `prev_value` IS `value`) just one —
+        // `MemoryCols::value_aliases_prev`.
+        if !prev_value_aliased {
+            output.add_u8_range_checks(&prev_record.value.to_le_bytes());
+        }
         output.add_u8_range_checks(&current_record.value.to_le_bytes());
 
         self.prev_shard = F::from_u32(prev_record.shard);
