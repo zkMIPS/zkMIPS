@@ -119,7 +119,7 @@ impl LoadWordChip {
         else {
             unreachable!("loads carry read records");
         };
-        cols.memory_access.populate(read_record, blu);
+        cols.memory_access.populate_trusted(read_record, blu);
         cols.is_lw = F::from_bool(matches!(event.opcode, Opcode::LW));
         cols.is_ll = F::from_bool(matches!(event.opcode, Opcode::LL));
         debug_assert!(matches!(event.opcode, Opcode::LW | Opcode::LL));

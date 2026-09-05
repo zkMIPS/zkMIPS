@@ -8,6 +8,16 @@ use super::{
     RegisterReadCols, RegisterReadWriteCols,
 };
 
+/// Which memory words a `populate_access` records byte range checks for; mirrors the
+/// sends of `eval_memory_access` (`Both`/`ValueOnly`) and `eval_memory_access_trusted`
+/// (`None`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ByteChecks {
+    Both,
+    ValueOnly,
+    None,
+}
+
 impl<F: PrimeField32> RegisterReadCols<F> {
     /// Populate from the NARROW register record the instruction events carry.
     ///
@@ -158,12 +168,28 @@ impl<F: PrimeField32> MemoryWriteCols<F> {
             timestamp: record.prev_timestamp,
         };
         self.prev_value = prev_record.value.into();
-        self.access.populate_access(current_record, prev_record, false, output);
+        self.access.populate_access(current_record, prev_record, ByteChecks::Both, output);
     }
 }
 
 impl<F: PrimeField32> MemoryReadCols<F> {
     pub fn populate(&mut self, record: MemoryReadRecord, output: &mut impl ByteRecord) {
+        self.populate_with(record, ByteChecks::ValueOnly, output);
+    }
+
+    /// Populate for a chip that evaluates the access with `eval_memory_access_trusted`
+    /// (no byte range checks): the memory-instruction chips, whose words come from and go to
+    /// registers.
+    pub fn populate_trusted(&mut self, record: MemoryReadRecord, output: &mut impl ByteRecord) {
+        self.populate_with(record, ByteChecks::None, output);
+    }
+
+    fn populate_with(
+        &mut self,
+        record: MemoryReadRecord,
+        byte_checks: ByteChecks,
+        output: &mut impl ByteRecord,
+    ) {
         let current_record =
             MemoryRecord { value: record.value, shard: record.shard, timestamp: record.timestamp };
         let prev_record = MemoryRecord {
@@ -171,7 +197,7 @@ impl<F: PrimeField32> MemoryReadCols<F> {
             shard: record.prev_shard,
             timestamp: record.prev_timestamp,
         };
-        self.access.populate_access(current_record, prev_record, true, output);
+        self.access.populate_access(current_record, prev_record, byte_checks, output);
     }
 }
 
@@ -183,7 +209,26 @@ impl<F: PrimeField32> MemoryReadWriteCols<F> {
         }
     }
 
+    /// Populate for a chip that evaluates the access with `eval_memory_access_trusted`
+    /// (no byte range checks); see `MemoryReadCols::populate_trusted`.
+    pub fn populate_trusted(&mut self, record: MemoryRecordEnum, output: &mut impl ByteRecord) {
+        // `output` still receives the timestamp range checks; only the value byte checks go.
+        match record {
+            MemoryRecordEnum::Read(r) => self.populate_read_with(r, ByteChecks::None, output),
+            MemoryRecordEnum::Write(w) => self.populate_write_with(w, ByteChecks::None, output),
+        }
+    }
+
     pub fn populate_write(&mut self, record: MemoryWriteRecord, output: &mut impl ByteRecord) {
+        self.populate_write_with(record, ByteChecks::Both, output);
+    }
+
+    fn populate_write_with(
+        &mut self,
+        record: MemoryWriteRecord,
+        byte_checks: ByteChecks,
+        output: &mut impl ByteRecord,
+    ) {
         let current_record =
             MemoryRecord { value: record.value, shard: record.shard, timestamp: record.timestamp };
         let prev_record = MemoryRecord {
@@ -192,10 +237,19 @@ impl<F: PrimeField32> MemoryReadWriteCols<F> {
             timestamp: record.prev_timestamp,
         };
         self.prev_value = prev_record.value.into();
-        self.access.populate_access(current_record, prev_record, false, output);
+        self.access.populate_access(current_record, prev_record, byte_checks, output);
     }
 
     pub fn populate_read(&mut self, record: MemoryReadRecord, output: &mut impl ByteRecord) {
+        self.populate_read_with(record, ByteChecks::Both, output);
+    }
+
+    fn populate_read_with(
+        &mut self,
+        record: MemoryReadRecord,
+        byte_checks: ByteChecks,
+        output: &mut impl ByteRecord,
+    ) {
         let current_record =
             MemoryRecord { value: record.value, shard: record.shard, timestamp: record.timestamp };
         let prev_record = MemoryRecord {
@@ -204,7 +258,7 @@ impl<F: PrimeField32> MemoryReadWriteCols<F> {
             timestamp: record.prev_timestamp,
         };
         self.prev_value = prev_record.value.into();
-        self.access.populate_access(current_record, prev_record, false, output);
+        self.access.populate_access(current_record, prev_record, byte_checks, output);
     }
 }
 
@@ -213,18 +267,23 @@ impl<F: PrimeField32> MemoryAccessCols<F> {
         &mut self,
         current_record: MemoryRecord,
         prev_record: MemoryRecord,
-        prev_value_aliased: bool,
+        byte_checks: ByteChecks,
         output: &mut impl ByteRecord,
     ) {
         self.value = current_record.value.into();
 
-        // Match the byte range checks emitted by `eval_memory_access`: one per memory word, and
-        // for a read-only access (`MemoryReadCols`, whose `prev_value` IS `value`) just one —
-        // `MemoryCols::value_aliases_prev`.
-        if !prev_value_aliased {
-            output.add_u8_range_checks(&prev_record.value.to_le_bytes());
+        // Match the byte range checks emitted by `eval_memory_access`: one per memory word
+        // (`Both`), one for a read-only access whose `prev_value` IS `value` (`ValueOnly`,
+        // `MemoryCols::value_aliases_prev`), none for the memory-instruction chips
+        // (`None`, `eval_memory_access_trusted`).
+        match byte_checks {
+            ByteChecks::Both => {
+                output.add_u8_range_checks(&prev_record.value.to_le_bytes());
+                output.add_u8_range_checks(&current_record.value.to_le_bytes());
+            }
+            ByteChecks::ValueOnly => output.add_u8_range_checks(&current_record.value.to_le_bytes()),
+            ByteChecks::None => {}
         }
-        output.add_u8_range_checks(&current_record.value.to_le_bytes());
 
         self.prev_shard = F::from_u32(prev_record.shard);
         self.prev_clk = F::from_u32(prev_record.timestamp);

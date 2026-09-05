@@ -190,7 +190,9 @@ pub fn eval_memory_common<AB: ZKMCoreAirBuilder>(
     // addr_ls_two_bits == addr_word.reduce()`, which is exactly this definition.
     let addr_aligned = addr_word.reduce::<AB>() - cols.addr_ls_two_bits;
 
-    builder.eval_memory_access(
+    // Trusted: the word moves between memory and a register (see
+    // `MemoryAirBuilder::eval_memory_access_trusted`).
+    builder.eval_memory_access_trusted(
         cols.shard(),
         crate::frame::clk_from_i_type_frame::<AB>(&cols.frame)
             + AB::Expr::from_u32(MemoryAccessPosition::Memory as u32),

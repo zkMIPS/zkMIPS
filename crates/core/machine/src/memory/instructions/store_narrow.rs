@@ -151,7 +151,7 @@ impl StoreNarrowChip {
         program: &zkm_core_executor::Program,
     ) {
         let addr_ls_two_bits = cols.common.populate(event, blu, program);
-        cols.memory_access.populate(event.mem_access, blu);
+        cols.memory_access.populate_trusted(event.mem_access, blu);
         populate_offset_flags(
             addr_ls_two_bits,
             &mut cols.ls_bits_is_one,

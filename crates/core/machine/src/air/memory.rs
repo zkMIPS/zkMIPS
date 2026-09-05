@@ -26,6 +26,36 @@ pub trait MemoryAirBuilder: BaseAirBuilder {
         memory_access: &impl MemoryCols<E>,
         do_check: impl Into<Self::Expr>,
     ) {
+        self.eval_memory_access_inner(shard, clk, addr, memory_access, do_check, true);
+    }
+
+    /// [`Self::eval_memory_access`] without the byte range checks of the memory words.
+    ///
+    /// For the memory-INSTRUCTION chips only: a store's word is a register value (registers
+    /// trust their writers — `eval_register_access` never byte-checks), a load's word goes to a
+    /// register, and every other entry into memory keeps its checks (`MemoryGlobalInit`
+    /// witnesses bits, precompile writes use `eval_memory_access`).  This removes 2 of the
+    /// 4 byte lookups per word-access row (~6% of the LogUp-GKR terms of a reth block).
+    fn eval_memory_access_trusted<E: Into<Self::Expr> + Clone>(
+        &mut self,
+        shard: impl Into<Self::Expr>,
+        clk: impl Into<Self::Expr>,
+        addr: impl Into<Self::Expr>,
+        memory_access: &impl MemoryCols<E>,
+        do_check: impl Into<Self::Expr>,
+    ) {
+        self.eval_memory_access_inner(shard, clk, addr, memory_access, do_check, false);
+    }
+
+    fn eval_memory_access_inner<E: Into<Self::Expr> + Clone>(
+        &mut self,
+        shard: impl Into<Self::Expr>,
+        clk: impl Into<Self::Expr>,
+        addr: impl Into<Self::Expr>,
+        memory_access: &impl MemoryCols<E>,
+        do_check: impl Into<Self::Expr>,
+        check_bytes: bool,
+    ) {
         let do_check: Self::Expr = do_check.into();
         let shard: Self::Expr = shard.into();
         let clk: Self::Expr = clk.into();
@@ -42,10 +72,12 @@ pub trait MemoryAirBuilder: BaseAirBuilder {
         // A read-only access aliases `value` and `prev_value` onto the same columns;
         // checking them twice was two identical byte lookups per row (2 of the 29
         // interactions of every `LoadWord` row), so the aliased form checks once.
-        if !memory_access.value_aliases_prev() {
-            self.slice_range_check_u8(&memory_access.prev_value().0, do_check.clone());
+        if check_bytes {
+            if !memory_access.value_aliases_prev() {
+                self.slice_range_check_u8(&memory_access.prev_value().0, do_check.clone());
+            }
+            self.slice_range_check_u8(&memory_access.value().0, do_check.clone());
         }
-        self.slice_range_check_u8(&memory_access.value().0, do_check.clone());
 
         // Add to the memory argument.
         let addr = addr.into();

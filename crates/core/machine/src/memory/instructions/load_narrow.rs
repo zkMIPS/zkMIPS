@@ -221,7 +221,7 @@ impl LoadNarrowChip {
         else {
             unreachable!("narrow loads carry read records");
         };
-        cols.memory_access.populate(read_record, blu);
+        cols.memory_access.populate_trusted(read_record, blu);
         populate_offset_flags(
             addr_ls_two_bits,
             &mut cols.ls_bits_is_one,

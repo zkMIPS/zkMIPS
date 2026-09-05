@@ -120,7 +120,7 @@ impl StoreWordChip {
         program: &zkm_core_executor::Program,
     ) {
         cols.common.populate(event, blu, program);
-        cols.memory_access.populate(event.mem_access, blu);
+        cols.memory_access.populate_trusted(event.mem_access, blu);
         cols.is_sw = F::from_bool(matches!(event.opcode, Opcode::SW));
         cols.is_sc = F::from_bool(matches!(event.opcode, Opcode::SC));
         debug_assert!(matches!(event.opcode, Opcode::SW | Opcode::SC));
