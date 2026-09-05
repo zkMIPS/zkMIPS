@@ -8,19 +8,43 @@ use zkm_derive::AlignedBorrow;
 use zkm_pcs::ZKMAirBuilder;
 use zkm_pcs::{
     septic_curve::{SepticCurve, CURVE_WITNESS_DUMMY_POINT_X, CURVE_WITNESS_DUMMY_POINT_Y},
-    septic_extension::{SepticBlock, SepticExtension},
+    septic_extension::{SepticBlock, SepticExtension, RECEIVE_Y6_MAX, SEND_Y6_MIN},
 };
 
+/// Upper bound (exclusive) of the witnessed `y6_value`; equals `RECEIVE_Y6_MAX`.
+pub const Y6_RANGE_BOUND: u32 = RECEIVE_Y6_MAX;
+/// `Y6_RANGE_BOUND >> 24` — the bound on the top limb checked by `LTU`.
+pub const Y6_TOP_BOUND: u8 = (Y6_RANGE_BOUND >> 24) as u8;
+
 /// A set of columns needed to compute the global interaction elliptic curve digest.
+///
+/// The digest sign is fixed by the top limb of `y`: a receive has
+/// `y6 = 1 + y6_value`, a send `y6 = SEND_Y6_MIN + y6_value`, with
+/// `y6_value < 63 * 2^24` proven through three byte-table lookups on the limbs
+/// `y6_value = y6_lo16 + y6_mid8 * 2^16 + y6_top * 2^24` (the last one is
+/// `LTU(y6_top, 63)`).  The two `y6` ranges are disjoint and mirror images of
+/// each other, so exactly one of `±P` is provable for any point outside the
+/// exception band (`lift_x` skips that band).  This replaces a 30-bit boolean
+/// decomposition plus an inverse witness, and the 8 offset bits collapse to
+/// one byte range checked together with `y6_mid8`: 53 -> 18 columns.
 #[derive(AlignedBorrow, Clone, Copy)]
 #[repr(C)]
 pub struct GlobalLookupOperation<T: Copy> {
-    pub offset_bits: [T; 8],
+    /// The `lift_x` offset (a byte).
+    pub offset: T,
     pub x_coordinate: SepticBlock<T>,
     pub y_coordinate: SepticBlock<T>,
-    pub y6_bit_decomp: [T; 30],
-    pub range_check_witness: T,
+    /// Low 16 bits of `y6_value`.
+    pub y6_lo16: T,
+    /// Bits 16..24 of `y6_value`.
+    pub y6_mid8: T,
+    /// Bits 24.. of `y6_value`; `< Y6_TOP_BOUND`.
+    pub y6_top: T,
 }
+
+/// The per-event digest data (point, offset, `y6_value` limbs); the layout lives in
+/// the executor crate so the record can carry it.  See `GlobalDigestCell`.
+pub type GlobalDigestRow = zkm_core_executor::GlobalDigestRowRaw;
 
 impl<F: PrimeField32> GlobalLookupOperation<F> {
     pub fn get_digest(
@@ -38,6 +62,22 @@ impl<F: PrimeField32> GlobalLookupOperation<F> {
         (point, offset)
     }
 
+    /// Compute the digest row for one event.
+    pub fn digest_row(values: SepticBlock<u32>, is_receive: bool, kind: u8) -> GlobalDigestRow {
+        let (point, offset) = Self::get_digest(values, is_receive, kind);
+        let y6 = point.y.0[6].as_canonical_u32();
+        let y6_value = if is_receive { y6 - 1 } else { y6 - SEND_Y6_MIN };
+        debug_assert!(y6_value < Y6_RANGE_BOUND);
+        GlobalDigestRow {
+            x: point.x.0.map(|v| v.as_canonical_u32()),
+            y: point.y.0.map(|v| v.as_canonical_u32()),
+            offset,
+            y6_top: (y6_value >> 24) as u8,
+            y6_mid8: ((y6_value >> 16) & 0xFF) as u8,
+            y6_lo16: (y6_value & 0xFFFF) as u16,
+        }
+    }
+
     pub fn populate(
         &mut self,
         values: SepticBlock<u32>,
@@ -46,43 +86,31 @@ impl<F: PrimeField32> GlobalLookupOperation<F> {
         kind: u8,
     ) {
         if is_real {
-            let (point, offset) = Self::get_digest(values, is_receive, kind);
-            for i in 0..8 {
-                self.offset_bits[i] = F::from_u8((offset >> i) & 1);
-            }
-            self.x_coordinate = SepticBlock::<F>::from(point.x.0);
-            self.y_coordinate = SepticBlock::<F>::from(point.y.0);
-            let range_check_value = if is_receive {
-                point.y.0[6].as_canonical_u32() - 1
-            } else {
-                point.y.0[6].as_canonical_u32() - F::ORDER_U32.div_ceil(2)
-            };
-            let mut top_7_bits = F::ZERO;
-            for i in 0..30 {
-                self.y6_bit_decomp[i] = F::from_u32((range_check_value >> i) & 1);
-                if i >= 23 {
-                    top_7_bits += self.y6_bit_decomp[i];
-                }
-            }
-            top_7_bits -= F::from_u32(7);
-            self.range_check_witness = top_7_bits.inverse();
+            self.populate_from_row(&Self::digest_row(values, is_receive, kind));
         } else {
             self.populate_dummy();
         }
     }
 
+    /// Populate from a precomputed digest row.
+    pub fn populate_from_row(&mut self, row: &GlobalDigestRow) {
+        self.offset = F::from_u8(row.offset);
+        self.x_coordinate = SepticBlock(row.x.map(F::from_u32));
+        self.y_coordinate = SepticBlock(row.y.map(F::from_u32));
+        self.y6_lo16 = F::from_u16(row.y6_lo16);
+        self.y6_mid8 = F::from_u8(row.y6_mid8);
+        self.y6_top = F::from_u8(row.y6_top);
+    }
+
     pub fn populate_dummy(&mut self) {
-        for i in 0..8 {
-            self.offset_bits[i] = F::ZERO;
-        }
+        self.offset = F::ZERO;
         self.x_coordinate =
             SepticBlock::<F>::from_base_fn(|i| F::from_u32(CURVE_WITNESS_DUMMY_POINT_X[i]));
         self.y_coordinate =
             SepticBlock::<F>::from_base_fn(|i| F::from_u32(CURVE_WITNESS_DUMMY_POINT_Y[i]));
-        for i in 0..30 {
-            self.y6_bit_decomp[i] = F::ZERO;
-        }
-        self.range_check_witness = F::ZERO;
+        self.y6_lo16 = F::ZERO;
+        self.y6_mid8 = F::ZERO;
+        self.y6_top = F::ZERO;
     }
 }
 
@@ -100,19 +128,37 @@ impl<F: Field> GlobalLookupOperation<F> {
         // Constrain that the `is_real` is boolean.
         builder.assert_bool(is_real);
 
-        // Compute the offset and range check each bits, ensuring that the offset is a byte.
-        let mut offset = AB::Expr::ZERO;
-        for i in 0..8 {
-            builder.assert_bool(cols.offset_bits[i]);
-            offset = offset.clone() + cols.offset_bits[i] * AB::F::from_u32(1 << i);
-        }
-
-        // Range check the first element in the message to be a u16 so that we can encode the interaction kind in the upper 8 bits.
+        // Range check the first element in the message to be a u16 so that we can encode the
+        // interaction kind in the upper 8 bits.
         builder.send_byte(
             AB::Expr::from_u8(ByteOpcode::U16Range as u8),
             values[0].clone(),
             AB::Expr::ZERO,
             AB::Expr::ZERO,
+            is_real,
+        );
+
+        // `y6_value = y6_lo16 + y6_mid8 * 2^16 + y6_top * 2^24 < 63 * 2^24`, and the offset is
+        // a byte: one U16Range, one U8Range (pairing `y6_mid8` with `offset`) and one LTU.
+        builder.send_byte(
+            AB::Expr::from_u8(ByteOpcode::U16Range as u8),
+            cols.y6_lo16,
+            AB::Expr::ZERO,
+            AB::Expr::ZERO,
+            is_real,
+        );
+        builder.send_byte(
+            AB::Expr::from_u8(ByteOpcode::U8Range as u8),
+            AB::Expr::ZERO,
+            cols.y6_mid8,
+            cols.offset,
+            is_real,
+        );
+        builder.send_byte(
+            AB::Expr::from_u8(ByteOpcode::LTU as u8),
+            AB::Expr::ONE,
+            cols.y6_top,
+            AB::Expr::from_u8(Y6_TOP_BOUND),
             is_real,
         );
 
@@ -136,7 +182,7 @@ impl<F: Field> GlobalLookupOperation<F> {
         }
         builder.when(is_real).assert_eq(
             x.0[6].clone(),
-            values[6].clone() * AB::Expr::from_u32(256) + offset.clone(),
+            values[6].clone() * AB::Expr::from_u32(256) + cols.offset,
         );
 
         // Constrain that `(x, y)` is a valid point on the curve.
@@ -144,31 +190,53 @@ impl<F: Field> GlobalLookupOperation<F> {
         let x3_3zx_m3 = SepticCurve::<AB::Expr>::curve_formula(x);
         builder.assert_septic_ext_eq(y2, x3_3zx_m3);
 
-        // Constrain that `0 <= y6_value < (p - 1) / 2 = 2^30 - 2^23`.
-        // Decompose `y6_value` into 30 bits, and then constrain that the top 7 bits cannot be all 1.
-        // To do this, check that the sum of the top 7 bits is not equal to 7, which can be done by providing an inverse.
-        let mut y6_value = AB::Expr::ZERO;
-        let mut top_7_bits = AB::Expr::ZERO;
-        for i in 0..30 {
-            builder.assert_bool(cols.y6_bit_decomp[i]);
-            y6_value = y6_value.clone() + cols.y6_bit_decomp[i] * AB::F::from_u32(1 << i);
-            if i >= 23 {
-                top_7_bits = top_7_bits.clone() + cols.y6_bit_decomp[i];
-            }
-        }
-        // If `is_real` is true, check that `top_7_bits - 7` is non-zero, by checking `range_check_witness` is an inverse of it.
-        builder.when(is_real).assert_eq(
-            cols.range_check_witness * (top_7_bits - AB::Expr::from_u8(7)),
-            AB::Expr::ONE,
-        );
+        let y6_value = cols.y6_lo16
+            + cols.y6_mid8 * AB::F::from_u32(1 << 16)
+            + cols.y6_top * AB::F::from_u32(1 << 24);
 
         // Constrain that y has correct sign.
-        // If it's a receive: `1 <= y_6 <= (p - 1) / 2`, so `0 <= y_6 - 1 = y6_value < (p - 1) / 2`.
-        // If it's a send: `(p + 1) / 2 <= y_6 <= p - 1`, so `0 <= y_6 - (p + 1) / 2 = y6_value < (p - 1) / 2`.
+        // If it's a receive: `1 <= y_6 <= RECEIVE_Y6_MAX`, so `y_6 - 1 = y6_value < RECEIVE_Y6_MAX`.
+        // If it's a send: `SEND_Y6_MIN <= y_6 <= p - 1`, so `y_6 - SEND_Y6_MIN = y6_value < RECEIVE_Y6_MAX`
+        // (`p - SEND_Y6_MIN == RECEIVE_Y6_MAX`).  The two ranges are disjoint.
         builder.when(is_receive).assert_eq(y.0[6].clone(), AB::Expr::ONE + y6_value.clone());
-        builder.when(is_send).assert_eq(
-            y.0[6].clone(),
-            AB::Expr::from_u32((1 << 30) - (1 << 23) + 1) + y6_value.clone(),
-        );
+        builder
+            .when(is_send)
+            .assert_eq(y.0[6].clone(), AB::Expr::from_u32(SEND_Y6_MIN) + y6_value);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use p3_koala_bear::KoalaBear;
+
+    #[test]
+    fn digest_row_limbs_reassemble_and_bound() {
+        for i in 0..2000u32 {
+            let values = SepticBlock([i, i * 7 + 1, 3, i & 0xFFFF, 5, 6, i ^ 0x5A5A]);
+            for is_receive in [true, false] {
+                let row = GlobalLookupOperation::<KoalaBear>::digest_row(values, is_receive, 3);
+                let v = row.y6_lo16 as u32 + ((row.y6_mid8 as u32) << 16) + ((row.y6_top as u32) << 24);
+                assert!(v < Y6_RANGE_BOUND);
+                assert!(row.y6_top < Y6_TOP_BOUND);
+                let y6 = row.y[6];
+                if is_receive {
+                    assert_eq!(y6, 1 + v);
+                } else {
+                    assert_eq!(y6, SEND_Y6_MIN + v);
+                }
+                let mut cols = GlobalLookupOperation::<KoalaBear> {
+                    offset: KoalaBear::ZERO,
+                    x_coordinate: SepticBlock([KoalaBear::ZERO; 7]),
+                    y_coordinate: SepticBlock([KoalaBear::ZERO; 7]),
+                    y6_lo16: KoalaBear::ZERO,
+                    y6_mid8: KoalaBear::ZERO,
+                    y6_top: KoalaBear::ZERO,
+                };
+                cols.populate(values, is_receive, true, 3);
+                assert_eq!(cols.offset, KoalaBear::from_u8(row.offset));
+                assert_eq!(cols.x_coordinate.0[6], KoalaBear::from_u32(row.x[6]));
+            }
+        }
     }
 }

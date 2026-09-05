@@ -38,7 +38,13 @@ pub trait MemoryAirBuilder: BaseAirBuilder {
 
         // Defense-in-depth: memory words entering the subsystem must remain byte-shaped even
         // if an upstream chip forgot to range check them.
-        self.slice_range_check_u8(&memory_access.prev_value().0, do_check.clone());
+        //
+        // A read-only access aliases `value` and `prev_value` onto the same columns;
+        // checking them twice was two identical byte lookups per row (2 of the 29
+        // interactions of every `LoadWord` row), so the aliased form checks once.
+        if !memory_access.value_aliases_prev() {
+            self.slice_range_check_u8(&memory_access.prev_value().0, do_check.clone());
+        }
         self.slice_range_check_u8(&memory_access.value().0, do_check.clone());
 
         // Add to the memory argument.

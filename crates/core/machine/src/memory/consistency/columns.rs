@@ -175,6 +175,12 @@ impl<T> RegisterCols<T> for RegisterReadWriteCols<T> {
 
 /// The common columns for all memory access types.
 pub trait MemoryCols<T> {
+    /// `true` when `value()` and `prev_value()` are the SAME columns (read-only
+    /// accesses), so a byte-shape check of one is a check of the other.
+    fn value_aliases_prev(&self) -> bool {
+        false
+    }
+
     fn access(&self) -> &MemoryAccessCols<T>;
 
     fn access_mut(&mut self) -> &mut MemoryAccessCols<T>;
@@ -189,6 +195,10 @@ pub trait MemoryCols<T> {
 }
 
 impl<T> MemoryCols<T> for MemoryReadCols<T> {
+    fn value_aliases_prev(&self) -> bool {
+        true
+    }
+
     fn access(&self) -> &MemoryAccessCols<T> {
         &self.access
     }

@@ -1,18 +1,25 @@
-use std::{borrow::Borrow, mem::transmute};
+use std::{
+    borrow::Borrow,
+    mem::transmute,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 
 use p3_air::{Air, BaseAir, WindowAccess};
 use p3_field::PrimeCharacteristicRing;
 use p3_field::PrimeField32;
 use p3_matrix::dense::RowMajorMatrix;
 use rayon::iter::{
-    IndexedParallelIterator, IntoParallelIterator, IntoParallelRefMutIterator, ParallelBridge,
-    ParallelIterator,
+    IndexedParallelIterator, IntoParallelIterator, IntoParallelRefIterator,
+    IntoParallelRefMutIterator, ParallelBridge, ParallelIterator,
 };
 use rayon_scan::ScanParallelIterator;
 use std::borrow::BorrowMut;
 use zkm_core_executor::{
-    events::{ByteRecord, GlobalLookupEvent},
-    ExecutionRecord, Program,
+    events::{ByteLookupEvent, ByteRecord, GlobalLookupEvent},
+    ByteOpcode, ExecutionRecord, Program,
 };
 use zkm_pcs::{
     air::{AirLookup, LookupScope, MachineAir},
@@ -23,7 +30,9 @@ use zkm_pcs::{
 };
 
 use crate::{
-    operations::{GlobalAccumulationOperation, GlobalLookupOperation},
+    operations::{
+        GlobalAccumulationOperation, GlobalDigestRow, GlobalLookupOperation, Y6_TOP_BOUND,
+    },
     utils::{indices_arr, next_multiple_of_32, zeroed_f_vec},
     CoreChipError,
 };
@@ -45,7 +54,41 @@ pub const GLOBAL_INITIAL_DIGEST_POS: usize = GLOBAL_COL_MAP.accumulation.initial
 // (for the GlobalAccumulation bus chain) shifts `accumulation.initial_digest`
 // one position right.  Kept in sync with the struct-derived
 // `GLOBAL_INITIAL_DIGEST_POS` by the assert in `name()` below.
-pub const GLOBAL_INITIAL_DIGEST_POS_COPY: usize = 65;
+pub const GLOBAL_INITIAL_DIGEST_POS_COPY: usize = 30;
+
+/// Whether the `GlobalChip` trace (and with it the three per-row byte-table
+/// lookups that need `lift_x`) is generated on the DEVICE.  When set, the host
+/// `generate_dependencies` emits only the `U16Range(message[0])` lookups and the
+/// device trace generator publishes the other multiplicities through
+/// `ExecutionRecord::global_byte_lookups` for the Byte chip to fold in.  A host
+/// `lift_x` is ~7 us; a reth shard has ~560 K global events, so leaving this
+/// off on a GPU prover would add ~4 CPU-seconds per shard to the dependency pass.
+static GLOBAL_BYTE_LOOKUPS_ON_DEVICE: AtomicBool = AtomicBool::new(false);
+
+pub fn set_global_byte_lookups_on_device(on: bool) {
+    GLOBAL_BYTE_LOOKUPS_ON_DEVICE.store(on, Ordering::Release);
+}
+
+pub fn global_byte_lookups_on_device() -> bool {
+    GLOBAL_BYTE_LOOKUPS_ON_DEVICE.load(Ordering::Acquire)
+}
+
+/// Compute the digest row of every event, in parallel.
+pub fn compute_global_digest_rows<F: PrimeField32>(
+    events: &[GlobalLookupEvent],
+) -> Vec<GlobalDigestRow> {
+    events
+        .par_iter()
+        .with_min_len(1 << 10)
+        .map(|event| {
+            GlobalLookupOperation::<F>::digest_row(
+                SepticBlock(event.message),
+                event.is_receive,
+                event.kind,
+            )
+        })
+        .collect()
+}
 
 #[repr(C)]
 pub struct Ghost {
@@ -94,32 +137,47 @@ impl<F: PrimeField32> MachineAir<F> for GlobalChip {
         let chunk_size = std::cmp::max(events.len() / num_cpus::get(), 1);
 
         // Aggregate per chunk into a COUNTING map, exactly like every other
-        // chip in this machine (`alu/add_sub`, `cpu/trace`,
-        // `memory/instructions/trace`, ...).  `Global` was the sole chip still
-        // collecting a flat `Vec<ByteLookupEvent>` and folding it in
-        // one-event-at-a-time: `add_byte_lookup_events` is a SERIAL loop of
-        // `byte_lookups.entry(..)` hashes, and this chip has one event per
-        // global lookup — the largest event count in the record.
+        // chip in this machine.  `U16Range(message[0])` collapses to a couple
+        // of dozen distinct keys per shard (`message[0]` is a shard index).
         //
-        // Those hashes are almost entirely redundant.  The only key is
-        // `U16Range(message[0])`, and `message[0]` is a shard index (memory
-        // lookups) or a syscall shard (syscall lookups), so a whole reth shard
-        // collapses to a couple of dozen distinct keys.  Measured on reth:
-        // 274,815 events per shard mapping to 29 distinct keys, costing 2.5 ms
-        // of serial host time per shard inside the `generate_dependencies`
-        // critical section, plus a full flatten of the intermediate Vec.
-        //
-        // Byte-neutral: `byte_lookups` is a multiplicity counter and the Byte
-        // chip's trace-gen (`bytes/trace.rs`) is a scatter-ADD into a fixed
-        // 2^16-row table, so only the (event -> count) multiset matters —
-        // never the insertion order or the batching.
+        // The three range-check lookups of the digest columns (`y6_lo16`,
+        // `y6_mid8`+`offset`, `LTU(y6_top, 63)`) need the lifted point.  On the
+        // host path the rows are computed here ONCE (parallel), published in
+        // `global_digests` for `generate_trace`, and counted; on the device path
+        // (`global_byte_lookups_on_device()`) the GPU trace generator derives
+        // and publishes those multiplicities itself.
+        let digests = if global_byte_lookups_on_device() {
+            None
+        } else {
+            let rows = input
+                .global_digests
+                .get(events.len())
+                .unwrap_or_else(|| Arc::new(compute_global_digest_rows::<F>(events)));
+            input.global_digests.publish(events.len(), rows.clone());
+            Some(rows)
+        };
+
         let blu_batches = events
             .chunks(chunk_size)
+            .enumerate()
             .par_bridge()
-            .map(|events| {
+            .map(|(ci, events)| {
                 let mut blu: zkm_core_executor::events::ByteLookupMap = Default::default();
-                events.iter().for_each(|event| {
+                let base = ci * chunk_size;
+                events.iter().enumerate().for_each(|(k, event)| {
                     blu.add_u16_range_check(event.message[0].try_into().unwrap());
+                    if let Some(rows) = &digests {
+                        let row = &rows[base + k];
+                        blu.add_u16_range_check(row.y6_lo16);
+                        blu.add_u8_range_check(row.y6_mid8, row.offset);
+                        blu.add_byte_lookup_event(ByteLookupEvent {
+                            opcode: ByteOpcode::LTU,
+                            a1: 1,
+                            a2: 0,
+                            b: row.y6_top,
+                            c: Y6_TOP_BOUND,
+                        });
+                    }
                 });
                 blu
             })
@@ -150,6 +208,11 @@ impl<F: PrimeField32> MachineAir<F> for GlobalChip {
 
         let nb_rows = events.len();
         let padded_nb_rows = <GlobalChip as MachineAir<F>>::num_rows(self, input).unwrap();
+        // One `lift_x` per event: reuse the rows the dependency pass published.
+        let digests = input
+            .global_digests
+            .get(nb_rows)
+            .unwrap_or_else(|| Arc::new(compute_global_digest_rows::<F>(events)));
         let mut values = zeroed_f_vec(padded_nb_rows * NUM_GLOBAL_COLS);
         let chunk_size = std::cmp::max(nb_rows / num_cpus::get(), 0) + 1;
 
@@ -171,12 +234,7 @@ impl<F: PrimeField32> MachineAir<F> for GlobalChip {
                     let event: &GlobalLookupEvent = &events[idx];
                     cols.message = event.message.map(F::from_u32);
                     cols.kind = F::from_u8(event.kind);
-                    cols.lookup.populate(
-                        SepticBlock(event.message),
-                        event.is_receive,
-                        true,
-                        event.kind,
-                    );
+                    cols.lookup.populate_from_row(&digests[idx]);
                     cols.is_real = F::ONE;
                     // Option 2: running index for the GlobalAccumulation
                     // bus chain (real rows are placed contiguously at
@@ -222,13 +280,6 @@ impl<F: PrimeField32> MachineAir<F> for GlobalChip {
             )),
         );
 
-        let final_digest = match cumulative_sum.last() {
-            Some(digest) => digest.point(),
-            None => SepticCurve::<F>::dummy(),
-        };
-        let dummy = SepticCurve::<F>::dummy();
-        let final_sum_checker = SepticCurve::<F>::sum_checker_x(final_digest, dummy, final_digest);
-
         let chunk_size = std::cmp::max(padded_nb_rows / num_cpus::get(), 0) + 1;
         values.chunks_mut(chunk_size * NUM_GLOBAL_COLS).enumerate().par_bridge().for_each(
             |(i, rows)| {
@@ -236,14 +287,11 @@ impl<F: PrimeField32> MachineAir<F> for GlobalChip {
                     let idx = i * chunk_size + j;
                     let cols: &mut GlobalCols<F> = row.borrow_mut();
                     if idx < nb_rows {
-                        cols.accumulation.populate_real(
-                            &cumulative_sum[idx..idx + 2],
-                            final_digest,
-                            final_sum_checker,
-                        );
+                        cols.accumulation.populate_real(&cumulative_sum[idx..idx + 2]);
                     } else {
+                        // Padding: `(dummy, dummy, dummy)` — see `populate_dummy`.
                         cols.lookup.populate_dummy();
-                        cols.accumulation.populate_dummy(final_digest, final_sum_checker);
+                        cols.accumulation.populate_dummy();
                     }
                 });
             },

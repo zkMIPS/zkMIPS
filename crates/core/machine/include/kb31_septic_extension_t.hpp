@@ -348,18 +348,23 @@ class kb31_septic_extension_t {
             return result;
         }
 
+        // Digest sign bands — mirror of `septic_extension.rs::{RECEIVE_Y6_MAX,
+        // SEND_Y6_MIN}` and of the `GlobalLookupOperation` AIR.
+        static const uint32_t RECEIVE_Y6_MAX = 63u << 24;
+        static const uint32_t SEND_Y6_MIN = (1u << 30) + 1u;
+
         FUN bool is_receive() const {
             uint32_t limb = value[6].as_canonical_u32();
-            return 1 <= limb && limb <= (kb31_t::MOD - 1) / 2;
+            return 1 <= limb && limb <= RECEIVE_Y6_MAX;
         }
 
         FUN bool is_send() const {
             uint32_t limb = value[6].as_canonical_u32();
-            return (kb31_t::MOD + 1) / 2 <= limb && limb <= (kb31_t::MOD - 1);
+            return SEND_Y6_MIN <= limb && limb <= (kb31_t::MOD - 1);
         }
 
         FUN bool is_exception() const {
-            return value[6] == kb31_t::zero();
+            return !is_receive() && !is_send();
         }
 };
 

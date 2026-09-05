@@ -82,6 +82,95 @@ impl GlobalCumulativeSumCell {
     }
 }
 
+/// One `GlobalChip` row's digest data, computed once per event by whichever
+/// side (host `generate_dependencies` or the device trace generator) got there
+/// first, shared with the other consumers of the same record.  Mirrors
+/// `zkm_core_machine::operations::GlobalDigestRow` field for field (the machine
+/// crate depends on this one, so the layout lives here).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[repr(C)]
+pub struct GlobalDigestRowRaw {
+    pub x: [u32; 7],
+    pub y: [u32; 7],
+    pub offset: u8,
+    pub y6_top: u8,
+    pub y6_mid8: u8,
+    pub y6_lo16: u16,
+}
+
+/// Carrier for the per-event digest rows of this shard's `global_lookup_events`
+/// (host path: `GlobalChip::generate_dependencies` computes them for the byte
+/// lookups, `generate_trace` reuses them instead of a second `lift_x` per event).
+/// Same length-tag + deep-clone discipline as [`GlobalCumulativeSumCell`].
+#[derive(Debug, Default)]
+pub struct GlobalDigestCell(Mutex<Option<(usize, Arc<Vec<GlobalDigestRowRaw>>)>>);
+
+impl GlobalDigestCell {
+    #[inline]
+    pub fn publish(&self, nb_events: usize, rows: Arc<Vec<GlobalDigestRowRaw>>) {
+        debug_assert_eq!(rows.len(), nb_events);
+        *self.0.lock().unwrap() = Some((nb_events, rows));
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn get(&self, nb_events: usize) -> Option<Arc<Vec<GlobalDigestRowRaw>>> {
+        match &*self.0.lock().unwrap() {
+            Some((n, rows)) if *n == nb_events => Some(rows.clone()),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn clear(&self) {
+        *self.0.lock().unwrap() = None;
+    }
+}
+
+impl Clone for GlobalDigestCell {
+    fn clone(&self) -> Self {
+        Self(Mutex::new(self.0.lock().unwrap().clone()))
+    }
+}
+
+/// Byte-table multiplicities that the `GlobalChip` DEVICE trace generator
+/// derived on the GPU (the three range-check lookups of every real row need
+/// `lift_x`, which the host does not repeat when the chip is device-generated:
+/// `zkm_core_machine::global::global_byte_lookups_on_device()`).  Triples are
+/// `(byte-table row, opcode, multiplicity)` in the Byte chip's own scatter
+/// coordinates; the Byte chip's trace generator folds them in AFTER the Global
+/// chip has published (the shard prover orders the two).  Tagged with the event
+/// count like the other cells.
+#[derive(Debug, Default)]
+pub struct GlobalByteLookupCell(Mutex<Option<(usize, Arc<Vec<(u32, u8, u32)>>)>>);
+
+impl GlobalByteLookupCell {
+    #[inline]
+    pub fn publish(&self, nb_events: usize, triples: Arc<Vec<(u32, u8, u32)>>) {
+        *self.0.lock().unwrap() = Some((nb_events, triples));
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn get(&self, nb_events: usize) -> Option<Arc<Vec<(u32, u8, u32)>>> {
+        match &*self.0.lock().unwrap() {
+            Some((n, t)) if *n == nb_events => Some(t.clone()),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn clear(&self) {
+        *self.0.lock().unwrap() = None;
+    }
+}
+
+impl Clone for GlobalByteLookupCell {
+    fn clone(&self) -> Self {
+        Self(Mutex::new(self.0.lock().unwrap().clone()))
+    }
+}
+
 impl Clone for GlobalCumulativeSumCell {
     fn clone(&self) -> Self {
         Self(Mutex::new(*self.0.lock().unwrap()))
@@ -171,6 +260,13 @@ pub struct ExecutionRecord {
     /// [`GlobalCumulativeSumCell`].
     #[serde(skip)]
     pub global_cumulative_sum: GlobalCumulativeSumCell,
+    /// Per-event digest rows (host path).  See [`GlobalDigestCell`].
+    #[serde(skip)]
+    pub global_digests: GlobalDigestCell,
+    /// Device-derived Byte-table multiplicities of the Global chip (device path).
+    /// See [`GlobalByteLookupCell`].
+    #[serde(skip)]
+    pub global_byte_lookups: GlobalByteLookupCell,
     /// The public values.
     pub public_values: PublicValues<u32, u32>,
     /// The shape of the proof.
@@ -590,6 +686,9 @@ impl MachineRecord for ExecutionRecord {
         // site.)
         self.global_cumulative_sum.clear();
         other.global_cumulative_sum.clear();
+        // `global_digests` / `global_byte_lookups` are guarded by their event-count
+        // tag alone: an append that brings no events leaves them valid (the
+        // dependency pass appends an event-less output record after publishing).
     }
 
     /// Retrieves the public values.  This method is needed for the `MachineRecord` trait, since

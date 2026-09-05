@@ -19,7 +19,6 @@ use zkm_pcs::{
 #[repr(C)]
 pub struct GlobalAccumulationOperation<T, const N: usize> {
     pub initial_digest: [SepticBlock<T>; 2],
-    pub sum_checker: [SepticBlock<T>; N],
     pub cumulative_sum: [[SepticBlock<T>; 2]; N],
 }
 
@@ -27,7 +26,6 @@ impl<T: Default, const N: usize> Default for GlobalAccumulationOperation<T, N> {
     fn default() -> Self {
         Self {
             initial_digest: core::array::from_fn(|_| SepticBlock::<T>::default()),
-            sum_checker: core::array::from_fn(|_| SepticBlock::<T>::default()),
             cumulative_sum: core::array::from_fn(|_| {
                 [SepticBlock::<T>::default(), SepticBlock::<T>::default()]
             }),
@@ -51,57 +49,46 @@ impl<F: PrimeField32, const N: usize> GlobalAccumulationOperation<F, N> {
                 y: SepticExtension(global_lookup_cols[i].y_coordinate.0),
             };
             assert!(is_real[i] == F::ONE || is_real[i] == F::ZERO);
+            // A padding slot must still satisfy the unconditional x-check
+            // `sum_checker_x(current, point, next) == 0`; with `point == dummy` it
+            // does so for `current == dummy` (chord through equal x vanishes), which
+            // is how `populate_dummy` lays out padding rows.  Within a real row a
+            // padding slot (N > 1) keeps the running sum.
             let sum_point = if is_real[i] == F::ONE {
                 point_cur.add_incomplete(*initial_digest)
             } else {
                 *initial_digest
             };
-            let sum_checker = if is_real[i] == F::ONE {
-                SepticExtension::<F>::ZERO
-            } else {
-                SepticCurve::<F>::sum_checker_x(*initial_digest, point_cur, sum_point)
-            };
-            self.sum_checker[i] = SepticBlock::from(sum_checker.0);
             self.cumulative_sum[i][0] = SepticBlock::from(sum_point.x.0);
             self.cumulative_sum[i][1] = SepticBlock::from(sum_point.y.0);
             *initial_digest = sum_point;
         }
     }
 
-    pub fn populate_dummy(
-        &mut self,
-        final_digest: SepticCurve<F>,
-        final_sum_checker: SepticExtension<F>,
-    ) {
-        self.initial_digest[0] = SepticBlock::from(final_digest.x.0);
-        self.initial_digest[1] = SepticBlock::from(final_digest.y.0);
+    /// Lay out a padding row: `initial_digest == cumulative_sum == dummy`, which is on
+    /// the curve and makes the unconditional `sum_checker_x(dummy, dummy, dummy) == 0`
+    /// hold.  Padding rows are outside the `GlobalAccumulation` bus chain (multiplicity
+    /// `is_real == 0`), so nothing else constrains them.
+    pub fn populate_dummy(&mut self) {
+        let dummy = SepticCurve::<F>::dummy();
+        self.initial_digest[0] = SepticBlock::from(dummy.x.0);
+        self.initial_digest[1] = SepticBlock::from(dummy.y.0);
         for i in 0..N {
-            self.sum_checker[i] = SepticBlock::from(final_sum_checker.0);
-            self.cumulative_sum[i][0] = SepticBlock::from(final_digest.x.0);
-            self.cumulative_sum[i][1] = SepticBlock::from(final_digest.y.0);
+            self.cumulative_sum[i][0] = SepticBlock::from(dummy.x.0);
+            self.cumulative_sum[i][1] = SepticBlock::from(dummy.y.0);
         }
     }
 
-    pub fn populate_real(
-        &mut self,
-        sums: &[SepticCurveComplete<F>],
-        final_digest: SepticCurve<F>,
-        final_sum_checker: SepticExtension<F>,
-    ) {
+    pub fn populate_real(&mut self, sums: &[SepticCurveComplete<F>]) {
         let len = sums.len();
+        debug_assert!(len >= 2);
         let sums = sums.iter().map(|complete_point| complete_point.point()).collect::<Vec<_>>();
         self.initial_digest[0] = SepticBlock::from(sums[0].x.0);
         self.initial_digest[1] = SepticBlock::from(sums[0].y.0);
         for i in 0..N {
-            if len >= i + 2 {
-                self.sum_checker[i] = SepticBlock([F::ZERO; 7]);
-                self.cumulative_sum[i][0] = SepticBlock::from(sums[i + 1].x.0);
-                self.cumulative_sum[i][1] = SepticBlock::from(sums[i + 1].y.0);
-            } else {
-                self.sum_checker[i] = SepticBlock::from(final_sum_checker.0);
-                self.cumulative_sum[i][0] = SepticBlock::from(final_digest.x.0);
-                self.cumulative_sum[i][1] = SepticBlock::from(final_digest.y.0);
-            }
+            let s = &sums[(i + 1).min(len - 1)];
+            self.cumulative_sum[i][0] = SepticBlock::from(s.x.0);
+            self.cumulative_sum[i][1] = SepticBlock::from(s.y.0);
         }
     }
 }
@@ -181,38 +168,30 @@ impl<F: Field, const N: usize> GlobalAccumulationOperation<F, N> {
             let point_to_add = ith_point_to_add(i);
             let next_sum = ith_cumulative_sum(i);
             assert_on_curve(builder, next_sum.clone());
-            // If `local_is_real[i] == 1`, current_sum + point_to_add == next_sum must hold.
-            // To do this, constrain that `sum_checker_x` and `sum_checker_y` are both zero when `is_real == 1`.
+            // `sum_checker_x` is degree 3 and is asserted UNCONDITIONALLY (SP1-hypercube
+            // shape): padding rows are laid out as `(dummy, dummy, dummy)`, where the
+            // chord through two equal x-coordinates makes it vanish identically, so no
+            // witnessed copy is needed.  `sum_checker_y` is degree 2 and gated by
+            // `is_real` (degree 3).  Together, on a real row, `next_sum == current_sum +
+            // point_to_add` (incomplete addition, as before).
             let sum_checker_x = SepticCurve::<AB::Expr>::sum_checker_x(
                 current_sum.clone(),
                 point_to_add.clone(),
                 next_sum.clone(),
             );
             let sum_checker_y = SepticCurve::<AB::Expr>::sum_checker_y(
-                current_sum.clone(),
+                current_sum,
                 point_to_add,
-                next_sum.clone(),
+                next_sum,
             );
-            let witnessed_sum_checker_x = SepticExtension::<AB::Expr>::from_base_fn(|idx| {
-                local_accumulation.sum_checker[i].0[idx].into()
-            });
-            // Since `sum_checker_x` is degree 3, we constrain it to be equal to `witnessed_sum_checker_x` first.
-            builder.assert_septic_ext_eq(sum_checker_x, witnessed_sum_checker_x.clone());
-            // Now we can constrain that when `local_is_real[i] == 1`, the two `sum_checker` values are both zero.
-            builder.when(local_is_real[i]).assert_septic_ext_eq(
-                witnessed_sum_checker_x,
+            builder.assert_septic_ext_eq(
+                sum_checker_x,
                 SepticExtension::<AB::Expr>::from_base_fn(|_| AB::Expr::ZERO),
             );
             builder.when(local_is_real[i]).assert_septic_ext_eq(
                 sum_checker_y,
                 SepticExtension::<AB::Expr>::from_base_fn(|_| AB::Expr::ZERO),
             );
-
-            // If `is_real == 0`, current_sum == next_sum must hold.
-            builder
-                .when_not(local_is_real[i])
-                .assert_septic_ext_eq(current_sum.x.clone(), next_sum.x.clone());
-            builder.when_not(local_is_real[i]).assert_septic_ext_eq(current_sum.y, next_sum.y);
         }
 
         // Option 2: the cross-row `final_digest == next.initial_digest`

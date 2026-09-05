@@ -620,21 +620,38 @@ impl<F: Field> SepticExtension<F> {
     }
 }
 
+/// Digest sign convention (shared with the `GlobalLookupOperation` AIR and the
+/// CUDA `kb31_septic_extension_t` header — keep the three in sync).
+///
+/// A point whose top `y` limb lies in `1..=RECEIVE_Y6_MAX` encodes a receive,
+/// one in `SEND_Y6_MIN..=p-1` a send; `y6 == 0` and the band
+/// `RECEIVE_Y6_MAX+1 ..= SEND_Y6_MIN-1` are exceptions and `lift_x` moves on
+/// to the next offset.  The bands are mirror images (`p - RECEIVE_Y6_MAX ==
+/// SEND_Y6_MIN`), so negating a send gives a receive and vice versa.
+///
+/// `RECEIVE_Y6_MAX = 63 * 2^24` lets the AIR prove `y6 - 1 < 63 * 2^24` with a
+/// 16-bit limb, an 8-bit limb and one `LTU(top, 63)` byte lookup (3 lookups,
+/// 3 columns) instead of a 30-bit boolean decomposition.  The band costs one
+/// extra `lift_x` retry in ~2^-7 of the cases.
+pub const RECEIVE_Y6_MAX: u32 = 63 << 24;
+pub const SEND_Y6_MIN: u32 = (1 << 30) + 1;
+
 impl<F: PrimeField32> SepticExtension<F> {
     /// Returns whether the extension field element viewed as an y-coordinate of a digest represents a receive lookup.
     pub fn is_receive(&self) -> bool {
-        1 <= self.0[6].as_canonical_u32() && self.0[6].as_canonical_u32() <= (F::ORDER_U32 - 1) / 2
+        let limb = self.0[6].as_canonical_u32();
+        1 <= limb && limb <= RECEIVE_Y6_MAX
     }
 
     /// Returns whether the extension field element viewed as an y-coordinate of a digest represents a send lookup.
     pub fn is_send(&self) -> bool {
-        F::ORDER_U32.div_ceil(2) <= self.0[6].as_canonical_u32()
-            && self.0[6].as_canonical_u32() <= (F::ORDER_U32 - 1)
+        let limb = self.0[6].as_canonical_u32();
+        SEND_Y6_MIN <= limb && limb <= (F::ORDER_U32 - 1)
     }
 
     /// Returns whether the extension field element viewed as an y-coordinate of a digest cannot represent anything.
     pub fn is_exception(&self) -> bool {
-        self.0[6].as_canonical_u32() == 0
+        !self.is_receive() && !self.is_send()
     }
 }
 
