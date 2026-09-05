@@ -67,7 +67,7 @@ use zkm_pcs::{
 
 use crate::io::ZKMStdin;
 use crate::mips::MipsAir;
-use crate::programs::tests::{fibonacci_program, sha3_chain_program};
+use crate::programs::tests::{fibonacci_program, sha3_chain_program, simple_memory_program, ssz_withdrawals_program};
 use crate::utils::{prove_with_context, setup_logger};
 
 type SC = KoalaBearPoseidon2;
@@ -919,4 +919,21 @@ fn preprocessed_binding_cross_vk_probe() {
          program's verifying key; if it does, the preprocessed traces are \
          unbound and `vk.commit` is decorative"
     );
+}
+
+/// GATE (memory chips): honest FIX-off proofs of memory-heavy programs verify.
+#[test]
+#[ignore = "proves three real FIX-off core proofs; run with --ignored"]
+fn stage0_control_fixoff_memory_programs_verify() {
+    setup_logger();
+    for (name, program) in [
+        ("simple_memory", simple_memory_program()),
+        ("ssz_withdrawals", ssz_withdrawals_program()),
+        ("sha3_chain", sha3_chain_program()),
+    ] {
+        let (proof, machine, vk) = prove_fixoff(program, ZKMStdin::new());
+        let res = verify(&machine, &vk, &proof);
+        eprintln!("[STAGE0][MEMGATE][{name} FIX-off] shards={} honest verify = {}", proof.shard_proofs.len(), reject_tag(&res));
+        assert!(res.is_ok(), "honest FIX-off proof of {name} must verify");
+    }
 }
