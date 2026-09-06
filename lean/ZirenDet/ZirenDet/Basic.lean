@@ -44,7 +44,7 @@ macro_rules
         (try intros)
         (try cases w)
         (try cases w')
-        (try simp only [constraints, $ts,*, inputs, outputs, assumed, rel, List.cons.injEq,
+        (try simp only [constraints, $[$ts:term],*, inputs, outputs, assumed, rel, List.cons.injEq,
                List.nil_eq, and_true, true_and, sub_eq_zero, W.mk.injEq] at *)
         (try casesm* _ ∧ _)
         (try subst_vars)
