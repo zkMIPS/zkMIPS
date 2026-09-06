@@ -348,14 +348,31 @@ abbrev F := ZMod KB
 
 end ZirenDet
 
-/-- Closing tactic for generated determinism / postcondition theorems. -/
+/-- Closing tactic for generated determinism / postcondition theorems.
+
+Strategy: split both witness records into their fields, unfold the generated definitions,
+turn every `a - b = 0` into `a = b`, split conjunctions, substitute every variable that is
+defined by an equation (`subst_vars` propagates the linear definitions and the input
+equalities), and close what is left by `rfl` / `ring`.  Anything that needs case analysis on
+guarded bits is left as `sorry` so the file still elaborates and the obligation is visible. -/
 syntax "picus_det" : tactic
+-- Hygiene off: the tactic must see the use-site `constraints`, `inputs`, `W`, `w`, … of the
+-- module it closes, not names resolved at this definition site.
+set_option hygiene false in
 macro_rules
   | `(tactic| picus_det) =>
     `(tactic| first
         | (intros; rfl)
-        | (intros; simp_all only [List.cons.injEq, List.nil_eq, and_true, true_and]; done)
-        | (intros; simp_all; done)
+        | (intros
+           all_goals (try (rename_i w w' hw hw' hin hassume))
+           all_goals (try cases w)
+           all_goals (try cases w')
+           simp only [constraints, inputs, outputs, assumed, rel, List.cons.injEq, List.nil_eq,
+             and_true, true_and, sub_eq_zero, W.mk.injEq] at *
+           all_goals (try casesm* _ ∧ _)
+           all_goals (try subst_vars)
+           all_goals (try constructorm* _ ∧ _)
+           all_goals (first | rfl | ring | (simp only [mul_comm, mul_assoc, mul_left_comm, add_comm, add_assoc, add_left_comm]; done) | sorry))
         | sorry)
 "#,
         )?;
