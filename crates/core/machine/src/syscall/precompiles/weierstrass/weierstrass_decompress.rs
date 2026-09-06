@@ -3,6 +3,8 @@ use core::{
     mem::size_of,
 };
 use std::fmt::Debug;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use crate::{
     air::MemoryAirBuilder,
@@ -47,7 +49,7 @@ pub const fn num_weierstrass_decompress_cols<P: FieldParameters + NumWords>() ->
 
 /// A set of columns to compute `WeierstrassDecompress` that decompresses a point on a Weierstrass
 /// curve.
-#[derive(Debug, Clone, AlignedBorrow)]
+#[derive(PicusAnnotations, Debug, Clone, AlignedBorrow)]
 #[repr(C)]
 pub struct WeierstrassDecompressCols<T, P: FieldParameters + NumWords> {
     pub is_real: T,
@@ -156,6 +158,10 @@ impl<F: PrimeField32, E: EllipticCurve + WeierstrassParameters> MachineAir<F>
             CurveType::Bls12381 => "Bls12381Decompress".to_string(),
             _ => panic!("Unsupported curve"),
         }
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        WeierstrassDecompressCols::<u8, E::BaseField>::picus_info()
     }
 
     fn generate_trace(

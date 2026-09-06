@@ -25,7 +25,7 @@ use p3_matrix::Matrix;
 use super::code::RsCodeWord;
 use super::config::{FriConfig, BATCH_GRINDING_BITS};
 use super::encoder::DftEncoder;
-use super::fri::{codeword_from_ef, commit_round_leaves, fold_codeword_once, final_poly};
+use super::fri::{codeword_from_ef, commit_round_leaves, final_poly, fold_codeword_once};
 use super::mle::Mle;
 use super::proof::{BasefoldProof, LeafOpening, MerkleOpening};
 

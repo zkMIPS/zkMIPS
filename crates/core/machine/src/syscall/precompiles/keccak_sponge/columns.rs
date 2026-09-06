@@ -1,4 +1,6 @@
 use core::mem::size_of;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use p3_keccak_air::KeccakCols;
 use zkm_derive::AlignedBorrow;
@@ -12,7 +14,7 @@ use zkm_derive::AlignedBorrow;
 ///
 /// `keccak` MUST stay the first field (offset 0): trace generation copies the
 /// `p3_keccak` per-round columns into `row[..NUM_KECCAK_COLS]`.
-#[derive(AlignedBorrow)]
+#[derive(PicusAnnotations, AlignedBorrow)]
 #[repr(C)]
 pub(crate) struct KeccakSpongeCols<T> {
     pub keccak: KeccakCols<T>,

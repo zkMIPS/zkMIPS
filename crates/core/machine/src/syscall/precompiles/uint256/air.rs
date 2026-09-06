@@ -3,6 +3,8 @@ use crate::{
     operations::field::field_op::FieldOpCols,
     CoreChipError,
 };
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use crate::{
     air::MemoryAirBuilder,
@@ -54,7 +56,7 @@ type WordsFieldElement = <U256Field as NumWords>::WordsFieldElement;
 const WORDS_FIELD_ELEMENT: usize = WordsFieldElement::USIZE;
 
 /// A set of columns for the Uint256Mul operation.
-#[derive(Debug, Clone, AlignedBorrow)]
+#[derive(PicusAnnotations, Debug, Clone, AlignedBorrow)]
 #[repr(C)]
 pub struct Uint256MulCols<T> {
     /// The shard number of the syscall.
@@ -97,6 +99,10 @@ impl<F: PrimeField32> MachineAir<F> for Uint256MulChip {
 
     fn name(&self) -> String {
         "Uint256MulMod".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        Uint256MulCols::<u8>::picus_info()
     }
 
     fn generate_trace(

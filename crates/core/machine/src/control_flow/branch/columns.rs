@@ -35,7 +35,6 @@ pub struct BranchColumns<T> {
     /// and target_pc equals to next_next_pc when it really works(the branch is taken).
     pub next_next_pc_range_checker: KoalaBearWordRangeChecker<T>,
 
-
     /// Branch Instructions Selectors.
     #[picus(selector)]
     pub is_beq: T,

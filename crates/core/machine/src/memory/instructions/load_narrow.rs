@@ -26,10 +26,7 @@ use zkm_derive::{AlignedBorrow, PicusAnnotations};
 use zkm_pcs::{air::MachineAir, PicusInfo};
 
 use crate::{
-    air::ZKMCoreAirBuilder,
-    memory::MemoryCols,
-    utils::next_multiple_of_32,
-    CoreChipError,
+    air::ZKMCoreAirBuilder, memory::MemoryCols, utils::next_multiple_of_32, CoreChipError,
 };
 
 use super::common::{

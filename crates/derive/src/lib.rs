@@ -207,6 +207,20 @@ pub fn machine_air_derive(input: TokenStream) -> TokenStream {
                 }
             });
 
+            let selectors_partition_arms = variants.iter().map(|(variant_name, field)| {
+                let field_ty = &field.ty;
+                quote! {
+                    #name::#variant_name(x) => <#field_ty as zkm_pcs::air::MachineAir<F>>::selectors_partition_real_rows(x)
+                }
+            });
+
+            let selector_allowed_arms = variants.iter().map(|(variant_name, field)| {
+                let field_ty = &field.ty;
+                quote! {
+                    #name::#variant_name(x) => <#field_ty as zkm_pcs::air::MachineAir<F>>::picus_selector_specialization_allowed(x, selector_name)
+                }
+            });
+
             let machine_air = quote! {
                 impl #impl_generics zkm_pcs::air::MachineAir<F> for #name #ty_generics #where_clause {
                     type Record = #execution_record_path;
@@ -271,6 +285,18 @@ pub fn machine_air_derive(input: TokenStream) -> TokenStream {
                     fn picus_info(&self) -> PicusInfo {
                         match self {
                             #(#picus_info_arms,)*
+                        }
+                    }
+
+                    fn selectors_partition_real_rows(&self) -> bool {
+                        match self {
+                            #(#selectors_partition_arms,)*
+                        }
+                    }
+
+                    fn picus_selector_specialization_allowed(&self, selector_name: &str) -> bool {
+                        match self {
+                            #(#selector_allowed_arms,)*
                         }
                     }
                 }
@@ -398,4 +424,9 @@ fn find_eval_trait_bound(attrs: &[syn::Attribute]) -> Option<String> {
 #[proc_macro_derive(PicusAnnotations, attributes(picus))]
 pub fn picus_annotations_derive(input: TokenStream) -> TokenStream {
     picus_annotations::picus_annotations_derive(input)
+}
+
+#[proc_macro_derive(PicusProjection, attributes(picus, picus_projection))]
+pub fn picus_projection_derive(input: TokenStream) -> TokenStream {
+    picus_annotations::picus_projection_derive(input)
 }

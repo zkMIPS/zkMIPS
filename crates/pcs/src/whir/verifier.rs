@@ -75,9 +75,8 @@ where
         proof: &RoundedProof<F, EF, MT>,
     ) -> Result<(), WhirVerifierError>
     where
-        Challenger: FieldChallenger<F>
-            + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+        Challenger:
+            FieldChallenger<F> + GrindingChallenger<Witness = F> + CanObserve<MT::Commitment>,
     {
         let n = point.len();
         let num_rounds = self.config.round_parameters.len();
@@ -171,10 +170,8 @@ where
         }
 
         // ---- Terminal identity. ----
-        let final_mle = Mle::from_row_major(p3_matrix::dense::RowMajorMatrix::new(
-            proof.final_poly.clone(),
-            1,
-        ));
+        let final_mle =
+            Mle::from_row_major(p3_matrix::dense::RowMajorMatrix::new(proof.final_poly.clone(), 1));
         let mut total = EF::ZERO;
         for (p, c, v) in &constraints {
             let k = v - final_log;

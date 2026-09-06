@@ -10,8 +10,8 @@ use std::{
 
 use itertools::Itertools;
 use p3_air::{Air, AirBuilder, BaseAir, WindowAccess};
-use p3_field::PrimeField32;
 use p3_field::PrimeCharacteristicRing;
+use p3_field::PrimeField32;
 use p3_matrix::dense::RowMajorMatrix;
 use zkm_core_executor::{
     events::{ByteRecord, MemInstrEvent},

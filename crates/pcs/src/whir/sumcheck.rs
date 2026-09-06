@@ -211,8 +211,7 @@ where
         claimed_sum,
     };
     let mut folding_randomness = Vec::with_capacity(n);
-    let round_polys =
-        folder.fold_variables::<F, _>(n, &[], challenger, &mut folding_randomness);
+    let round_polys = folder.fold_variables::<F, _>(n, &[], challenger, &mut folding_randomness);
 
     WhirFold {
         round_polys,

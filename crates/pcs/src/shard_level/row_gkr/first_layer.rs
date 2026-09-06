@@ -136,7 +136,11 @@ pub fn build_chip_interaction_tables<
 ///
 /// Virtual rows beyond the real prefix are NOT materialized; consumers
 /// (`ChipLayerState`) resolve them via the per-quadrant pad constant.
-fn split_real_parity<F: Clone>(values: &[F], num_cols: usize, real_rows: usize) -> (Vec<F>, Vec<F>) {
+fn split_real_parity<F: Clone>(
+    values: &[F],
+    num_cols: usize,
+    real_rows: usize,
+) -> (Vec<F>, Vec<F>) {
     if num_cols == 0 || real_rows == 0 {
         return (Vec::new(), Vec::new());
     }

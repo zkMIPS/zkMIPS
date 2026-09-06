@@ -10,12 +10,11 @@ use p3_matrix::dense::RowMajorMatrix;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::prelude::ParallelSlice;
 use std::borrow::BorrowMut;
-use zkm_core_executor::events::{
-    ByteRecord, Poseidon2PermuteEvent, PrecompileEvent,
-};
+use zkm_core_executor::events::{ByteRecord, Poseidon2PermuteEvent, PrecompileEvent};
 use zkm_core_executor::syscalls::SyscallCode;
 use zkm_core_executor::{ExecutionRecord, Program};
 use zkm_pcs::MachineAir;
+use zkm_pcs::PicusInfo;
 
 impl<F: PrimeField32> MachineAir<F> for Poseidon2PermuteChip {
     type Record = ExecutionRecord;
@@ -24,6 +23,10 @@ impl<F: PrimeField32> MachineAir<F> for Poseidon2PermuteChip {
 
     fn name(&self) -> String {
         "Poseidon2Permute".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        Poseidon2MemCols::<u8>::picus_info()
     }
 
     fn generate_trace(

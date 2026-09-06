@@ -62,10 +62,10 @@ where
         // ZERO, so the link equation is gated by `op_a_0`; on those rows the
         // committed zero still passes the word range check below.
         let link = *local.frame.op_a_access.value();
-        builder.when(is_real.clone()).when_not(local.frame.instruction.op_a_0).assert_eq(
-            link.reduce::<AB>(),
-            local.next_pc.reduce::<AB>() + AB::F::from_u32(4),
-        );
+        builder
+            .when(is_real.clone())
+            .when_not(local.frame.instruction.op_a_0)
+            .assert_eq(link.reduce::<AB>(), local.next_pc.reduce::<AB>() + AB::F::from_u32(4));
 
         // Range check the link, next_pc, and next_next_pc.
         // SAFETY: `is_real` is already checked to be boolean.

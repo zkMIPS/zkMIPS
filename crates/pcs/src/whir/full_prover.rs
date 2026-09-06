@@ -71,9 +71,8 @@ where
     ) -> WhirProof<F, EF, MT>
     where
         EFDft: TwoAdicSubgroupDft<EF>,
-        Challenger: FieldChallenger<F>
-            + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+        Challenger:
+            FieldChallenger<F> + GrindingChallenger<Witness = F> + CanObserve<MT::Commitment>,
     {
         let n = mle.num_variables() as usize;
         let ff = self.config.round_parameters[0].folding_factor;
@@ -220,10 +219,8 @@ where
         for _ in 0..self.config.final_queries {
             let idx = (challenger.sample_bits(prev_domain_log) & final_mask) >> ff;
             let opening = self.mmcs.open_batch(idx, &prev_data);
-            final_leaves.push(LeafOpening {
-                values: opening.opened_values,
-                proof: opening.opening_proof,
-            });
+            final_leaves
+                .push(LeafOpening { values: opening.opened_values, proof: opening.opening_proof });
         }
         round_query_openings.push(MerkleOpening { leaves: final_leaves });
 

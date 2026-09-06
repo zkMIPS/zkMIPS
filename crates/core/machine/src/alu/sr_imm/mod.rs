@@ -90,8 +90,6 @@ pub struct ShiftRightImmCols<T> {
     pub pc: T,
     pub next_pc: T,
 
-
-
     /// A boolean array whose `i`th element indicates whether `num_bits_to_shift = i`.
     pub shift_by_n_bits: [T; BYTE_SIZE],
 
@@ -579,8 +577,7 @@ mod tests {
 
     /// A register seed plus immediate-form (shamt) right shifts on it.
     fn sr_imm_instructions(reps: usize) -> Vec<Instruction> {
-        let mut instructions =
-            vec![Instruction::new(Opcode::ADD, 29, 0, 0x87654321, false, true)];
+        let mut instructions = vec![Instruction::new(Opcode::ADD, 29, 0, 0x87654321, false, true)];
         for i in 0..reps {
             let sa = (i % 32) as u32;
             instructions.push(Instruction::new(Opcode::SRL, 31, 29, sa, false, true));

@@ -1,4 +1,5 @@
 use std::borrow::BorrowMut;
+use zkm_pcs::PicusInfo;
 
 use itertools::Itertools;
 use p3_field::PrimeField32;
@@ -30,6 +31,10 @@ impl<F: PrimeField32> MachineAir<F> for SyscallInstrsChip {
 
     fn name(&self) -> String {
         "SyscallInstrs".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        SyscallInstrColumns::<u8>::picus_info()
     }
 
     fn num_rows(&self, input: &Self::Record) -> Option<usize> {

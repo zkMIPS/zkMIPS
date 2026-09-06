@@ -5,6 +5,8 @@ use crate::{
     utils::{limbs_from_access, pad_rows_fixed, words_to_bytes_le},
     CoreChipError,
 };
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use num::{BigUint, One};
 use p3_air::{Air, AirBuilder, BaseAir, WindowAccess};
@@ -48,7 +50,7 @@ const LO_REGISTER: u32 = Register::A2 as u32;
 const HI_REGISTER: u32 = Register::A3 as u32;
 
 /// A set of columns for the U256x2048Mul operation.
-#[derive(Debug, Clone, AlignedBorrow)]
+#[derive(PicusAnnotations, Debug, Clone, AlignedBorrow)]
 #[repr(C)]
 pub struct U256x2048MulCols<T> {
     /// The shard number of the syscall.
@@ -99,6 +101,10 @@ impl<F: PrimeField32> MachineAir<F> for U256x2048MulChip {
         "U256XU2048Mul".to_string()
     }
 
+    fn picus_info(&self) -> PicusInfo {
+        U256x2048MulCols::<u8>::picus_info()
+    }
+
     fn generate_trace(
         &self,
         input: &ExecutionRecord,
@@ -137,8 +143,10 @@ impl<F: PrimeField32> MachineAir<F> for U256x2048MulChip {
                             .populate(event.lo_ptr_memory, &mut new_byte_lookup_events);
                         cols.hi_ptr_memory
                             .populate(event.hi_ptr_memory, &mut new_byte_lookup_events);
-                        cols.lo_ptr_range_checker.populate(&mut new_byte_lookup_events, event.lo_ptr_memory.value);
-                        cols.hi_ptr_range_checker.populate(&mut new_byte_lookup_events, event.hi_ptr_memory.value);
+                        cols.lo_ptr_range_checker
+                            .populate(&mut new_byte_lookup_events, event.lo_ptr_memory.value);
+                        cols.hi_ptr_range_checker
+                            .populate(&mut new_byte_lookup_events, event.hi_ptr_memory.value);
 
                         // Populate memory columns.
                         for i in 0..WORDS_FIELD_ELEMENT {

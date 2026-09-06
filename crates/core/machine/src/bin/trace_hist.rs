@@ -2,7 +2,12 @@
 //! lines, most frequent first, for `addr2line -i` attribution.
 //!
 //!   cargo run --release --example trace_hist -- trace.bin > pcs.txt
-use std::{collections::HashMap, env, fs::File, io::{BufReader, Read, Write}};
+use std::{
+    collections::HashMap,
+    env,
+    fs::File,
+    io::{BufReader, Read, Write},
+};
 
 fn main() {
     let path = env::args().nth(1).expect("trace file");

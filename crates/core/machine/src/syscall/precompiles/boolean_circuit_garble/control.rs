@@ -16,6 +16,8 @@
 
 use core::borrow::{Borrow, BorrowMut};
 use std::mem::size_of;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use p3_air::{Air, AirBuilder, BaseAir, WindowAccess};
 use p3_field::{PrimeCharacteristicRing, PrimeField32};
@@ -35,7 +37,7 @@ use crate::{utils::pad_rows_fixed, CoreChipError};
 pub const NUM_BOOLEAN_CIRCUIT_GARBLE_CONTROL_COLS: usize =
     size_of::<BooleanCircuitGarbleControlCols<u8>>();
 
-#[derive(AlignedBorrow, Default, Debug, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Default, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct BooleanCircuitGarbleControlCols<T> {
     pub shard: T,
@@ -76,6 +78,10 @@ impl<F: PrimeField32> MachineAir<F> for BooleanCircuitGarbleControlChip {
 
     fn name(&self) -> String {
         "BooleanCircuitGarbleControl".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        BooleanCircuitGarbleControlCols::<u8>::picus_info()
     }
 
     fn generate_trace(

@@ -1,4 +1,6 @@
 use std::mem::size_of;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use zkm_derive::AlignedBorrow;
 use zkm_pcs::Word;
@@ -15,7 +17,7 @@ pub const NUM_SYS_LINUX_COLS: usize = size_of::<SysLinuxCols<u8>>();
 /// All branch selectors are **derived** from `syscall_id` / `a0` / `a1` via `IsZeroOperation`.
 /// Intermediate values (`page_offset`, `upper_address`, `is_offset_0`) are computed inline
 /// from byte decompositions, not stored.
-#[derive(AlignedBorrow, Default, Debug, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Default, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct SysLinuxCols<T> {
     // ── Common inputs (15 cols) ────────────────────────────────────────

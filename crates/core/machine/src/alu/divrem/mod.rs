@@ -115,8 +115,6 @@ pub struct DivRemCols<T> {
     pub pc: T,
     pub next_pc: T,
 
-
-
     /// Results of dividing `b` by `c`.
     pub quotient: Word<T>,
 
@@ -212,7 +210,6 @@ pub struct DivRemCols<T> {
 
     /// Access to hi register
     pub op_hi_access: MemoryReadWriteCols<T>,
-
 }
 
 impl<F: PrimeField32> MachineAir<F> for DivRemChip {
@@ -401,9 +398,9 @@ impl<F: PrimeField32> MachineAir<F> for DivRemChip {
             || {
                 let mut row = [F::ZERO; NUM_DIVREM_COLS];
                 let cols: &mut DivRemCols<F> = row.as_mut_slice().borrow_mut();
-                        // A padding row's frame needs no neutralising: the
-                        // typed R-type frame's register-access multiplicities
-                        // are `is_real`.
+                // A padding row's frame needs no neutralising: the
+                // typed R-type frame's register-access multiplicities
+                // are `is_real`.
                 row
             },
             input.fixed_log2_rows::<F, _>(self),

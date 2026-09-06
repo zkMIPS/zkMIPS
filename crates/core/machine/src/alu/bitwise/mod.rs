@@ -246,13 +246,10 @@ where
         // discarded register-0 write (a zero-multiplicity entry contributes
         // nothing regardless of its tuple values, so the pinned-zero result
         // word on those rows is harmless).
-        builder.assert_eq(
-            local.lookup_gate,
-            is_real.clone() * (AB::Expr::ONE - local.frame.op_a_0),
-        );
+        builder
+            .assert_eq(local.lookup_gate, is_real.clone() * (AB::Expr::ONE - local.frame.op_a_0));
         let av = *local.frame.op_a_access.value();
-        for ((a, b), c) in av.into_iter().zip(local.frame.op_b_val()).zip(local.frame.op_c_val())
-        {
+        for ((a, b), c) in av.into_iter().zip(local.frame.op_b_val()).zip(local.frame.op_c_val()) {
             builder.send_byte(opcode.clone(), a, b, c, local.lookup_gate);
         }
 

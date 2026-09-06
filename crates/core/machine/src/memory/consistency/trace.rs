@@ -281,7 +281,9 @@ impl<F: PrimeField32> MemoryAccessCols<F> {
                 output.add_u8_range_checks(&prev_record.value.to_le_bytes());
                 output.add_u8_range_checks(&current_record.value.to_le_bytes());
             }
-            ByteChecks::ValueOnly => output.add_u8_range_checks(&current_record.value.to_le_bytes()),
+            ByteChecks::ValueOnly => {
+                output.add_u8_range_checks(&current_record.value.to_le_bytes())
+            }
             ByteChecks::None => {}
         }
 

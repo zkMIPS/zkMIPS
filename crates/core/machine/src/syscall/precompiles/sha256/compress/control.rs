@@ -16,6 +16,8 @@
 
 use core::borrow::{Borrow, BorrowMut};
 use std::mem::size_of;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use p3_air::{Air, BaseAir, WindowAccess};
 use p3_field::{PrimeCharacteristicRing, PrimeField32};
@@ -31,7 +33,7 @@ use crate::{utils::pad_rows_fixed, CoreChipError};
 
 pub const NUM_SHA_COMPRESS_CONTROL_COLS: usize = size_of::<ShaCompressControlCols<u8>>();
 
-#[derive(AlignedBorrow, Default, Debug, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Default, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct ShaCompressControlCols<T> {
     pub shard: T,
@@ -69,6 +71,10 @@ impl<F: PrimeField32> MachineAir<F> for ShaCompressControlChip {
 
     fn name(&self) -> String {
         "ShaCompressControl".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        ShaCompressControlCols::<u8>::picus_info()
     }
 
     fn generate_trace(

@@ -80,8 +80,6 @@ pub struct ShiftLeftImmCols<T> {
 
     /// The output operand.
 
-
-
     /// The 5 bits of the shift amount `c` (a shamt, `< 32`): bits 0..3 select the bit shift,
     /// bits 3..5 the byte shift.
     pub c_least_sig_byte: [T; SHAMT_BITS],
@@ -432,17 +430,9 @@ mod tests {
 
     /// A register seed plus immediate-form (shamt) shifts on it.
     fn sll_imm_instructions(count: usize) -> Vec<Instruction> {
-        let mut instructions =
-            vec![Instruction::new(Opcode::ADD, 29, 0, 0x12345678, false, true)];
+        let mut instructions = vec![Instruction::new(Opcode::ADD, 29, 0, 0x12345678, false, true)];
         for i in 0..count {
-            instructions.push(Instruction::new(
-                Opcode::SLL,
-                31,
-                29,
-                (i % 32) as u32,
-                false,
-                true,
-            ));
+            instructions.push(Instruction::new(Opcode::SLL, 31, 29, (i % 32) as u32, false, true));
         }
         instructions
     }

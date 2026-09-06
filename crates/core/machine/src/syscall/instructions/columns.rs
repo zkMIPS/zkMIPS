@@ -1,12 +1,14 @@
 use std::mem::size_of;
 use zkm_derive::AlignedBorrow;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 use zkm_pcs::{air::PV_DIGEST_NUM_WORDS, Word};
 
 use crate::operations::{IsZeroOperation, KoalaBearWordRangeChecker};
 
 pub const NUM_SYSCALL_INSTR_COLS: usize = size_of::<SyscallInstrColumns<u8>>();
 
-#[derive(AlignedBorrow, Default, Debug, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Default, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct SyscallInstrColumns<T> {
     /// Program fetch, register access and `(clk, pc)` chaining; live on every

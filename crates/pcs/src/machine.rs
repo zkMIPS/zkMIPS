@@ -53,7 +53,6 @@ pub struct StarkMachine<SC: StarkGenericConfig, A> {
     /// to the host `verify_zerocheck_host` / `recompute_zerocheck_rlc_eval_host`
     /// so a core proof is host-verified rev and a recursion/wrap proof legacy.
     core_rev: bool,
-
 }
 
 impl<SC: StarkGenericConfig, A> StarkMachine<SC, A> {

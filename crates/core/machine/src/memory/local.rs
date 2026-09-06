@@ -2,6 +2,8 @@ use std::{
     borrow::{Borrow, BorrowMut},
     mem::size_of,
 };
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use p3_air::{Air, BaseAir, WindowAccess};
 use p3_field::PrimeCharacteristicRing;
@@ -54,7 +56,7 @@ pub struct SingleMemoryLocal<T: Copy> {
     pub is_real: T,
 }
 
-#[derive(AlignedBorrow, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Clone, Copy)]
 #[repr(C)]
 pub struct MemoryLocalCols<T: Copy> {
     memory_local_entries: [SingleMemoryLocal<T>; NUM_LOCAL_MEMORY_ENTRIES_PER_ROW],
@@ -92,6 +94,10 @@ impl<F: PrimeField32> MachineAir<F> for MemoryLocalChip {
 
     fn name(&self) -> String {
         "MemoryLocal".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        MemoryLocalCols::<u8>::picus_info()
     }
 
     fn generate_dependencies(

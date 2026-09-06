@@ -3,6 +3,8 @@ use std::{
     marker::PhantomData,
     mem::size_of,
 };
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use crate::{air::MemoryAirBuilder, utils::zeroed_f_vec, CoreChipError};
 use generic_array::GenericArray;
@@ -38,14 +40,16 @@ pub struct FpOpChip<P> {
 }
 
 /// A set of columns for the FpAdd operation.
-#[derive(Debug, Clone, AlignedBorrow)]
+#[derive(PicusAnnotations, Debug, Clone, AlignedBorrow)]
 #[repr(C)]
 pub struct FpOpCols<T, P: FpOpField> {
     pub is_real: T,
     pub shard: T,
     pub clk: T,
+    #[picus(selector)]
     pub is_add: T,
     pub is_sub: T,
+    #[picus(selector)]
     pub is_mul: T,
     pub x_ptr: T,
     pub y_ptr: T,
@@ -85,6 +89,10 @@ impl<F: PrimeField32, P: FpOpField> MachineAir<F> for FpOpChip<P> {
             FieldType::Bn254 => "Bn254FpOpAssign".to_string(),
             FieldType::Bls12381 => "Bls12381FpOpAssign".to_string(),
         }
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        FpOpCols::<u8, P>::picus_info()
     }
 
     fn generate_trace(

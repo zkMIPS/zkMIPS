@@ -6,7 +6,7 @@ use core::{
 
 use itertools::Itertools;
 use p3_air::{Air, AirBuilder, BaseAir, WindowAccess};
-use p3_field::{PrimeCharacteristicRing, PrimeField32, Field};
+use p3_field::{Field, PrimeCharacteristicRing, PrimeField32};
 use p3_matrix::dense::RowMajorMatrix;
 use p3_maybe_rayon::prelude::{ParallelBridge, ParallelIterator};
 use zkm_core_executor::{
@@ -51,7 +51,6 @@ pub struct AddSubCols<T> {
     pub add_gate: T,
     /// `is_sub * (1 - op_a_0)`.
     pub sub_gate: T,
-
 
     /// Flag indicating whether the opcode is `ADD`.
     #[picus(selector)]
@@ -221,14 +220,8 @@ where
         // The addition runs DIRECTLY on the frame's register accesses — no
         // operand or result mirror columns, and no byte range checks (see the
         // column doc).  A discarded register-0 result ungates the equation.
-        builder.assert_eq(
-            local.add_gate,
-            local.is_add * (AB::Expr::ONE - local.frame.op_a_0),
-        );
-        builder.assert_eq(
-            local.sub_gate,
-            local.is_sub * (AB::Expr::ONE - local.frame.op_a_0),
-        );
+        builder.assert_eq(local.add_gate, local.is_add * (AB::Expr::ONE - local.frame.op_a_0));
+        builder.assert_eq(local.sub_gate, local.is_sub * (AB::Expr::ONE - local.frame.op_a_0));
         let av = *local.frame.op_a_access.value();
         let bv = local.frame.op_b_val();
         let cv = local.frame.op_c_val();

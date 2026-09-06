@@ -2,9 +2,9 @@ use std::borrow::BorrowMut;
 
 use itertools::Itertools;
 use p3_field::PrimeField32;
-use zkm_core_executor::ByteOpcode;
 use p3_matrix::dense::RowMajorMatrix;
 use rayon::iter::{ParallelBridge, ParallelIterator};
+use zkm_core_executor::ByteOpcode;
 use zkm_core_executor::{
     events::{BranchEvent, ByteLookupEvent, ByteRecord},
     ExecutionRecord, Opcode, Program,
@@ -115,7 +115,6 @@ impl BranchChip {
         cols.is_bgtz = F::from_bool(matches!(event.opcode, Opcode::BGTZ));
         cols.is_blez = F::from_bool(matches!(event.opcode, Opcode::BLEZ));
         cols.is_bgez = F::from_bool(matches!(event.opcode, Opcode::BGEZ));
-
 
         let a_eq_b = event.a == event.b;
 

@@ -320,10 +320,7 @@ where
         query_openings: &[super::proof::MerkleOpening<F, MT>],
         betas: &[EF],
     ) -> Result<(), BasefoldVerifierError> {
-        let arities = Self::round_arities(
-            betas.len(),
-            self.fri_config.log_folding_arity(),
-        );
+        let arities = Self::round_arities(betas.len(), self.fri_config.log_folding_arity());
         let log_max_height = betas.len() + self.fri_config.log_blowup();
         let mut folded = reduced_openings;
         let mut indices = indices.to_vec();

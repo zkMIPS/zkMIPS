@@ -1,7 +1,7 @@
 pub mod concurrency;
-pub mod global_sum;
 #[cfg(test)]
 mod forgery_harness;
+pub mod global_sum;
 mod logger;
 mod prove;
 mod span;
@@ -162,10 +162,7 @@ pub fn next_multiple_of_32(n: usize, fixed_power: Option<usize>, chip: &str) -> 
 pub fn next_multiple_of_32_rows(n: usize, fixed_rows: Option<usize>, chip: &str) -> usize {
     match fixed_rows {
         Some(rows) => {
-            assert!(
-                n <= rows,
-                "chip {chip}: shape pins {rows} rows but the trace needs {n}",
-            );
+            assert!(n <= rows, "chip {chip}: shape pins {rows} rows but the trace needs {n}",);
             rows
         }
         None => next_power_of_two(n, None, chip),

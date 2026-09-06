@@ -92,8 +92,10 @@ impl<F: PrimeField32> MachineAir<F> for RangeChip<F> {
         input: &ExecutionRecord,
         _output: &mut ExecutionRecord,
     ) -> Result<RowMajorMatrix<F>, Self::Error> {
-        let mut trace =
-            RowMajorMatrix::new(zeroed_f_vec(NUM_RANGE_MULT_COLS * NUM_RANGE_ROWS), NUM_RANGE_MULT_COLS);
+        let mut trace = RowMajorMatrix::new(
+            zeroed_f_vec(NUM_RANGE_MULT_COLS * NUM_RANGE_ROWS),
+            NUM_RANGE_MULT_COLS,
+        );
         for (lookup, mult) in input.byte_lookups.iter() {
             if lookup.opcode != ByteOpcode::Range {
                 continue;
@@ -127,6 +129,12 @@ impl<AB: ZKMAirBuilder<F: Field>> Air<AB> for RangeChip<AB::F> {
         let local: &RangePreprocessedCols<AB::Var> = (*prep).borrow();
 
         let field_op = ByteOpcode::Range.as_field::<AB::F>();
-        builder.receive_byte(field_op, local.a, local.bits, AB::Expr::ZERO, local_mult.multiplicity);
+        builder.receive_byte(
+            field_op,
+            local.a,
+            local.bits,
+            AB::Expr::ZERO,
+            local_mult.multiplicity,
+        );
     }
 }

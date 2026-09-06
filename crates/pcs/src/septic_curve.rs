@@ -381,12 +381,18 @@ mod lift_x_bench {
         let mut acc = 0u64;
         for i in 0..n {
             let m = SepticExtension::<KoalaBear>::from_basis_coefficients_fn(|j| {
-                KoalaBear::from_u32(i.wrapping_mul(2654435761).wrapping_add(j as u32 * 40503) & 0xFFFF)
+                KoalaBear::from_u32(
+                    i.wrapping_mul(2654435761).wrapping_add(j as u32 * 40503) & 0xFFFF,
+                )
             });
             let (p, off) = SepticCurve::<KoalaBear>::lift_x(m);
             acc += off as u64 + p.x.0[0].as_canonical_u32() as u64;
         }
         let dt = t.elapsed();
-        println!("LIFT_X_BENCH n={n} total={:.3}s per={:.2}us acc={acc}", dt.as_secs_f64(), dt.as_secs_f64() * 1e6 / n as f64);
+        println!(
+            "LIFT_X_BENCH n={n} total={:.3}s per={:.2}us acc={acc}",
+            dt.as_secs_f64(),
+            dt.as_secs_f64() * 1e6 / n as f64
+        );
     }
 }

@@ -147,8 +147,8 @@ pub trait MemoryAirBuilder: BaseAirBuilder {
         let diff_minus_one = clk.clone() - prev_clk.clone() - Self::Expr::ONE;
         let diff_16bit_limb: Self::Expr = access.diff_16bit_limb.clone().into();
 
-        let diff_high_limb = (diff_minus_one - diff_16bit_limb.clone())
-            * Self::F::from_u32(1 << 16).inverse();
+        let diff_high_limb =
+            (diff_minus_one - diff_16bit_limb.clone()) * Self::F::from_u32(1 << 16).inverse();
 
         self.send_byte(
             Self::Expr::from_u8(ByteOpcode::U16Range as u8),

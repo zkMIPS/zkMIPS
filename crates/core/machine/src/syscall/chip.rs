@@ -3,6 +3,8 @@ use std::{
     borrow::{Borrow, BorrowMut},
     mem::size_of,
 };
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use p3_air::{Air, AirBuilder, BaseAir, WindowAccess};
 use p3_field::{PrimeCharacteristicRing, PrimeField32};
@@ -66,7 +68,7 @@ impl SyscallChip {
 /// **Soundness**: `arg1_lo/hi` and `arg2_lo/hi` are U16Range-checked inside
 /// `send_syscall_result_packed` (see `crates/pcs/src/air/builder.rs`).
 /// Any chip using this interaction gets range-checked half-words automatically.
-#[derive(AlignedBorrow, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Clone, Copy)]
 #[repr(C)]
 pub struct SyscallCols<T: Copy> {
     /// The shard number of the syscall.
@@ -112,6 +114,10 @@ impl<F: PrimeField32> MachineAir<F> for SyscallChip {
 
     fn name(&self) -> String {
         format!("Syscall{}", self.shard_kind).to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        SyscallCols::<u8>::picus_info()
     }
 
     fn generate_dependencies(

@@ -21,7 +21,6 @@ use zkm_pcs::{
 
 use crate::{air::WordAirBuilder, CoreChipError};
 
-
 use crate::utils::{next_multiple_of_32, zeroed_f_vec};
 
 /// The number of main trace columns for `MovCondChip`.

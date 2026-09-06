@@ -58,11 +58,8 @@ impl<F: Field> AddDoubleOperation<F> {
         let vhi = [cols.value_hi[0], cols.value_hi[1], cols.value_hi[2], cols.value_hi[3]];
         let mut carry = AB::Expr::ZERO;
         for i in 0..8 {
-            let (x, y, v) = if i < 4 {
-                (lo[i], blo[i], vlo[i])
-            } else {
-                (hi[i - 4], bhi[i - 4], vhi[i - 4])
-            };
+            let (x, y, v) =
+                if i < 4 { (lo[i], blo[i], vlo[i]) } else { (hi[i - 4], bhi[i - 4], vhi[i - 4]) };
             carry = (x + y - v + carry) * base_inv;
             builder_is_real.assert_bool(carry.clone());
         }

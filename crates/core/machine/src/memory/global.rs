@@ -3,6 +3,8 @@ use core::{
     mem::size_of,
 };
 use std::array;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use p3_air::{Air, AirBuilder, BaseAir, WindowAccess};
 use p3_field::{PrimeCharacteristicRing, PrimeField32};
@@ -54,6 +56,10 @@ impl<F: PrimeField32> MachineAir<F> for MemoryGlobalChip {
             MemoryChipType::Initialize => "MemoryGlobalInit".to_string(),
             MemoryChipType::Finalize => "MemoryGlobalFinalize".to_string(),
         }
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        MemoryInitCols::<u8>::picus_info()
     }
 
     fn generate_dependencies(
@@ -219,7 +225,7 @@ impl<F: PrimeField32> MachineAir<F> for MemoryGlobalChip {
     }
 }
 
-#[derive(AlignedBorrow, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Clone, Copy)]
 #[repr(C)]
 pub struct MemoryInitCols<T: Copy> {
     /// The shard number of the memory access.

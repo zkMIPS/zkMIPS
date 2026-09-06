@@ -76,8 +76,6 @@ pub struct ShiftLeftCols<T> {
 
     /// The output operand.
 
-
-
     /// The least significant byte of `c`. Used to verify `shift_by_n_bits` and `shift_by_n_bytes`.
     pub c_least_sig_byte: [T; BYTE_SIZE],
 

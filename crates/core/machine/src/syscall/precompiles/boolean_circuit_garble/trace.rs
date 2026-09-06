@@ -12,12 +12,11 @@ use p3_maybe_rayon::prelude::ParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::prelude::ParallelSlice;
 use std::borrow::BorrowMut;
-use zkm_core_executor::events::{
-    BooleanCircuitGarbleEvent, ByteRecord, PrecompileEvent,
-};
+use zkm_core_executor::events::{BooleanCircuitGarbleEvent, ByteRecord, PrecompileEvent};
 use zkm_core_executor::syscalls::SyscallCode;
 use zkm_core_executor::{ExecutionRecord, Program};
 use zkm_pcs::MachineAir;
+use zkm_pcs::PicusInfo;
 
 impl<F: PrimeField32> MachineAir<F> for BooleanCircuitGarbleChip {
     type Record = ExecutionRecord;
@@ -26,6 +25,10 @@ impl<F: PrimeField32> MachineAir<F> for BooleanCircuitGarbleChip {
 
     fn name(&self) -> String {
         "BooleanCircuitGarble".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        BooleanCircuitGarbleCols::<u8>::picus_info()
     }
 
     fn generate_dependencies(

@@ -2,6 +2,8 @@ use std::{
     borrow::{Borrow, BorrowMut},
     mem::size_of,
 };
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use itertools::Itertools;
 use p3_air::{Air, BaseAir, WindowAccess};
@@ -27,7 +29,7 @@ pub(crate) const NUM_MEMORY_BUMP_COLS: usize = size_of::<MemoryBumpCols<u8>>();
 ///
 /// One row per (register, shard): a *shadow read* of the register at `(shard, 0)` that advances
 /// the register's memory-argument timestamp out of whatever earlier shard it was left in.
-#[derive(AlignedBorrow, Default, Debug, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Default, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct MemoryBumpCols<T> {
     /// The shadow read.  This is a *full* [`crate::memory::MemoryAccessCols`], i.e. it pays for
@@ -101,6 +103,10 @@ impl<F: PrimeField32> MachineAir<F> for MemoryBumpChip {
 
     fn name(&self) -> String {
         "MemoryBump".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        MemoryBumpCols::<u8>::picus_info()
     }
 
     fn generate_dependencies(

@@ -1,4 +1,5 @@
 use std::borrow::BorrowMut;
+use zkm_pcs::PicusInfo;
 
 use itertools::Itertools;
 use p3_field::PrimeField32;
@@ -26,6 +27,10 @@ impl<F: PrimeField32> MachineAir<F> for ShaCompressChip {
 
     fn name(&self) -> String {
         "ShaCompress".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        ShaCompressCols::<u8>::picus_info()
     }
 
     fn generate_trace(

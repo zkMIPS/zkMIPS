@@ -67,7 +67,9 @@ use zkm_pcs::{
 
 use crate::io::ZKMStdin;
 use crate::mips::MipsAir;
-use crate::programs::tests::{fibonacci_program, sha3_chain_program, simple_memory_program, ssz_withdrawals_program};
+use crate::programs::tests::{
+    fibonacci_program, sha3_chain_program, simple_memory_program, ssz_withdrawals_program,
+};
 use crate::utils::{prove_with_context, setup_logger};
 
 type SC = KoalaBearPoseidon2;
@@ -933,7 +935,11 @@ fn stage0_control_fixoff_memory_programs_verify() {
     ] {
         let (proof, machine, vk) = prove_fixoff(program, ZKMStdin::new());
         let res = verify(&machine, &vk, &proof);
-        eprintln!("[STAGE0][MEMGATE][{name} FIX-off] shards={} honest verify = {}", proof.shard_proofs.len(), reject_tag(&res));
+        eprintln!(
+            "[STAGE0][MEMGATE][{name} FIX-off] shards={} honest verify = {}",
+            proof.shard_proofs.len(),
+            reject_tag(&res)
+        );
         assert!(res.is_ok(), "honest FIX-off proof of {name} must verify");
     }
 }

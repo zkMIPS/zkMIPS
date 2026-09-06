@@ -8,10 +8,7 @@ use zkm_curves::params::{FieldParameters, Limbs};
 use zkm_derive::AlignedBorrow;
 use zkm_pcs::air::{Polynomial, ZKMAirBuilder};
 
-use super::{
-    util::compute_root_quotient_and_shift,
-    util_air::eval_field_operation,
-};
+use super::{util::compute_root_quotient_and_shift, util_air::eval_field_operation};
 use crate::air::WordAirBuilder;
 
 /// A set of columns to compute `InnerProduct([a], [b])` where a, b are emulated elements.
@@ -70,7 +67,6 @@ impl<F: PrimeField32, P: FieldParameters> FieldInnerProductCols<F, P> {
             P::NB_BITS_PER_LIMB as u32,
             P::NB_WITNESS_LIMBS,
         );
-
 
         self.result = p_result.into();
         self.carry = p_carry.into();

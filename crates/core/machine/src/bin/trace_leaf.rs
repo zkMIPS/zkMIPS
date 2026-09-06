@@ -5,7 +5,12 @@
 //!
 //!   trace_leaf trace.bin leaves.txt   (lines: `start size name`, decimal)
 //! prints `callsite_pc cycles name`, most expensive first.
-use std::{collections::HashMap, env, fs::{self, File}, io::{BufReader, Read, Write}};
+use std::{
+    collections::HashMap,
+    env,
+    fs::{self, File},
+    io::{BufReader, Read, Write},
+};
 
 fn main() {
     let args: Vec<String> = env::args().collect();

@@ -77,7 +77,6 @@ pub type JaggedProverData = JaggedProverDataGeneric<JaggedMmcs>;
 /// clamped down for small commits (see [`pick_log_stacking_height`]).
 pub const DEFAULT_LOG_STACKING_HEIGHT: u32 = 21;
 
-
 /// Interleave batch size for the stacked PCS: number of MLE-column
 /// streams packed into each stripe.  Purely a packing constant — no
 /// soundness implication.
@@ -1439,9 +1438,8 @@ pub mod jagged {
                     .collect();
                 let lsh = wdatas[0].log_stacking_height as usize;
                 let cfg = crate::whir::jagged::core_whir_config(lsh);
-                let ef_dft = alloc::sync::Arc::new(p3_dft::Radix2DitParallel::<
-                    InnerChallenge,
-                >::default());
+                let ef_dft =
+                    alloc::sync::Arc::new(p3_dft::Radix2DitParallel::<InnerChallenge>::default());
                 let proof = crate::whir::jagged::open_jagged_whir_rounds_generic::<
                     Challenger,
                     MT,
@@ -1897,8 +1895,7 @@ pub mod jagged {
             let hash = crate::kb31_poseidon2::InnerHash::new(perm.clone());
             let compress = crate::kb31_poseidon2::InnerCompress::new(perm);
             let mmcs = crate::jagged_pcs::JaggedMmcs::new(hash, compress, 0);
-            let cfg =
-                crate::whir::jagged::core_whir_config(commit.log_stacking_height as usize);
+            let cfg = crate::whir::jagged::core_whir_config(commit.log_stacking_height as usize);
             let res = crate::whir::jagged::verify_jagged_whir_rounds(
                 mmcs,
                 cfg,
@@ -2236,7 +2233,6 @@ mod test {
     // both sides (the shard-level Phase 1 prologue analog).
     // ════════════════════════════════════════════════════════════════
 
-    
     use crate::jagged_pcs::jagged::{
         build_jagged_verify_inputs, prove_jagged_basefold_rounds,
         verify_jagged_basefold_no_observe, ChipTraceView, JaggedBasefoldBundle, JaggedOpenRound,
@@ -2396,9 +2392,8 @@ mod test {
         // (inner ring, legacy `use_rev = false`, no area pin), observe it
         // (the shard-level Phase 1 prologue observe), open the single MAIN
         // round.
-        let precomputed = <KoalaBearPoseidon2 as crate::config::BasefoldRing>::commit_multilinears(
-            &views, false,
-        );
+        let precomputed =
+            <KoalaBearPoseidon2 as crate::config::BasefoldRing>::commit_multilinears(&views, false);
         p_chal.observe(precomputed.commit.original_commitment.clone());
         let r_row = r_row_suffixes(&views, &z_row);
         let rounds = [JaggedOpenRound {
@@ -2428,9 +2423,8 @@ mod test {
         // (inner ring, legacy `use_rev = false`, no area pin), observe it
         // (the shard-level Phase 1 prologue observe), open the single MAIN
         // round.
-        let precomputed = <KoalaBearPoseidon2 as crate::config::BasefoldRing>::commit_multilinears(
-            &views, false,
-        );
+        let precomputed =
+            <KoalaBearPoseidon2 as crate::config::BasefoldRing>::commit_multilinears(&views, false);
         p_chal.observe(precomputed.commit.original_commitment.clone());
         let r_row = r_row_suffixes(&views, &z_row);
         let rounds = [JaggedOpenRound {
@@ -2494,9 +2488,8 @@ mod test {
         // (inner ring, legacy `use_rev = false`, no area pin), observe it
         // (the shard-level Phase 1 prologue observe), open the single MAIN
         // round.
-        let precomputed = <KoalaBearPoseidon2 as crate::config::BasefoldRing>::commit_multilinears(
-            &views, false,
-        );
+        let precomputed =
+            <KoalaBearPoseidon2 as crate::config::BasefoldRing>::commit_multilinears(&views, false);
         p_chal.observe(precomputed.commit.original_commitment.clone());
         let r_row = r_row_suffixes(&views, &z_row);
         let rounds = [JaggedOpenRound {
@@ -2552,9 +2545,8 @@ mod test {
         // (inner ring, legacy `use_rev = false`, no area pin), observe it
         // (the shard-level Phase 1 prologue observe), open the single MAIN
         // round.
-        let precomputed = <KoalaBearPoseidon2 as crate::config::BasefoldRing>::commit_multilinears(
-            &views, false,
-        );
+        let precomputed =
+            <KoalaBearPoseidon2 as crate::config::BasefoldRing>::commit_multilinears(&views, false);
         p_chal.observe(precomputed.commit.original_commitment.clone());
         let r_row = r_row_suffixes(&views, &z_row);
         let rounds = [JaggedOpenRound {

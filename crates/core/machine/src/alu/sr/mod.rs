@@ -92,8 +92,6 @@ pub struct ShiftRightCols<T> {
     pub pc: T,
     pub next_pc: T,
 
-
-
     /// A boolean array whose `i`th element indicates whether `num_bits_to_shift = i`.
     pub shift_by_n_bits: [T; BYTE_SIZE],
 

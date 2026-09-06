@@ -1,4 +1,6 @@
 use std::mem::size_of;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use zkm_derive::AlignedBorrow;
 use zkm_pcs::Word;
@@ -20,7 +22,7 @@ pub const NUM_SHA_COMPRESS_COLS: usize = size_of::<ShaCompressCols<u8>>();
 /// During init, the columns are initialized with the input values, one word at a time. During each
 /// compression cycle, one iteration of sha compress is computed. During finalize, the columns are
 /// combined and written back to memory.
-#[derive(AlignedBorrow, Default, Debug, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Default, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct ShaCompressCols<T> {
     /// Inputs.
@@ -104,8 +106,11 @@ pub struct ShaCompressCols<T> {
     pub finalized_operand: Word<T>,
     pub finalize_add: AddOperation<T>,
 
+    #[picus(selector)]
     pub is_initialize: T,
+    #[picus(selector)]
     pub is_compression: T,
+    #[picus(selector)]
     pub is_finalize: T,
     pub is_real: T,
 }

@@ -74,7 +74,7 @@ mod test {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
-    use super::{map_to_pow, mono_eval, monomial_partial_eq, full_monomial_basis_eq};
+    use super::{full_monomial_basis_eq, map_to_pow, mono_eval, monomial_partial_eq};
     use crate::kb31_poseidon2::{InnerChallenge, InnerVal};
 
     type F = InnerVal;
@@ -144,7 +144,7 @@ mod test {
         let mut rng = StdRng::seed_from_u64(0x3);
         let a: Vec<EF> = (0..m).map(|_| rand_ef(&mut rng)).collect();
         let b: Vec<EF> = (0..m).map(|_| rand_ef(&mut rng)).collect();
-        // full_monomial_basis_eq(a,b) = Σ_i monomial_partial_eq(a)[i] · lagrange? 
+        // full_monomial_basis_eq(a,b) = Σ_i monomial_partial_eq(a)[i] · lagrange?
         // Direct check: the closed form Π(a_j b_j + 1 - b_j) equals evaluating
         // the monomial partial-eq table of `a` in the Lagrange basis at `b`.
         let wa = monomial_partial_eq(&a);

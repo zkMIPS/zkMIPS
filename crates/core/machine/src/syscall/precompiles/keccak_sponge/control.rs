@@ -24,6 +24,8 @@
 
 use core::borrow::{Borrow, BorrowMut};
 use std::mem::size_of;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use p3_air::{Air, AirBuilder, BaseAir, WindowAccess};
 use p3_field::{PrimeCharacteristicRing, PrimeField32};
@@ -52,7 +54,7 @@ use crate::{utils::pad_rows_fixed, CoreChipError};
 
 pub const NUM_KECCAK_SPONGE_CONTROL_COLS: usize = size_of::<KeccakSpongeControlCols<u8>>();
 
-#[derive(AlignedBorrow, Debug, Clone, Copy)]
+#[derive(PicusAnnotations, AlignedBorrow, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct KeccakSpongeControlCols<T> {
     pub shard: T,
@@ -171,6 +173,10 @@ impl<F: PrimeField32> MachineAir<F> for KeccakSpongeControlChip {
 
     fn name(&self) -> String {
         "KeccakSpongeControl".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        KeccakSpongeControlCols::<u8>::picus_info()
     }
 
     fn generate_dependencies(

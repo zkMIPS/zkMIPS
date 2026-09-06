@@ -113,4 +113,3 @@ impl<F: Field> AddOperation<F> {
         builder.slice_range_check_u8(&cols.value.0, is_real);
     }
 }
-

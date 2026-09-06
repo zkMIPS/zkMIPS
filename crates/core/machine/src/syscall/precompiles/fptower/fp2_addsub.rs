@@ -3,6 +3,8 @@ use std::{
     marker::PhantomData,
     mem::size_of,
 };
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use crate::{air::MemoryAirBuilder, utils::zeroed_f_vec, CoreChipError};
 use generic_array::GenericArray;
@@ -35,7 +37,7 @@ pub const fn num_fp2_addsub_cols<P: FpOpField>() -> usize {
 }
 
 /// A set of columns for the Fp2AddSub operation.
-#[derive(Debug, Clone, AlignedBorrow)]
+#[derive(PicusAnnotations, Debug, Clone, AlignedBorrow)]
 #[repr(C)]
 pub struct Fp2AddSubAssignCols<T, P: FpOpField> {
     pub is_real: T,
@@ -88,6 +90,10 @@ impl<F: PrimeField32, P: FpOpField> MachineAir<F> for Fp2AddSubAssignChip<P> {
             FieldType::Bn254 => "Bn254Fp2AddSubAssign".to_string(),
             FieldType::Bls12381 => "Bls12831Fp2AddSubAssign".to_string(),
         }
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        Fp2AddSubAssignCols::<u8, P>::picus_info()
     }
 
     fn generate_trace(

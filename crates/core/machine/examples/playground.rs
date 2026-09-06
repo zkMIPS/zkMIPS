@@ -320,78 +320,79 @@ fn main() {
                     }
                 }
                 for rec in &records {
-                num_shards += 1;
-                let mut total_padded = 0usize;
-                let mut total_raw = 0usize;
-                let mut total_values: u128 = 0;
-                let mut max_h = 0usize;
-                let mut per_shard: Vec<(String, usize, usize, usize)> = vec![];
-                // Real per-chip row counts: what the GKR slab actually
-                // materialises (the padded tail is analytic, never stored),
-                // so cells are `height × num_interactions`.
-                let heights: std::collections::HashMap<String, usize> =
-                    MipsAir::<KoalaBear>::core_heights(rec)
-                        .into_iter()
-                        .map(|(id, h)| (id.as_str().to_string(), h))
-                        .collect();
-                for c in machine.shard_chips(rec) {
-                    let name = MachineAir::<KoalaBear>::name(c);
-                    let h = heights.get(&name).copied().unwrap_or(0).max(
-                        rec.shape
-                            .as_ref()
-                            .and_then(|s| {
-                                std::str::FromStr::from_str(&name).ok().and_then(|id| s.height(&id))
-                            })
-                            .unwrap_or(0),
-                    );
-                    let h = if h > 0 {
-                        h
-                    } else {
-                        match name.as_str() {
-                            "Program" => rec.program.instructions.len(),
-                            "Byte" => 1 << 16,
-                            _ => 0,
-                        }
-                    };
-                    let tot = c.sends().len() + c.receives().len();
-                    let padded = tot.max(1).next_power_of_two();
-                    total_padded += padded;
-                    total_raw += tot;
-                    max_h = max_h.max(h);
-                    // Committed cells: the jagged commit pads each chip to a
-                    // power-of-two height, and the size CLASS is
-                    // `ceil(log2(Σ width × padded height))`.
-                    total_values += (p3_air::BaseAir::<KoalaBear>::width(c).max(1) as u128)
-                        * (h.max(1).next_power_of_two() as u128);
-                    per_shard.push((name, h, tot, padded));
-                }
-                let nrv = max_h.max(1).next_power_of_two().trailing_zeros().max(2) as usize;
-                let niv =
-                    total_padded.max(1).next_power_of_two().trailing_zeros() as usize;
-                let niv_raw = total_raw.max(1).next_power_of_two().trailing_zeros() as usize;
-                *niv_raw_hist.entry(niv_raw).or_default() += 1;
-                shard_raw.push(total_raw);
-                let log_dense = 128 - (total_values.max(1) - 1).leading_zeros() as usize;
-                *dense_hist.entry(log_dense).or_default() += 1;
-                // Aggregate committed "columns": total cells divided by the
-                // padded row axis, i.e. how many columns wide the shard looks
-                // once every chip is stacked at the tallest chip's height.
-                let agg_cols = total_values / (1u128 << nrv);
-                dense_cols.push((log_dense, agg_cols));
-                grid_cells_raw += 4u128 << (nrv + niv_raw);
-                *niv_hist.entry(niv).or_default() += 1;
-                *nrv_hist.entry(nrv).or_default() += 1;
-                shard_padded.push(total_padded);
-                // Four quadrant MLEs (n0/n1/d0/d1) over a grid that halves
-                // every layer: 4 · 2^(nrv-1) · 2^niv · 2 folded cells.
-                grid_cells += 4u128 << (nrv + niv);
-                for (name, h, tot, padded) in per_shard {
-                    *real_cells.entry(name.clone()).or_default() += h as u128 * tot as u128;
-                    *paid_cells.entry(name.clone()).or_default() +=
-                        h.max(1) as u128 * padded as u128;
-                    *chip_rows.entry(name.clone()).or_default() += h as u128;
-                    *chip_appear.entry(name).or_default() += 1;
-                }
+                    num_shards += 1;
+                    let mut total_padded = 0usize;
+                    let mut total_raw = 0usize;
+                    let mut total_values: u128 = 0;
+                    let mut max_h = 0usize;
+                    let mut per_shard: Vec<(String, usize, usize, usize)> = vec![];
+                    // Real per-chip row counts: what the GKR slab actually
+                    // materialises (the padded tail is analytic, never stored),
+                    // so cells are `height × num_interactions`.
+                    let heights: std::collections::HashMap<String, usize> =
+                        MipsAir::<KoalaBear>::core_heights(rec)
+                            .into_iter()
+                            .map(|(id, h)| (id.as_str().to_string(), h))
+                            .collect();
+                    for c in machine.shard_chips(rec) {
+                        let name = MachineAir::<KoalaBear>::name(c);
+                        let h = heights.get(&name).copied().unwrap_or(0).max(
+                            rec.shape
+                                .as_ref()
+                                .and_then(|s| {
+                                    std::str::FromStr::from_str(&name)
+                                        .ok()
+                                        .and_then(|id| s.height(&id))
+                                })
+                                .unwrap_or(0),
+                        );
+                        let h = if h > 0 {
+                            h
+                        } else {
+                            match name.as_str() {
+                                "Program" => rec.program.instructions.len(),
+                                "Byte" => 1 << 16,
+                                _ => 0,
+                            }
+                        };
+                        let tot = c.sends().len() + c.receives().len();
+                        let padded = tot.max(1).next_power_of_two();
+                        total_padded += padded;
+                        total_raw += tot;
+                        max_h = max_h.max(h);
+                        // Committed cells: the jagged commit pads each chip to a
+                        // power-of-two height, and the size CLASS is
+                        // `ceil(log2(Σ width × padded height))`.
+                        total_values += (p3_air::BaseAir::<KoalaBear>::width(c).max(1) as u128)
+                            * (h.max(1).next_power_of_two() as u128);
+                        per_shard.push((name, h, tot, padded));
+                    }
+                    let nrv = max_h.max(1).next_power_of_two().trailing_zeros().max(2) as usize;
+                    let niv = total_padded.max(1).next_power_of_two().trailing_zeros() as usize;
+                    let niv_raw = total_raw.max(1).next_power_of_two().trailing_zeros() as usize;
+                    *niv_raw_hist.entry(niv_raw).or_default() += 1;
+                    shard_raw.push(total_raw);
+                    let log_dense = 128 - (total_values.max(1) - 1).leading_zeros() as usize;
+                    *dense_hist.entry(log_dense).or_default() += 1;
+                    // Aggregate committed "columns": total cells divided by the
+                    // padded row axis, i.e. how many columns wide the shard looks
+                    // once every chip is stacked at the tallest chip's height.
+                    let agg_cols = total_values / (1u128 << nrv);
+                    dense_cols.push((log_dense, agg_cols));
+                    grid_cells_raw += 4u128 << (nrv + niv_raw);
+                    *niv_hist.entry(niv).or_default() += 1;
+                    *nrv_hist.entry(nrv).or_default() += 1;
+                    shard_padded.push(total_padded);
+                    // Four quadrant MLEs (n0/n1/d0/d1) over a grid that halves
+                    // every layer: 4 · 2^(nrv-1) · 2^niv · 2 folded cells.
+                    grid_cells += 4u128 << (nrv + niv);
+                    for (name, h, tot, padded) in per_shard {
+                        *real_cells.entry(name.clone()).or_default() += h as u128 * tot as u128;
+                        *paid_cells.entry(name.clone()).or_default() +=
+                            h.max(1) as u128 * padded as u128;
+                        *chip_rows.entry(name.clone()).or_default() += h as u128;
+                        *chip_appear.entry(name).or_default() += 1;
+                    }
                 }
                 if done {
                     break;

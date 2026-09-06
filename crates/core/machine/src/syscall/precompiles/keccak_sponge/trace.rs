@@ -1,4 +1,5 @@
 use std::borrow::BorrowMut;
+use zkm_pcs::PicusInfo;
 
 use p3_field::PrimeField32;
 use p3_keccak_air::{generate_trace_rows, NUM_KECCAK_COLS, NUM_ROUNDS};
@@ -22,6 +23,10 @@ impl<F: PrimeField32> MachineAir<F> for KeccakSpongeChip {
 
     fn name(&self) -> String {
         "KeccakSponge".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        KeccakSpongeCols::<u8>::picus_info()
     }
 
     /// This chip has NO dependencies, so `generate_dependencies` must do

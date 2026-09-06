@@ -255,6 +255,14 @@ where
     fn picus_info(&self) -> PicusInfo {
         self.air.picus_info()
     }
+
+    fn selectors_partition_real_rows(&self) -> bool {
+        self.air.selectors_partition_real_rows()
+    }
+
+    fn picus_selector_specialization_allowed(&self, selector_name: &str) -> bool {
+        self.air.picus_selector_specialization_allowed(selector_name)
+    }
 }
 
 // Implement AIR directly on Chip, evaluating both execution and permutation constraints.

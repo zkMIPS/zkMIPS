@@ -153,10 +153,8 @@ fn run_tower(
     ff: usize,
     num_rounds: usize,
     seed: u64,
-) -> (
-    Mle<InnerVal>,
-    crate::whir::round_prover::RoundedProof<InnerVal, InnerChallenge, InnerValMmcs>,
-) {
+) -> (Mle<InnerVal>, crate::whir::round_prover::RoundedProof<InnerVal, InnerChallenge, InnerValMmcs>)
+{
     type F = InnerVal;
     type EF = InnerChallenge;
 
@@ -168,8 +166,10 @@ fn run_tower(
         (0..n)
             .map(|_| {
                 use p3_field::BasedVectorSpace;
-                <EF as BasedVectorSpace<F>>::from_basis_coefficients_iter((0..4).map(|_| rand_kb(rng)))
-                    .unwrap()
+                <EF as BasedVectorSpace<F>>::from_basis_coefficients_iter(
+                    (0..4).map(|_| rand_kb(rng)),
+                )
+                .unwrap()
             })
             .collect()
     };
@@ -182,8 +182,7 @@ fn run_tower(
     let mut challenger = build_challenger();
 
     let prover = WhirProver::<F, EF, _, _>::new(base_dft, mmcs, tower_config(n, ff, num_rounds));
-    let proof =
-        prover.prove_rounds(ef_dft, &mut challenger, Arc::clone(&mle), point, eval);
+    let proof = prover.prove_rounds(ef_dft, &mut challenger, Arc::clone(&mle), point, eval);
     (Arc::try_unwrap(mle).ok().unwrap(), proof)
 }
 
@@ -192,12 +191,8 @@ fn run_tower(
 #[test]
 fn tower_claim_invariant() {
     let (_mle, proof) = run_tower(8, 2, 3, 0xA1);
-    let dot: InnerChallenge = proof
-        .final_weight
-        .iter()
-        .zip(&proof.final_poly)
-        .map(|(&w, &f)| w * f)
-        .sum();
+    let dot: InnerChallenge =
+        proof.final_weight.iter().zip(&proof.final_poly).map(|(&w, &f)| w * f).sum();
     assert_eq!(proof.final_claim, dot, "claim must equal Σ weight·f over the final polynomial");
 }
 
@@ -217,12 +212,15 @@ fn tower_folds_original_poly() {
     let q: Vec<EF> = (0..final_vars)
         .map(|_| {
             use p3_field::BasedVectorSpace;
-            <EF as BasedVectorSpace<F>>::from_basis_coefficients_iter((0..4).map(|_| rand_kb(&mut rng)))
-                .unwrap()
+            <EF as BasedVectorSpace<F>>::from_basis_coefficients_iter(
+                (0..4).map(|_| rand_kb(&mut rng)),
+            )
+            .unwrap()
         })
         .collect();
 
-    let full_point: Vec<EF> = proof.folding_randomness.iter().copied().chain(q.iter().copied()).collect();
+    let full_point: Vec<EF> =
+        proof.folding_randomness.iter().copied().chain(q.iter().copied()).collect();
     assert_eq!(full_point.len(), mle.num_variables() as usize);
     assert_eq!(
         final_mle.eval_at::<EF>(&q)[0],
@@ -260,7 +258,14 @@ fn tower_round_ood_correct() {
 /// Build a WHIR config for `n` variables, uniform folding factor `ff`, a
 /// per-round query schedule, and OOD samples — folding down to a
 /// `final`-variable polynomial.
-fn whir_config_for(n: usize, ff: usize, queries: &[usize], ood: usize, rate: usize, pow: usize) -> WhirConfig {
+fn whir_config_for(
+    n: usize,
+    ff: usize,
+    queries: &[usize],
+    ood: usize,
+    rate: usize,
+    pow: usize,
+) -> WhirConfig {
     use crate::whir::config::RoundConfig;
     let final_log = n - ff * queries.len();
     let mut config = WhirConfig::default_whir_config();
@@ -321,8 +326,10 @@ fn bench_whir_vs_basefold() {
         let point: Vec<EF> = (0..n)
             .map(|_| {
                 use p3_field::BasedVectorSpace;
-                <EF as BasedVectorSpace<F>>::from_basis_coefficients_iter((0..4).map(|_| rand_kb(&mut rng)))
-                    .unwrap()
+                <EF as BasedVectorSpace<F>>::from_basis_coefficients_iter(
+                    (0..4).map(|_| rand_kb(&mut rng)),
+                )
+                .unwrap()
             })
             .collect();
         let eval = mle.eval_at::<EF>(&point)[0];
@@ -393,8 +400,10 @@ fn tower_roundtrip_verifies() {
     let point: Vec<EF> = (0..n)
         .map(|_| {
             use p3_field::BasedVectorSpace;
-            <EF as BasedVectorSpace<F>>::from_basis_coefficients_iter((0..4).map(|_| rand_kb(&mut rng)))
-                .unwrap()
+            <EF as BasedVectorSpace<F>>::from_basis_coefficients_iter(
+                (0..4).map(|_| rand_kb(&mut rng)),
+            )
+            .unwrap()
         })
         .collect();
     let eval = mle.eval_at::<EF>(&point)[0];
@@ -405,8 +414,13 @@ fn tower_roundtrip_verifies() {
 
     let prover = WhirProver::<F, EF, _, _>::new(base_dft, build_mmcs(), cfg.clone());
     let mut p_chal = build_challenger();
-    let proof =
-        prover.prove_rounds(Arc::clone(&ef_dft), &mut p_chal, Arc::clone(&mle), point.clone(), eval);
+    let proof = prover.prove_rounds(
+        Arc::clone(&ef_dft),
+        &mut p_chal,
+        Arc::clone(&mle),
+        point.clone(),
+        eval,
+    );
 
     let verifier = WhirVerifier::<F, EF, _>::new(build_mmcs(), cfg);
 
@@ -550,14 +564,14 @@ fn stacked_roundtrip_verifies() {
 
     let dft = Arc::new(Radix2DitParallel::<F>::default());
     let ef_dft = Arc::new(Radix2DitParallel::<EF>::default());
-    let prover =
-        StackedWhirProver::<F, EF, _, _>::new(build_mmcs(), dft, cfg.clone(), lsh as u32);
+    let prover = StackedWhirProver::<F, EF, _, _>::new(build_mmcs(), dft, cfg.clone(), lsh as u32);
 
     let mk_stripe = |rng: &mut StdRng| {
         let v: Vec<F> = (0..(1usize << lsh)).map(|_| rand_kb(rng)).collect();
         Arc::new(Mle::from_row_major(RowMajorMatrix::new(v, 1)))
     };
-    let round_a = prover.commit_stripes(vec![mk_stripe(&mut rng), mk_stripe(&mut rng), mk_stripe(&mut rng)]);
+    let round_a =
+        prover.commit_stripes(vec![mk_stripe(&mut rng), mk_stripe(&mut rng), mk_stripe(&mut rng)]);
     let round_b = prover.commit_stripes(vec![mk_stripe(&mut rng), mk_stripe(&mut rng)]);
 
     let stack_point: Vec<EF> = (0..lsh)
@@ -584,7 +598,13 @@ fn stacked_roundtrip_verifies() {
     // Honest proof verifies.
     let mut v_chal = build_challenger();
     assert_eq!(
-        verifier.verify_trusted_evaluation(&commitments, &[3, 2], &stack_point, &proof, &mut v_chal),
+        verifier.verify_trusted_evaluation(
+            &commitments,
+            &[3, 2],
+            &stack_point,
+            &proof,
+            &mut v_chal
+        ),
         Ok(())
     );
 
@@ -631,7 +651,7 @@ fn stacked_roundtrip_verifies() {
 /// open must verify against the claim interpolated at the batch coordinates.
 #[test]
 fn jagged_whir_roundtrip_matches_basefold_layout() {
-    use crate::basefold::{FriConfig, StackedPcsProver, BasefoldProver};
+    use crate::basefold::{BasefoldProver, FriConfig, StackedPcsProver};
     use crate::jagged_pcs::DEFAULT_BATCH_SIZE;
     use crate::whir::jagged::{
         commit_jagged_whir_generic, open_jagged_whir_rounds_generic, verify_jagged_whir_rounds,
@@ -648,8 +668,7 @@ fn jagged_whir_roundtrip_matches_basefold_layout() {
     let mut rng = StdRng::seed_from_u64(0x1A66ED);
     let dense_len = 3usize << lsh;
     let dense: Vec<F> = (0..dense_len).map(|_| rand_kb(&mut rng)).collect();
-    let chip_traces =
-        vec![(String::from("dense"), RowMajorMatrix::new(dense.clone(), 1))];
+    let chip_traces = vec![(String::from("dense"), RowMajorMatrix::new(dense.clone(), 1))];
 
     let (commit, prover_data) = commit_jagged_whir_generic(
         chip_traces.clone(),
@@ -689,12 +708,8 @@ fn jagged_whir_roundtrip_matches_basefold_layout() {
         RowMajorMatrix::new(dense.clone(), 1),
     ))]);
     let bf_flat: Vec<EF> = bf_prover.round_batch_evaluations(stack_point, &bf_data);
-    let whir_flat: Vec<EF> = prover_data
-        .stacked_data
-        .stripes
-        .iter()
-        .map(|s| s.eval_at::<EF>(stack_point)[0])
-        .collect();
+    let whir_flat: Vec<EF> =
+        prover_data.stacked_data.stripes.iter().map(|s| s.eval_at::<EF>(stack_point)[0]).collect();
     assert_eq!(bf_flat, whir_flat, "stacked layout parity broken");
 
     // The claim the jagged layer would bind.
@@ -756,7 +771,7 @@ fn jagged_whir_roundtrip_matches_basefold_layout() {
 
 #[test]
 fn jagged_whir_roundtrip_mixed_fold_schedule() {
-    use crate::basefold::{FriConfig, StackedPcsProver, BasefoldProver};
+    use crate::basefold::{BasefoldProver, FriConfig, StackedPcsProver};
     use crate::jagged_pcs::DEFAULT_BATCH_SIZE;
     use crate::whir::jagged::{
         commit_jagged_whir_generic, open_jagged_whir_rounds_generic, verify_jagged_whir_rounds,
@@ -775,8 +790,7 @@ fn jagged_whir_roundtrip_mixed_fold_schedule() {
     let mut rng = StdRng::seed_from_u64(0x1A66ED);
     let dense_len = 3usize << lsh;
     let dense: Vec<F> = (0..dense_len).map(|_| rand_kb(&mut rng)).collect();
-    let chip_traces =
-        vec![(String::from("dense"), RowMajorMatrix::new(dense.clone(), 1))];
+    let chip_traces = vec![(String::from("dense"), RowMajorMatrix::new(dense.clone(), 1))];
 
     let (commit, prover_data) = commit_jagged_whir_generic(
         chip_traces.clone(),
@@ -816,12 +830,8 @@ fn jagged_whir_roundtrip_mixed_fold_schedule() {
         RowMajorMatrix::new(dense.clone(), 1),
     ))]);
     let bf_flat: Vec<EF> = bf_prover.round_batch_evaluations(stack_point, &bf_data);
-    let whir_flat: Vec<EF> = prover_data
-        .stacked_data
-        .stripes
-        .iter()
-        .map(|s| s.eval_at::<EF>(stack_point)[0])
-        .collect();
+    let whir_flat: Vec<EF> =
+        prover_data.stacked_data.stripes.iter().map(|s| s.eval_at::<EF>(stack_point)[0]).collect();
     assert_eq!(bf_flat, whir_flat, "stacked layout parity broken");
 
     // The claim the jagged layer would bind.

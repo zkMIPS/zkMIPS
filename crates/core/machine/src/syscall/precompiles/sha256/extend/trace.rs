@@ -9,6 +9,7 @@ use zkm_core_executor::{
     ExecutionRecord, Program,
 };
 use zkm_pcs::air::MachineAir;
+use zkm_pcs::PicusInfo;
 
 use crate::CoreChipError;
 
@@ -23,6 +24,10 @@ impl<F: PrimeField32> MachineAir<F> for ShaExtendChip {
 
     fn name(&self) -> String {
         "ShaExtend".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        ShaExtendCols::<u8>::picus_info()
     }
 
     fn generate_trace(

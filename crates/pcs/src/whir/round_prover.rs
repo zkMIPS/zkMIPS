@@ -88,9 +88,8 @@ where
     ) -> RoundedProof<F, EF, MT>
     where
         EFDft: TwoAdicSubgroupDft<EF>,
-        Challenger: FieldChallenger<F>
-            + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+        Challenger:
+            FieldChallenger<F> + GrindingChallenger<Witness = F> + CanObserve<MT::Commitment>,
     {
         let n = mle.num_variables() as usize;
         debug_assert_eq!(point.len(), n);
@@ -140,12 +139,12 @@ where
             //     is encoded by the EF DFT then flattened to base storage and
             //     committed with the same Merkle scheme as the base codewords.
             let rem = folder.f_vec.len().trailing_zeros() as usize;
-            let folded_mle = Arc::new(Mle::<EF>::from_row_major(RowMajorMatrix::new(
-                folder.f_vec.clone(),
-                1,
-            )));
-            let ef_encoder =
-                DftEncoder::new(FriConfig::<EF>::new(round_cfg.log_inv_rate, 0, 0), Arc::clone(&ef_dft));
+            let folded_mle =
+                Arc::new(Mle::<EF>::from_row_major(RowMajorMatrix::new(folder.f_vec.clone(), 1)));
+            let ef_encoder = DftEncoder::new(
+                FriConfig::<EF>::new(round_cfg.log_inv_rate, 0, 0),
+                Arc::clone(&ef_dft),
+            );
             let ef_codewords = ef_encoder.encode_batch(alloc::vec![folded_mle]);
             let base_codeword = codeword_from_ef::<F, EF>(ef_codewords[0].data.values.clone());
             let (commitment, prover_data) = self.mmcs.commit(alloc::vec![base_codeword.data]);

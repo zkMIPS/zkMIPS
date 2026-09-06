@@ -10,10 +10,7 @@ use zkm_core_executor::events::{ByteRecord, FieldOperation};
 use zkm_derive::AlignedBorrow;
 use zkm_pcs::air::{Polynomial, ZKMAirBuilder};
 
-use super::{
-    util::compute_root_quotient_and_shift,
-    util_air::eval_field_operation,
-};
+use super::{util::compute_root_quotient_and_shift, util_air::eval_field_operation};
 use zkm_curves::params::{FieldParameters, Limbs};
 
 use typenum::Unsigned;

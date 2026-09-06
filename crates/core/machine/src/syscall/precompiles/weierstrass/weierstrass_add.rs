@@ -3,6 +3,8 @@ use core::{
     mem::size_of,
 };
 use std::{fmt::Debug, marker::PhantomData};
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use crate::{air::MemoryAirBuilder, utils::zeroed_f_vec, CoreChipError};
 use generic_array::GenericArray;
@@ -42,7 +44,7 @@ pub const fn num_weierstrass_add_cols<P: FieldParameters + NumWords>() -> usize 
 ///
 /// Right now the number of limbs is assumed to be a constant, although this could be macro-ed or
 /// made generic in the future.
-#[derive(Debug, Clone, AlignedBorrow)]
+#[derive(PicusAnnotations, Debug, Clone, AlignedBorrow)]
 #[repr(C)]
 pub struct WeierstrassAddAssignCols<T, P: FieldParameters + NumWords> {
     pub is_real: T,
@@ -139,6 +141,10 @@ impl<F: PrimeField32, E: EllipticCurve + WeierstrassParameters> MachineAir<F>
             CurveType::Bls12381 => "Bls12381AddAssign".to_string(),
             _ => panic!("Unsupported curve"),
         }
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        WeierstrassAddAssignCols::<u8, E::BaseField>::picus_info()
     }
 
     fn generate_dependencies(

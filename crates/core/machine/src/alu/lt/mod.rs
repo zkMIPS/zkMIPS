@@ -55,8 +55,6 @@ pub struct LtCols<T> {
 
     /// The output operand.
 
-
-
     /// Boolean flag to indicate which byte pair differs if the operands are not equal.
     pub byte_flags: [T; 4],
 

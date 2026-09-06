@@ -3,6 +3,8 @@ use core::{
     mem::size_of,
 };
 use std::{fmt::Debug, marker::PhantomData};
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use itertools::Itertools;
 use num::BigUint;
@@ -38,7 +40,7 @@ pub const NUM_ED_ADD_COLS: usize = size_of::<EdAddAssignCols<u8>>();
 /// A set of columns to compute `EdAdd` where a, b are field elements.
 /// Right now the number of limbs is assumed to be a constant, although this could be macro-ed
 /// or made generic in the future.
-#[derive(Debug, Clone, AlignedBorrow)]
+#[derive(PicusAnnotations, Debug, Clone, AlignedBorrow)]
 #[repr(C)]
 pub struct EdAddAssignCols<T> {
     pub is_real: T,
@@ -108,6 +110,10 @@ impl<F: PrimeField32, E: EllipticCurve + EdwardsParameters> MachineAir<F> for Ed
 
     fn name(&self) -> String {
         "EdAddAssign".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        EdAddAssignCols::<u8>::picus_info()
     }
 
     fn generate_trace(

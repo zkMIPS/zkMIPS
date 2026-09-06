@@ -73,8 +73,6 @@ pub trait MachineAir<F: Field>: BaseAir<F> + 'static + Send + Sync {
         LookupScope::Local
     }
 
-    /// Specifies whether the air only uses the local row, and not the next row.
-
     /// Returns information about Picus annotations on AIR columns.
     ///
     /// This includes:
@@ -82,6 +80,24 @@ pub trait MachineAir<F: Field>: BaseAir<F> + 'static + Send + Sync {
     /// - Selector indices: columns marked with `#[picus(selector)]`
     fn picus_info(&self) -> PicusInfo {
         PicusInfo::default()
+    }
+
+    /// Whether the chip's `#[picus(selector)]` columns partition its real rows.
+    ///
+    /// When `true`, the Picus `top` module asserts that the selector columns sum to exactly
+    /// `is_real` (or to one when `is_real` is specialized), rather than merely being boolean and
+    /// mutually exclusive.  Opt-in: an instruction chip whose selectors are its opcode flags
+    /// declares it; table chips keep the weaker default.
+    fn selectors_partition_real_rows(&self) -> bool {
+        false
+    }
+
+    /// Whether Picus should generate a selector-specialized module for `selector_name`.
+    ///
+    /// Override only when a selector value is impossible by trace construction and would make
+    /// the specialized module contradictory (and therefore vacuously deterministic).
+    fn picus_selector_specialization_allowed(&self, _selector_name: &str) -> bool {
+        true
     }
 }
 

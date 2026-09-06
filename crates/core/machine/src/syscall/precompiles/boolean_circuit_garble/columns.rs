@@ -1,6 +1,8 @@
 use crate::memory::MemoryReadCols;
 use crate::operations::{IsEqualWordOperation, XorOperation};
 use zkm_derive::AlignedBorrow;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 use zkm_pcs::Word;
 
 /// `BooleanCircuitGarbleCols` is the worker column layout for the Boolean Circuit
@@ -10,7 +12,7 @@ use zkm_pcs::Word;
 /// chip through the `LookupKind::PrecompileChain` state bus, replacing the legacy
 /// `when_first_row`/`next.*` row-selector machinery the single-row BaseFold
 /// zerocheck folder cannot evaluate.
-#[derive(AlignedBorrow)]
+#[derive(PicusAnnotations, AlignedBorrow)]
 #[repr(C)]
 pub struct BooleanCircuitGarbleCols<T> {
     pub shard: T,

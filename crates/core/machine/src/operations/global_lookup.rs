@@ -184,10 +184,9 @@ impl<F: Field> GlobalLookupOperation<F> {
         for i in 1..6 {
             builder.when(is_real).assert_eq(x.0[i].clone(), values[i].clone());
         }
-        builder.when(is_real).assert_eq(
-            x.0[6].clone(),
-            values[6].clone() * AB::Expr::from_u32(256) + cols.offset,
-        );
+        builder
+            .when(is_real)
+            .assert_eq(x.0[6].clone(), values[6].clone() * AB::Expr::from_u32(256) + cols.offset);
 
         // Constrain that `(x, y)` is a valid point on the curve.
         let y2 = y.square();
@@ -203,9 +202,7 @@ impl<F: Field> GlobalLookupOperation<F> {
         // If it's a send: `SEND_Y6_MIN <= y_6 <= p - 1`, so `y_6 - SEND_Y6_MIN = y6_value < RECEIVE_Y6_MAX`
         // (`p - SEND_Y6_MIN == RECEIVE_Y6_MAX`).  The two ranges are disjoint.
         builder.when(is_receive).assert_eq(y.0[6].clone(), AB::Expr::ONE + y6_value.clone());
-        builder
-            .when(is_send)
-            .assert_eq(y.0[6].clone(), AB::Expr::from_u32(SEND_Y6_MIN) + y6_value);
+        builder.when(is_send).assert_eq(y.0[6].clone(), AB::Expr::from_u32(SEND_Y6_MIN) + y6_value);
     }
 }
 
@@ -220,7 +217,8 @@ mod tests {
             let values = SepticBlock([i, i * 7 + 1, 3, i & 0xFFFF, 5, 6, i ^ 0x5A5A]);
             for is_receive in [true, false] {
                 let row = GlobalLookupOperation::<KoalaBear>::digest_row(values, is_receive, 3);
-                let v = row.y6_lo16 as u32 + ((row.y6_mid8 as u32) << 16) + ((row.y6_top as u32) << 24);
+                let v =
+                    row.y6_lo16 as u32 + ((row.y6_mid8 as u32) << 16) + ((row.y6_top as u32) << 24);
                 assert!(v < Y6_RANGE_BOUND);
                 assert!(row.y6_top < Y6_TOP_BOUND);
                 let y6 = row.y[6];

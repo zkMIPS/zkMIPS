@@ -5,8 +5,8 @@ use core::{
 };
 
 use itertools::Itertools;
-use p3_air::{Air, BaseAir, WindowAccess, AirBuilder};
-use p3_field::{PrimeCharacteristicRing, PrimeField32, Field};
+use p3_air::{Air, AirBuilder, BaseAir, WindowAccess};
+use p3_field::{Field, PrimeCharacteristicRing, PrimeField32};
 use p3_matrix::dense::RowMajorMatrix;
 use p3_maybe_rayon::prelude::{ParallelBridge, ParallelIterator};
 use zkm_core_executor::{
@@ -219,14 +219,8 @@ where
         // The addition runs DIRECTLY on the frame's words — the second
         // operand is the frame's IMMEDIATE rather than a register read; see
         // the register-form chip for the byte-shape argument.
-        builder.assert_eq(
-            local.add_gate,
-            local.is_add * (AB::Expr::ONE - local.frame.op_a_0),
-        );
-        builder.assert_eq(
-            local.sub_gate,
-            local.is_sub * (AB::Expr::ONE - local.frame.op_a_0),
-        );
+        builder.assert_eq(local.add_gate, local.is_add * (AB::Expr::ONE - local.frame.op_a_0));
+        builder.assert_eq(local.sub_gate, local.is_sub * (AB::Expr::ONE - local.frame.op_a_0));
         let av = *local.frame.op_a_access.value();
         let bv = local.frame.op_b_val();
         let cv = local.frame.op_c_val();

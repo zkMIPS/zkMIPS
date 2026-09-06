@@ -43,7 +43,7 @@ pub fn fresh_picus_expr() -> PicusExpr {
     PicusExpr::Var(fresh_picus_var_id())
 }
 
-use p3_field::{PrimeCharacteristicRing, PrimeField32};
+use p3_field::PrimeField32;
 
 /// Global, thread-safe holder for the PCL prime field modulus.
 ///
@@ -471,58 +471,6 @@ impl Mul<u64> for PicusExpr {
             PicusExpr::Const(c_1) => reduce_mod((c_1 * rhs) as i64).into(),
             _ => PicusExpr::Mul(Box::new(lhs), Box::new(rhs.into())),
         }
-    }
-}
-
-impl PrimeCharacteristicRing for PicusExpr {
-    type F = Felt;
-
-    const ZERO: Self = PicusExpr::Const(0);
-
-    const ONE: Self = PicusExpr::Const(1);
-
-    const TWO: Self = PicusExpr::Const(2);
-
-    const NEG_ONE: Self = PicusExpr::Const(u64::MAX);
-
-    fn from_f(f: Self::F) -> Self {
-        f.into()
-    }
-
-    fn from_bool(b: bool) -> Self {
-        if b {
-            PicusExpr::Const(1)
-        } else {
-            PicusExpr::Const(0)
-        }
-    }
-
-    fn from_canonical_u8(n: u8) -> Self {
-        n.into()
-    }
-
-    fn from_canonical_u16(n: u16) -> Self {
-        n.into()
-    }
-
-    fn from_canonical_u32(n: u32) -> Self {
-        n.into()
-    }
-
-    fn from_canonical_u64(n: u64) -> Self {
-        n.into()
-    }
-
-    fn from_canonical_usize(n: usize) -> Self {
-        n.into()
-    }
-
-    fn from_wrapped_u32(n: u32) -> Self {
-        n.into()
-    }
-
-    fn from_wrapped_u64(n: u64) -> Self {
-        n.into()
     }
 }
 

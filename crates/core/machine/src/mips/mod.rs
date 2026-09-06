@@ -29,12 +29,10 @@ use zkm_pcs::{
 pub(crate) mod mips_chips {
     pub use crate::{
         alu::{
-            AddSubChip, AddSubImmChip, BitwiseChip, BitwiseImmChip, CloClzChip, DivRemChip,
-            LtChip, LtImmChip, MulChip, ShiftLeft, ShiftLeftImm, ShiftRightChip,
-            ShiftRightImmChip,
+            AddSubChip, AddSubImmChip, BitwiseChip, BitwiseImmChip, CloClzChip, DivRemChip, LtChip,
+            LtImmChip, MulChip, ShiftLeft, ShiftLeftImm, ShiftRightChip, ShiftRightImmChip,
         },
         bytes::ByteChip,
-        range::RangeChip,
         control_flow::{BranchChip, JumpChip},
         memory::{
             LoadNarrowChip, LoadWordChip, MemoryGlobalChip, MemoryUnalignedChip, StoreNarrowChip,
@@ -42,6 +40,7 @@ pub(crate) mod mips_chips {
         },
         misc::{MiscInstrsChip, MovCondChip},
         program::ProgramChip,
+        range::RangeChip,
         syscall::{
             chip::SyscallChip,
             instructions::SyscallInstrsChip,
@@ -1007,8 +1006,7 @@ pub mod tests {
         };
         // `shape_config: None`: WHIR needs no shape banding, and the tiny test
         // programs no longer fit a preprocessed band anyway.
-        let result =
-            crate::utils::run_test_core::<CpuProver<_, _>>(runtime, ZKMStdin::new(), None);
+        let result = crate::utils::run_test_core::<CpuProver<_, _>>(runtime, ZKMStdin::new(), None);
         // Verified, AND actually under WHIR: a silently-false `whir_mode`
         // would prove plain BaseFold and pass anyway, so pin the dispatch.
         for sp in &result.unwrap().shard_proofs {

@@ -195,8 +195,7 @@ fn test_basefold_roundtrip_folding_arity() {
         let mmcs = build_mmcs();
         let dft = Arc::new(Radix2DitParallel::<F>::default());
 
-        let prover =
-            BasefoldProver::<F, EF, _, _>::new(fri_config.clone(), dft, mmcs.clone(), 1);
+        let prover = BasefoldProver::<F, EF, _, _>::new(fri_config.clone(), dft, mmcs.clone(), 1);
         let verifier = BasefoldVerifier::<F, EF, _>::new(fri_config, mmcs, 1);
 
         let mut p_chal = build_challenger();
@@ -230,13 +229,7 @@ fn test_basefold_roundtrip_folding_arity() {
         let mut v_chal = build_challenger();
         v_chal.observe(commitment.clone());
         verifier
-            .verify_mle_evaluations(
-                &[commitment],
-                eval_point,
-                &[claims],
-                &proof,
-                &mut v_chal,
-            )
+            .verify_mle_evaluations(&[commitment], eval_point, &[claims], &proof, &mut v_chal)
             .unwrap_or_else(|e| panic!("arity {log_folding_arity} must verify: {e:?}"));
     }
 }

@@ -30,8 +30,8 @@ use p3_matrix::dense::RowMajorMatrix;
 use crate::basefold::mle::Mle;
 use crate::basefold::stacked::interleave_multilinears_with_fixed_rate;
 use crate::jagged_pcs::{
-    chips_to_mles_owned, pick_log_stacking_height, JaggedChallenge, JaggedCommitGeneric,
-    JaggedVal, DEFAULT_BATCH_SIZE,
+    chips_to_mles_owned, pick_log_stacking_height, JaggedChallenge, JaggedCommitGeneric, JaggedVal,
+    DEFAULT_BATCH_SIZE,
 };
 use crate::whir::config::{RoundConfig, WhirConfig};
 use crate::whir::stacked::{
@@ -67,11 +67,7 @@ pub fn whir_config_for_stack(lsh: usize, ff: usize, final_log: usize) -> WhirCon
 /// round-0 factor shrinks round-0 query leaves — which for the stacked form
 /// span EVERY stripe's coset row — without touching the round count, the
 /// rate escalation, or the query budgets (all round-indexed).
-pub fn whir_config_for_fold_schedule(
-    lsh: usize,
-    folds: &[usize],
-    final_log: usize,
-) -> WhirConfig {
+pub fn whir_config_for_fold_schedule(lsh: usize, folds: &[usize], final_log: usize) -> WhirConfig {
     assert!(!folds.is_empty() && folds.iter().all(|&f| f > 0));
     assert_eq!(
         folds.iter().sum::<usize>() + final_log,
@@ -140,9 +136,8 @@ pub fn core_whir_config(lsh: usize) -> WhirConfig {
     // 100 -> 64 bit decision of Sep 5.
     const ROUND0_FF: usize = 3;
     const START_LOG_INV_RATE: usize = 2;
-    let mut rem = lsh
-        .checked_sub(ROUND0_FF)
-        .expect("stacking height must exceed the round-0 folding factor");
+    let mut rem =
+        lsh.checked_sub(ROUND0_FF).expect("stacking height must exceed the round-0 folding factor");
     let mut folds = alloc::vec![ROUND0_FF];
     while rem > 6 {
         folds.push(6);
@@ -200,8 +195,7 @@ pub fn commit_jagged_whir_generic<MT, D>(
     config: WhirConfig,
 ) -> (JaggedCommitGeneric<MT>, JaggedWhirProverDataGeneric<MT>)
 where
-    MT: Mmcs<JaggedVal, Commitment: Clone, ProverData<RowMajorMatrix<JaggedVal>>: 'static>
-        + Clone,
+    MT: Mmcs<JaggedVal, Commitment: Clone, ProverData<RowMajorMatrix<JaggedVal>>: 'static> + Clone,
     D: TwoAdicSubgroupDft<JaggedVal> + Send + Sync,
 {
     let (mles, chip_dims) = chips_to_mles_owned(chip_traces);
@@ -228,12 +222,8 @@ where
         area,
         log_stacking_height,
     };
-    let prover_data = JaggedWhirProverDataGeneric::<MT> {
-        stacked_data,
-        chip_dims,
-        area,
-        log_stacking_height,
-    };
+    let prover_data =
+        JaggedWhirProverDataGeneric::<MT> { stacked_data, chip_dims, area, log_stacking_height };
     (commit, prover_data)
 }
 
@@ -249,8 +239,7 @@ pub fn open_jagged_whir_rounds_generic<Challenger, MT, D, EFD>(
     config: WhirConfig,
 ) -> StackedWhirProof<JaggedVal, JaggedChallenge, MT>
 where
-    MT: Mmcs<JaggedVal, Commitment: Clone, ProverData<RowMajorMatrix<JaggedVal>>: 'static>
-        + Clone,
+    MT: Mmcs<JaggedVal, Commitment: Clone, ProverData<RowMajorMatrix<JaggedVal>>: 'static> + Clone,
     D: TwoAdicSubgroupDft<JaggedVal> + Send + Sync,
     EFD: TwoAdicSubgroupDft<JaggedChallenge>,
     Challenger: FieldChallenger<JaggedVal>
@@ -279,8 +268,7 @@ pub fn open_jagged_whir_rounds_generic_with_engine<Challenger, MT, D, EFD>(
     engine: Option<&mut dyn crate::whir::stacked::WhirRound0Engine<JaggedVal, JaggedChallenge, MT>>,
 ) -> StackedWhirProof<JaggedVal, JaggedChallenge, MT>
 where
-    MT: Mmcs<JaggedVal, Commitment: Clone, ProverData<RowMajorMatrix<JaggedVal>>: 'static>
-        + Clone,
+    MT: Mmcs<JaggedVal, Commitment: Clone, ProverData<RowMajorMatrix<JaggedVal>>: 'static> + Clone,
     D: TwoAdicSubgroupDft<JaggedVal> + Send + Sync,
     EFD: TwoAdicSubgroupDft<JaggedChallenge>,
     Challenger: FieldChallenger<JaggedVal>
@@ -295,8 +283,7 @@ where
         config,
         log_stacking_height,
     );
-    let stack_point: Vec<JaggedChallenge> =
-        eval_point[..log_stacking_height as usize].to_vec();
+    let stack_point: Vec<JaggedChallenge> = eval_point[..log_stacking_height as usize].to_vec();
     let stacked: Vec<&_> = rounds.iter().map(|r| &r.stacked_data).collect();
     prover.prove_trusted_evaluation_with_engine(ef_dft, stack_point, &stacked, challenger, engine)
 }
@@ -342,8 +329,7 @@ where
 
     // The StackingMismatch bind: the claim must equal the interpolation of the
     // flat echoed evaluations at the batch coordinates.
-    let flat: Vec<JaggedChallenge> =
-        proof.batch_evaluations.iter().flatten().copied().collect();
+    let flat: Vec<JaggedChallenge> = proof.batch_evaluations.iter().flatten().copied().collect();
     let mut current = flat;
     current.resize(1usize << batch_point.len(), JaggedChallenge::ZERO);
     for &r in batch_point {
@@ -359,7 +345,10 @@ where
         return Err(WhirVerifierError::IncorrectShape("stacking mismatch".into()));
     }
 
-    let verifier =
-        StackedWhirVerifier::<JaggedVal, JaggedChallenge, MT>::new(mmcs, config, log_stacking_height);
+    let verifier = StackedWhirVerifier::<JaggedVal, JaggedChallenge, MT>::new(
+        mmcs,
+        config,
+        log_stacking_height,
+    );
     verifier.verify_trusted_evaluation(commitments, &stripe_counts, stack_point, proof, challenger)
 }

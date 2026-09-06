@@ -292,6 +292,12 @@ pub struct PicusProgram {
 }
 
 impl PicusProgram {
+    /// The modules of the program, in their stable (name-sorted) order.
+    #[must_use]
+    pub fn modules(&self) -> &BTreeMap<String, PicusModule> {
+        &self.modules
+    }
+
     /// Create a new empty program over the given prime field.
     #[must_use]
     pub fn new(prime: u64) -> Self {

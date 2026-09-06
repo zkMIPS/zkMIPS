@@ -22,7 +22,6 @@ pub mod logup_gkr;
 mod lookup;
 mod machine;
 pub mod multilinear;
-pub mod whir;
 mod opts;
 mod permutation;
 mod proof;
@@ -39,6 +38,7 @@ mod stark_testing;
 pub mod tensor;
 mod types;
 mod verifier;
+pub mod whir;
 mod word;
 pub mod zerocheck_prover;
 

@@ -663,7 +663,9 @@ fn structural_jagged_eval_sumcheck<C: p3_challenger::FieldChallenger<InnerVal>>(
 /// values on any mismatch (the `..._VERIFY` sub-gate).  Because field arithmetic
 /// is exact, a correct engine yields a BYTE-IDENTICAL transcript + proof.
 #[allow(clippy::too_many_arguments)]
-fn structural_jagged_eval_sumcheck_with_engine<C: p3_challenger::FieldChallenger<InnerVal> + 'static>(
+fn structural_jagged_eval_sumcheck_with_engine<
+    C: p3_challenger::FieldChallenger<InnerVal> + 'static,
+>(
     engine: &mut dyn JaggedEvalRoundEngine,
     z_row: &[InnerChallenge],
     z_trace: &[InnerChallenge],
@@ -695,8 +697,7 @@ fn structural_jagged_eval_sumcheck_with_engine<C: p3_challenger::FieldChallenger
     // The snapshot is taken AFTER the claimed-sum observe in the caller, so
     // the device sponge starts at exactly this transcript position.
     if !verify {
-        if let Some(dc) = (challenger as &mut dyn core::any::Any)
-            .downcast_mut::<InnerChallenger>()
+        if let Some(dc) = (challenger as &mut dyn core::any::Any).downcast_mut::<InnerChallenger>()
         {
             let snap = DuplexSnapshot {
                 state: dc.sponge_state,
@@ -710,9 +711,7 @@ fn structural_jagged_eval_sumcheck_with_engine<C: p3_challenger::FieldChallenger
                 let mut current_claim = claimed_sum;
                 let mut rhos_out: Vec<InnerChallenge> = Vec::with_capacity(n);
                 for round in 0..n {
-                    let poly = UnivariatePolynomial::new(
-                        coeffs[3 * round..3 * round + 3].to_vec(),
-                    );
+                    let poly = UnivariatePolynomial::new(coeffs[3 * round..3 * round + 3].to_vec());
                     for &c in &poly.coefficients {
                         dc.observe_algebra_element(c);
                     }

@@ -248,7 +248,8 @@ impl MiscInstrsChip {
 
         builder.eval_memory_access(
             local.frame.shard,
-            crate::frame::clk_from_frame::<AB>(&local.frame) + AB::F::from_u32(MemoryAccessPosition::HI as u32),
+            crate::frame::clk_from_frame::<AB>(&local.frame)
+                + AB::F::from_u32(MemoryAccessPosition::HI as u32),
             AB::F::from_u32(33),
             &maddsub_cols.op_hi_access,
             is_real.clone(),

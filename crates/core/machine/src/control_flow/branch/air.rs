@@ -84,7 +84,6 @@ where
             .when(is_real.clone())
             .assert_word_eq(*local.frame.op_a_access.value(), local.frame.op_a_access.prev_value);
 
-
         // Evaluate program counter constraints.
         {
             // Range check local.next_pc, local.next_next_pc and local.target_pc, .
@@ -181,9 +180,10 @@ where
             zero_ops.clone(),
         );
         // `a > 0` signed on a zero-compare row: not negative and not zero.
-        builder
-            .when(zero_ops)
-            .assert_eq(local.a_gt_0, (AB::Expr::ONE - local.msb_a) * (AB::Expr::ONE - local.a_eq_b));
+        builder.when(zero_ops).assert_eq(
+            local.a_gt_0,
+            (AB::Expr::ONE - local.msb_a) * (AB::Expr::ONE - local.a_eq_b),
+        );
 
         // ── The branching decision, per opcode ───────────────────────────
         // BEQ branches iff a == b.

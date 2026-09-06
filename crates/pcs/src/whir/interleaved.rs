@@ -170,12 +170,7 @@ impl<EF: p3_field::Field> WhirFolder<EF> {
     /// constraint VALUES into the claimed sum and return the per-constraint
     /// batching coefficients (plus the next coefficient) — tiny, serial.
     /// Split out so a device backend can take over the weight absorption.
-    pub fn monomial_coeffs(
-        &mut self,
-        values: &[EF],
-        batch: EF,
-        start_coeff: EF,
-    ) -> (Vec<EF>, EF) {
+    pub fn monomial_coeffs(&mut self, values: &[EF], batch: EF, start_coeff: EF) -> (Vec<EF>, EF) {
         let mut coeffs = Vec::with_capacity(values.len());
         let mut coeff = start_coeff;
         for &val in values {
@@ -197,8 +192,7 @@ impl<EF: p3_field::Field> WhirFolder<EF> {
     /// associative-exact (no floats), so any grouping gives the same value.
     pub fn absorb_monomial_tables(&mut self, points_lsb: &[Vec<EF>], coeffs: &[EF]) {
         use p3_maybe_rayon::prelude::*;
-        let tables: Vec<Vec<EF>> =
-            points_lsb.par_iter().map(|pt| mono_table_lsb(pt)).collect();
+        let tables: Vec<Vec<EF>> = points_lsb.par_iter().map(|pt| mono_table_lsb(pt)).collect();
         for t in &tables {
             debug_assert_eq!(t.len(), self.weight.len());
         }
@@ -236,9 +230,8 @@ where
         mle: Arc<Mle<F>>,
     ) -> (MT::Commitment, Vec<Vec<EF>>, Vec<EF>)
     where
-        Challenger: FieldChallenger<F>
-            + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+        Challenger:
+            FieldChallenger<F> + GrindingChallenger<Witness = F> + CanObserve<MT::Commitment>,
     {
         let n = mle.num_variables() as usize;
         let ff = self.config.round_parameters[0].folding_factor;
@@ -273,9 +266,8 @@ where
     ) -> WhirProof<F, EF, MT>
     where
         EFDft: TwoAdicSubgroupDft<EF>,
-        Challenger: FieldChallenger<F>
-            + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+        Challenger:
+            FieldChallenger<F> + GrindingChallenger<Witness = F> + CanObserve<MT::Commitment>,
     {
         let n = mle.num_variables() as usize;
         let ff = self.config.round_parameters[0].folding_factor;
@@ -424,10 +416,8 @@ where
         for _ in 0..self.config.final_queries {
             let idx = challenger.sample_bits(prev_domain_log) & final_mask;
             let opening = self.mmcs.open_batch(idx, &prev_data);
-            final_leaves.push(LeafOpening {
-                values: opening.opened_values,
-                proof: opening.opening_proof,
-            });
+            final_leaves
+                .push(LeafOpening { values: opening.opened_values, proof: opening.opening_proof });
         }
         round_query_openings.push(MerkleOpening { leaves: final_leaves });
 
@@ -503,9 +493,8 @@ where
         proof: &WhirProof<F, EF, MT>,
     ) -> Result<(), WhirVerifierError>
     where
-        Challenger: FieldChallenger<F>
-            + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+        Challenger:
+            FieldChallenger<F> + GrindingChallenger<Witness = F> + CanObserve<MT::Commitment>,
     {
         let n = point.len();
         let ff = self.config.round_parameters[0].folding_factor;
@@ -614,12 +603,11 @@ where
             if openings.leaves.len() != indices.len() {
                 return Err(WhirVerifierError::IncorrectShape("query opening count".into()));
             }
-            let leaf_width =
-                if prev_base {
-                    1usize << round_cfg.folding_factor
-                } else {
-                    (1usize << round_cfg.folding_factor) * EF::DIMENSION
-                };
+            let leaf_width = if prev_base {
+                1usize << round_cfg.folding_factor
+            } else {
+                (1usize << round_cfg.folding_factor) * EF::DIMENSION
+            };
             let dims = alloc::vec![p3_matrix::Dimensions {
                 width: leaf_width,
                 height: 1usize << prev_domain_log,
@@ -659,8 +647,7 @@ where
             }
 
             prev_domain_log =
-                (rem - self.config.round_parameters[r + 1].folding_factor)
-                    + round_cfg.log_inv_rate;
+                (rem - self.config.round_parameters[r + 1].folding_factor) + round_cfg.log_inv_rate;
             prev_base = false;
             prev_commitment = proof.round_commitments[r].clone();
         }
@@ -677,11 +664,8 @@ where
             return Err(WhirVerifierError::IncorrectShape("final query count".into()));
         }
         let last_ff = *folds.last().unwrap();
-        let leaf_width = if prev_base {
-            1usize << last_ff
-        } else {
-            (1usize << last_ff) * EF::DIMENSION
-        };
+        let leaf_width =
+            if prev_base { 1usize << last_ff } else { (1usize << last_ff) * EF::DIMENSION };
         let dims = alloc::vec![p3_matrix::Dimensions {
             width: leaf_width,
             height: 1usize << prev_domain_log,

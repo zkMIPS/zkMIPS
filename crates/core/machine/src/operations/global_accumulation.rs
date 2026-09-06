@@ -180,11 +180,8 @@ impl<F: Field, const N: usize> GlobalAccumulationOperation<F, N> {
                 point_to_add.clone(),
                 next_sum.clone(),
             );
-            let sum_checker_y = SepticCurve::<AB::Expr>::sum_checker_y(
-                current_sum,
-                point_to_add,
-                next_sum,
-            );
+            let sum_checker_y =
+                SepticCurve::<AB::Expr>::sum_checker_y(current_sum, point_to_add, next_sum);
             builder.assert_septic_ext_eq(
                 sum_checker_x,
                 SepticExtension::<AB::Expr>::from_base_fn(|_| AB::Expr::ZERO),

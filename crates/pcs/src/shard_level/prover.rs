@@ -170,8 +170,7 @@ where
         // Build the ring-native BaseFold precompute via the `BasefoldRing`
         // trait method, INLINE during the prove pass.  The returned commit
         // already stamps `rev`.
-        let precomputed_generic =
-            <SC as BasefoldRing>::commit_multilinears(&named_inner, use_rev);
+        let precomputed_generic = <SC as BasefoldRing>::commit_multilinears(&named_inner, use_rev);
         // Ring-generic digest: NO jagged hash-bind on the outer ring (the
         // BN254 wrap re-binds in its registered hook).
         let digest_jv: [crate::jagged_pcs::JaggedVal; 8] =

@@ -56,7 +56,6 @@ pub struct CloClzCols<T> {
     /// The result
     pub a: Word<T>,
 
-
     /// if clo, bb == 0xffffffff - b
     /// if clz, bb == b
     pub bb: Word<T>,
@@ -165,7 +164,7 @@ impl<F: PrimeField32> MachineAir<F> for CloClzChip {
             || {
                 let mut row = [F::ZERO; NUM_CLOCLZ_COLS];
                 let cols: &mut CloClzCols<F> = row.as_mut_slice().borrow_mut();
-                                row
+                row
             },
             input.fixed_log2_rows::<F, _>(self),
             <CloClzChip as MachineAir<F>>::name(self).as_str(),

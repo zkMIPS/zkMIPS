@@ -430,7 +430,7 @@ mod parity_tests {
                 cols.shift_by_n_bits[0] = F::ONE;
                 cols.shift_by_n_bytes[0] = F::ONE;
                 cols.bit_shift_multiplier = F::ONE;
-                            }
+            }
         );
         check!(
             ShiftLeftImm::default(),
@@ -459,7 +459,7 @@ mod parity_tests {
                 use p3_field::PrimeCharacteristicRing;
                 cols.shift_by_n_bits[0] = F::ONE;
                 cols.shift_by_n_bytes[0] = F::ONE;
-                            }
+            }
         );
         check!(
             ShiftRightImmChip::default(),

@@ -9,8 +9,8 @@
 use std::{env, fs, time::Instant};
 
 use zkm_core_executor::{Executor, Program};
-use zkm_pcs::ZKMCoreOpts;
 use zkm_core_machine::io::ZKMStdin;
+use zkm_pcs::ZKMCoreOpts;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

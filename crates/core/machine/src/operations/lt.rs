@@ -25,7 +25,6 @@ use zkm_core_executor::{
 use zkm_derive::AlignedBorrow;
 use zkm_pcs::{air::ZKMAirBuilder, Word};
 
-
 /// Columns for one signed/unsigned less-than comparison of two words.
 ///
 /// The caller passes `is_slt` / `is_sltu` selector EXPRESSIONS (boolean, at

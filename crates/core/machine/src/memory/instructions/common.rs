@@ -31,7 +31,6 @@ use zkm_primitives::consts::WORD_SIZE;
 use crate::air::WordAirBuilder;
 use crate::{
     air::ZKMCoreAirBuilder,
-
     operations::{AddOperation, IsZeroOperation, KoalaBearWordRangeChecker},
     utils::zeroed_f_vec,
 };
@@ -218,7 +217,6 @@ pub fn receive_memory_instruction<AB: ZKMCoreAirBuilder>(
     op_a_immutable: AB::Expr,
     is_real: AB::Expr,
 ) {
-
     // A real instruction carries its own program fetch, register access and
     // `(clk, pc)` chaining.  Memory instructions are sequential, never halt.
     // The plain stores read op_a immutably (the per-chip `op_a_immutable`
@@ -322,7 +320,9 @@ pub(crate) fn generate_memory_trace<F: PrimeField32>(
     events: &[MemInstrEvent],
     padded_nb_rows: usize,
     num_cols: usize,
-    event_to_row: impl Fn(&MemInstrEvent, &mut [F], &mut zkm_core_executor::events::ByteLookupMap) + Sync + Send,
+    event_to_row: impl Fn(&MemInstrEvent, &mut [F], &mut zkm_core_executor::events::ByteLookupMap)
+        + Sync
+        + Send,
     pad_row: impl Fn(&mut [F]) + Sync + Send,
 ) -> (RowMajorMatrix<F>, Vec<zkm_core_executor::events::ByteLookupMap>) {
     let chunk_size = std::cmp::max(events.len() / num_cpus::get(), 1);

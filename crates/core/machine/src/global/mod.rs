@@ -6,6 +6,8 @@ use std::{
         Arc,
     },
 };
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use p3_air::{Air, BaseAir, WindowAccess};
 use p3_field::PrimeCharacteristicRing;
@@ -98,7 +100,7 @@ pub struct Ghost {
 #[derive(Default)]
 pub struct GlobalChip;
 
-#[derive(AlignedBorrow)]
+#[derive(PicusAnnotations, AlignedBorrow)]
 #[repr(C)]
 pub struct GlobalCols<T: Copy> {
     pub message: [T; 7],
@@ -125,6 +127,10 @@ impl<F: PrimeField32> MachineAir<F> for GlobalChip {
     fn name(&self) -> String {
         assert_eq!(GLOBAL_INITIAL_DIGEST_POS_COPY, GLOBAL_INITIAL_DIGEST_POS);
         "Global".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        GlobalCols::<u8>::picus_info()
     }
 
     fn generate_dependencies(
@@ -441,4 +447,3 @@ mod tests {
         }
     }
 }
-

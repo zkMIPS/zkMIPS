@@ -49,12 +49,7 @@ where
         // commit time are unused (folding sets them per round), so a nominal
         // FriConfig carries only the blowup the encoder needs.
         let fri = FriConfig::new(config.starting_log_inv_rate, 0, 0);
-        Self {
-            encoder: DftEncoder::new(fri, dft),
-            mmcs,
-            config,
-            _ef: core::marker::PhantomData,
-        }
+        Self { encoder: DftEncoder::new(fri, dft), mmcs, config, _ef: core::marker::PhantomData }
     }
 
     /// WHIR commit: encode + Merkle-commit the MLE, then draw and answer the

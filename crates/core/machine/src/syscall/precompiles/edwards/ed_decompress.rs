@@ -3,6 +3,8 @@ use core::{
     mem::size_of,
 };
 use std::marker::PhantomData;
+use zkm_derive::PicusAnnotations;
+use zkm_pcs::PicusInfo;
 
 use crate::{air::MemoryAirBuilder, utils::pad_rows_fixed_with_err, CoreChipError};
 use generic_array::GenericArray;
@@ -40,7 +42,7 @@ pub const NUM_ED_DECOMPRESS_COLS: usize = size_of::<EdDecompressCols<u8>>();
 /// compressed Y (without sign bit).
 ///
 /// After `EdDecompress`, the first 32 bytes of the slice are overwritten with the decompressed X.
-#[derive(Debug, Clone, AlignedBorrow)]
+#[derive(PicusAnnotations, Debug, Clone, AlignedBorrow)]
 #[repr(C)]
 pub struct EdDecompressCols<T> {
     pub is_real: T,
@@ -208,6 +210,10 @@ impl<F: PrimeField32, E: EdwardsParameters> MachineAir<F> for EdDecompressChip<E
 
     fn name(&self) -> String {
         "EdDecompress".to_string()
+    }
+
+    fn picus_info(&self) -> PicusInfo {
+        EdDecompressCols::<u8>::picus_info()
     }
 
     fn generate_trace(

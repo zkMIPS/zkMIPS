@@ -89,8 +89,6 @@ pub struct MulCols<T> {
 
     /// The output operand.
 
-
-
     /// Trace.
     pub carry: [T; PRODUCT_SIZE],
 
@@ -133,7 +131,6 @@ pub struct MulCols<T> {
     /// real row (every Mul row is an instruction — the Instruction bus and
     /// its dependency rows are gone).
     pub frame: RTypeFrameCols<T>,
-
 }
 
 impl<F: PrimeField32> MachineAir<F> for MulChip {
