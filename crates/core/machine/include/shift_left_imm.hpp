@@ -22,15 +22,14 @@ namespace zkm_core_machine_sys::shift_left_imm {
         cols.pc = F::from_canonical_u32(event.pc);
         cols.next_pc = F::from_canonical_u32(event.next_pc);
         cols.is_real = F::one();
-        for (uint32_t i = 0; i < BYTE_SIZE; i += 1) {
+        // 5 shamt bits (mirror of `sll_imm/mod.rs`: `SHAMT_BITS`).
+        for (uint32_t i = 0; i < 5; i += 1) {
             cols.c_least_sig_byte[i] = F::from_canonical_u32((event.c >> i) & 1);
         }
 
-        // Variables for bit shifting.
+        // Variables for bit shifting (the multiplier is pinned by the AIR as
+        // (1 + c0)(1 + 3 c1)(1 + 15 c2); no selector array).
         uint32_t num_bits_to_shift = event.c % BYTE_SIZE;
-        for (uint32_t i = 0; i < BYTE_SIZE; i++) {
-            cols.shift_by_n_bits[i] = F::from_bool(num_bits_to_shift == i);
-        }
 
         uint32_t bit_shift_multiplier = 1u << num_bits_to_shift;
         cols.bit_shift_multiplier = F::from_canonical_u32(bit_shift_multiplier);

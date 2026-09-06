@@ -57,6 +57,9 @@ use crate::{
 };
 
 /// The number of main trace columns for `ShiftLeftImm`.
+/// Width of a MIPS shift amount.
+pub const SHAMT_BITS: usize = 5;
+
 pub const NUM_SHIFT_LEFT_IMM_COLS: usize = size_of::<ShiftLeftImmCols<u8>>();
 
 /// The number of bits in a byte.
@@ -79,13 +82,12 @@ pub struct ShiftLeftImmCols<T> {
 
 
 
-    /// The least significant byte of `c`. Used to verify `shift_by_n_bits` and `shift_by_n_bytes`.
-    pub c_least_sig_byte: [T; BYTE_SIZE],
+    /// The 5 bits of the shift amount `c` (a shamt, `< 32`): bits 0..3 select the bit shift,
+    /// bits 3..5 the byte shift.
+    pub c_least_sig_byte: [T; SHAMT_BITS],
 
-    /// A boolean array whose `i`th element indicates whether `num_bits_to_shift = i`.
-    pub shift_by_n_bits: [T; BYTE_SIZE],
-
-    /// The number to multiply to shift `b` by `num_bits_to_shift`. (i.e., `2^num_bits_to_shift`)
+    /// `2^num_bits_to_shift`, pinned as the product `(1 + c0)(1 + 3 c1)(1 + 15 c2)` — no one-hot
+    /// selector array is needed for it.
     pub bit_shift_multiplier: T,
 
     /// The result of multiplying `b` by `bit_shift_multiplier`.
@@ -170,7 +172,6 @@ impl<F: PrimeField32> MachineAir<F> for ShiftLeftImm {
         let padded_row_template = {
             let mut row = [F::ZERO; NUM_SHIFT_LEFT_IMM_COLS];
             let cols: &mut ShiftLeftImmCols<F> = row.as_mut_slice().borrow_mut();
-            cols.shift_by_n_bits[0] = F::ONE;
             cols.shift_by_n_bytes[0] = F::ONE;
             cols.bit_shift_multiplier = F::ONE;
             // A padding row's frame needs no neutralising: the typed frame's
@@ -244,15 +245,13 @@ impl ShiftLeftImm {
         cols.pc = F::from_u32(event.pc);
         cols.next_pc = F::from_u32(event.next_pc);
         cols.is_real = F::ONE;
-        for i in 0..BYTE_SIZE {
+        debug_assert!(event.c < 32, "SLL shamt must be < 32");
+        for i in 0..SHAMT_BITS {
             cols.c_least_sig_byte[i] = F::from_u32((event.c >> i) & 1);
         }
 
         // Variables for bit shifting.
         let num_bits_to_shift = event.c as usize % BYTE_SIZE;
-        for i in 0..BYTE_SIZE {
-            cols.shift_by_n_bits[i] = F::from_bool(num_bits_to_shift == i);
-        }
 
         let bit_shift_multiplier = 1u32 << num_bits_to_shift;
         cols.bit_shift_multiplier = F::from_u32(bit_shift_multiplier);
@@ -316,35 +315,21 @@ where
 
         // Step 1: Perform the fine-grained bit shift (i.e., shifting b by c % 8 bits).
 
-        // Check the sum of c_least_sig_byte[i] * 2^i equals c[0].
+        // Check the sum of c_least_sig_byte[i] * 2^i equals c (a shamt, so 5 bits bind it fully
+        // and force c < 32).
         let mut c_byte_sum = zero.clone();
-        for i in 0..BYTE_SIZE {
+        for i in 0..SHAMT_BITS {
             let val: AB::Expr = AB::F::from_u32(1 << i).into();
             c_byte_sum = c_byte_sum.clone() + val * local.c_least_sig_byte[i];
         }
         builder.assert_eq(c_byte_sum, op_c);
 
-        // Check shift_by_n_bits[i] is 1 iff i = num_bits_to_shift.
-        let mut num_bits_to_shift = zero.clone();
-
-        // 3 is the maximum number of bits necessary to represent num_bits_to_shift as
-        // num_bits_to_shift is in [0, 7].
-        for i in 0..3 {
-            num_bits_to_shift =
-                num_bits_to_shift.clone() + local.c_least_sig_byte[i] * AB::F::from_u32(1 << i);
-        }
-        for i in 0..BYTE_SIZE {
-            builder
-                .when(local.shift_by_n_bits[i])
-                .assert_eq(num_bits_to_shift.clone(), AB::F::from_usize(i));
-        }
-
-        // Check bit_shift_multiplier = 2^num_bits_to_shift by using shift_by_n_bits.
-        for i in 0..BYTE_SIZE {
-            builder
-                .when(local.shift_by_n_bits[i])
-                .assert_eq(local.bit_shift_multiplier, AB::F::from_usize(1 << i));
-        }
+        // Check bit_shift_multiplier = 2^(c mod 8) = (1 + c0)(1 + 3 c1)(1 + 15 c2) (degree 3, the
+        // bits being boolean).
+        let multiplier = (one.clone() + local.c_least_sig_byte[0])
+            * (one.clone() + local.c_least_sig_byte[1] * AB::F::from_u32(3))
+            * (one.clone() + local.c_least_sig_byte[2] * AB::F::from_u32(15));
+        builder.assert_eq(local.bit_shift_multiplier, multiplier);
 
         // Check bit_shift_result = b * bit_shift_multiplier by using bit_shift_result_carry to
         // carry-propagate.
@@ -398,14 +383,6 @@ where
         for bit in local.c_least_sig_byte.iter() {
             builder.assert_bool(*bit);
         }
-
-        for shift in local.shift_by_n_bits.iter() {
-            builder.assert_bool(*shift);
-        }
-        builder.assert_eq(
-            local.shift_by_n_bits.iter().fold(zero.clone(), |acc, &x| acc + x),
-            one.clone(),
-        );
 
         // Range check.
         {
