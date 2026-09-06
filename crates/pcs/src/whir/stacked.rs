@@ -170,12 +170,7 @@ pub trait WhirRound0Engine<F: p3_field::Field, EF, MT: Mmcs<F>> {
     /// [`crate::whir::sumcheck`] `eq_table` convention (LSB-first, bit k
     /// pairs with coordinate k).  `false` declines to the host absorption;
     /// resident-weight rule as for [`Self::absorb_monomials`].
-    fn absorb_ood(
-        &mut self,
-        _weight: &mut [EF],
-        _points_lsb: &[Vec<EF>],
-        _coeffs: &[EF],
-    ) -> bool {
+    fn absorb_ood(&mut self, _weight: &mut [EF], _points_lsb: &[Vec<EF>], _coeffs: &[EF]) -> bool {
         false
     }
 }
@@ -238,10 +233,7 @@ mod open_timing {
                 g(&GRINDQ), g(&QR0), g(&QLATER), g(&FGRIND), g(&FOPEN),
                 g(&CENGINE), g(&CHOST)
             );
-            eprintln!(
-                "#WHIR-OPEN-TIMING n={n} pevals={:.2}s pinit={:.2}s",
-                g(&PEVALS), g(&PINIT)
-            );
+            eprintln!("#WHIR-OPEN-TIMING n={n} pevals={:.2}s pinit={:.2}s", g(&PEVALS), g(&PINIT));
         }
     }
 }
@@ -304,9 +296,16 @@ where
         EFDft: TwoAdicSubgroupDft<EF>,
         Challenger: FieldChallenger<F>
             + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+            + CanObserve<MT::Commitment>
+            + 'static,
     {
-        self.prove_trusted_evaluation_with_engine(ef_dft, stack_point, prover_data, challenger, None)
+        self.prove_trusted_evaluation_with_engine(
+            ef_dft,
+            stack_point,
+            prover_data,
+            challenger,
+            None,
+        )
     }
 
     /// [`Self::prove_trusted_evaluation`] with an optional
@@ -326,7 +325,8 @@ where
         EFDft: TwoAdicSubgroupDft<EF>,
         Challenger: FieldChallenger<F>
             + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+            + CanObserve<MT::Commitment>
+            + 'static,
     {
         let lsh = self.log_stacking_height as usize;
         let ff = self.ff();
@@ -472,16 +472,12 @@ where
                     challenger.observe_algebra_element(c0);
                     challenger.observe_algebra_element(c1);
                     challenger.observe_algebra_element(c2);
-                    let pow =
-                        challenger.grind(round_cfg.pow_bits.get(var).copied().unwrap_or(0));
+                    let pow = challenger.grind(round_cfg.pow_bits.get(var).copied().unwrap_or(0));
                     let rc: EF = challenger.sample_algebra_element();
                     folder.claimed_sum = c0 + c1 * rc + c2 * rc * rc;
                     e.apply_rc(rc);
                     this_round_randomness.push(rc);
-                    out.push((
-                        SumcheckPoly(alloc::vec![c0, c1, c2]),
-                        ProofOfWork(pow),
-                    ));
+                    out.push((SumcheckPoly(alloc::vec![c0, c1, c2]), ProofOfWork(pow)));
                 }
                 out
             } else {
@@ -526,8 +522,9 @@ where
             // host time on the prover's critical path).  A backend
             // commitment is byte-identical to the host mmcs commit, so the
             // transcript cannot tell.
-            let engine_commit =
-                engine.as_deref_mut().and_then(|e| e.commit_folded(next_ff, round_cfg.log_inv_rate));
+            let engine_commit = engine
+                .as_deref_mut()
+                .and_then(|e| e.commit_folded(next_ff, round_cfg.log_inv_rate));
             let this_tree = match engine_commit {
                 Some(commitment) => {
                     challenger.observe(commitment.clone());
@@ -567,9 +564,8 @@ where
             // Fresh OOD on the folded polynomial (answered by the engine
             // while it holds the vector: the host `eval_at` on the 2^17
             // post-round-0 vector was ~9 ms per open).
-            let folded = (!resident).then(|| {
-                Mle::<EF>::from_row_major(RowMajorMatrix::new(folder.f_vec.clone(), 1))
-            });
+            let folded = (!resident)
+                .then(|| Mle::<EF>::from_row_major(RowMajorMatrix::new(folder.f_vec.clone(), 1)));
             let mut ood_points = Vec::with_capacity(round_cfg.ood_samples);
             let mut ood_answers = Vec::with_capacity(round_cfg.ood_samples);
             for _ in 0..round_cfg.ood_samples {
@@ -589,7 +585,13 @@ where
             // Query PoW + indices into the PREVIOUS codeword.
             {
                 let _t_g = open_timing::Timer::new(&open_timing::GRINDQ);
-                folding_pow.push(ProofOfWork(challenger.grind(round_cfg.queries_pow_bits)));
+                // Through `deterministic_grind`: a registered device accelerator (the GPU
+                // prover registers one for its inner challenger) replaces the host search,
+                // and the host fallback is the smallest-index `find_first` walk.
+                folding_pow.push(ProofOfWork(crate::basefold::prover::deterministic_grind(
+                    challenger,
+                    round_cfg.queries_pow_bits,
+                )));
             }
             let mask = (1usize << prev_domain_log) - 1;
             let indices: Vec<usize> = (0..round_cfg.num_queries)
@@ -610,12 +612,11 @@ where
                 };
             // Round-1-codeword queries against an ENGINE-committed tree:
             // fetched in one batched call, served from the queue below.
-            let mut engine_folded_batch: Option<
-                alloc::collections::VecDeque<LeafOpening<F, MT>>,
-            > = match (&prev_single, engine.as_deref_mut()) {
-                (PrevTree::Engine, Some(e)) => Some(e.open_folded_queries(&indices).into()),
-                _ => None,
-            };
+            let mut engine_folded_batch: Option<alloc::collections::VecDeque<LeafOpening<F, MT>>> =
+                match (&prev_single, engine.as_deref_mut()) {
+                    (PrevTree::Engine, Some(e)) => Some(e.open_folded_queries(&indices).into()),
+                    _ => None,
+                };
             let _t_qkind = open_timing::Timer::new(if matches!(prev_single, PrevTree::Stripes) {
                 &open_timing::QR0
             } else {
@@ -626,8 +627,7 @@ where
             // trees, so this half is inherently sequential.  It is also the
             // cheap half: the cost of `qr0` is the combine below.
             let stripes_mode = matches!(prev_single, PrevTree::Stripes);
-            let mut per_query: Vec<Vec<LeafOpening<F, MT>>> =
-                Vec::with_capacity(indices.len());
+            let mut per_query: Vec<Vec<LeafOpening<F, MT>>> = Vec::with_capacity(indices.len());
             for &idx in &indices {
                 let opened: Vec<LeafOpening<F, MT>> = match &prev_single {
                     PrevTree::Stripes => {
@@ -728,9 +728,9 @@ where
             let ood_coeffs = folder.ood_coeffs(&ood_answers, round_batch);
             let ood_absorbed = {
                 let _t_e = open_timing::Timer::new(&open_timing::CENGINE);
-                engine.as_deref_mut().map_or(false, |e| {
-                    e.absorb_ood(&mut folder.weight, &ood_points, &ood_coeffs)
-                })
+                engine
+                    .as_deref_mut()
+                    .map_or(false, |e| e.absorb_ood(&mut folder.weight, &ood_points, &ood_coeffs))
             };
             if !ood_absorbed {
                 assert!(!resident, "WhirRound0Engine declined absorb_ood while resident");
@@ -741,8 +741,7 @@ where
             // The weight absorption goes to the backend when one is present
             // (value-identical - field ops are exact in any order); the
             // transcript half stays host either way.
-            let (mono_coeffs, _) =
-                folder.monomial_coeffs(&stir_values, round_batch, start_coeff);
+            let (mono_coeffs, _) = folder.monomial_coeffs(&stir_values, round_batch, start_coeff);
             let absorbed = {
                 let _t_e = open_timing::Timer::new(&open_timing::CENGINE);
                 engine.as_deref_mut().map_or(false, |e| {
@@ -765,7 +764,10 @@ where
         let final_poly = folder.f_vec.clone();
         let final_pow = {
             let _t_g = open_timing::Timer::new(&open_timing::FGRIND);
-            ProofOfWork(challenger.grind(self.config.final_pow_bits))
+            ProofOfWork(crate::basefold::prover::deterministic_grind(
+                challenger,
+                self.config.final_pow_bits,
+            ))
         };
         let final_mask = (1usize << prev_domain_log) - 1;
         let _t_fopen = open_timing::Timer::new(&open_timing::FOPEN);
@@ -879,7 +881,8 @@ where
     where
         Challenger: FieldChallenger<F>
             + GrindingChallenger<Witness = F>
-            + CanObserve<MT::Commitment>,
+            + CanObserve<MT::Commitment>
+            + 'static,
     {
         let lsh = self.log_stacking_height as usize;
         let ff = self.config.round_parameters[0].folding_factor;
@@ -1023,8 +1026,7 @@ where
             let mut stir_values: Vec<EF> = Vec::with_capacity(indices.len());
             for (qi, &idx) in indices.iter().enumerate() {
                 let virt_leaf: Vec<EF> = if prev_round0 {
-                    let mut virt_leaf =
-                        alloc::vec![EF::ZERO; 1usize << round_cfg.folding_factor];
+                    let mut virt_leaf = alloc::vec![EF::ZERO; 1usize << round_cfg.folding_factor];
                     for (ri, commitment) in commitments.iter().enumerate() {
                         let leaf = &openings.leaves[qi * leaves_per_query + ri];
                         let stripe_count = round_stripe_counts[ri];
@@ -1044,9 +1046,7 @@ where
                         self.mmcs
                             .verify_batch(commitment, &dims, idx, opened)
                             .map_err(|_| WhirVerifierError::IncorrectShape("merkle".into()))?;
-                        for (row, &lp) in
-                            leaf.values.iter().zip(&lambda_powers_per_round[ri])
-                        {
+                        for (row, &lp) in leaf.values.iter().zip(&lambda_powers_per_round[ri]) {
                             for (v, &s) in virt_leaf.iter_mut().zip(row.iter()) {
                                 *v += lp * s;
                             }
@@ -1091,8 +1091,7 @@ where
             }
 
             prev_domain_log =
-                (rem - self.config.round_parameters[r + 1].folding_factor)
-                    + round_cfg.log_inv_rate;
+                (rem - self.config.round_parameters[r + 1].folding_factor) + round_cfg.log_inv_rate;
             prev_round0 = false;
         }
 
@@ -1147,12 +1146,7 @@ where
                     opening_proof: &leaf.proof,
                 };
                 self.mmcs
-                    .verify_batch(
-                        whir.round_commitments.last().unwrap(),
-                        &dims,
-                        idx,
-                        opened,
-                    )
+                    .verify_batch(whir.round_commitments.last().unwrap(), &dims, idx, opened)
                     .map_err(|_| WhirVerifierError::IncorrectShape("final merkle".into()))?;
                 leaf.values[0]
                     .chunks_exact(EF::DIMENSION)

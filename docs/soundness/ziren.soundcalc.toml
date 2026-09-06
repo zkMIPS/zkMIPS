@@ -18,7 +18,7 @@ hash_size_bits = 248
 #   2^22 rows (CORE_MAX_LOG_ROW_COUNT).  WHIR folds [3, 6, 6] from 21 variables,
 #   starting rate 2^-2; round r commits at log_inv_rate 2 + 3(r+1) = 5, 8
 #   (Ziren's escalation, NOT WHIR's k-1 default — overridden below);
-#   71 / 51 / 49 queries with a 16-bit query PoW per round, 2 OOD samples per
+#   65 / 47 / 45 queries with a 20-bit query PoW per round, 2 OOD samples per
 #   committed round, no folding PoW.  Lookups: LogUp-GKR, 16-bit grind.
 [[circuits]]
 protocol_family = "JAGGED"
@@ -40,11 +40,11 @@ num_iterations = 3
 folding_factors = [3, 6, 6]
 whir_log_inv_rates = [2, 5, 8, 8]
 constraint_degree = 3
-num_queries = [71, 51, 49]
+num_queries = [65, 47, 45]
 num_ood_samples = [2, 2]
 grinding_batching_phase = 0
 grinding_bits_folding = [[0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
-grinding_bits_queries = [16, 16, 16]
+grinding_bits_queries = [20, 20, 20]
 grinding_bits_ood = [0, 0]
 
 [[circuits.lookups]]
@@ -82,11 +82,11 @@ num_iterations = 3
 folding_factors = [3, 6, 6]
 whir_log_inv_rates = [2, 5, 8, 8]
 constraint_degree = 3
-num_queries = [71, 51, 49]
+num_queries = [65, 47, 45]
 num_ood_samples = [2, 2]
 grinding_batching_phase = 0
 grinding_bits_folding = [[0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
-grinding_bits_queries = [16, 16, 16]
+grinding_bits_queries = [20, 20, 20]
 grinding_bits_ood = [0, 0]
 
 [[circuits.lookups]]
