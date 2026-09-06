@@ -214,10 +214,8 @@ impl<'a> TracingVM<'a> {
         // uninitialized image) read as zero.  Consuming positionally removes
         // both failure modes: the Nth access gets the Nth recorded record.
         if !chunk.mem_reads.is_empty() {
-            sub.replay_mem = Some(crate::minimal_trace::ReplayMem {
-                entries: chunk.mem_reads.clone(),
-                pos: 0,
-            });
+            sub.replay_mem =
+                Some(crate::minimal_trace::ReplayMem { entries: chunk.mem_reads.clone(), pos: 0 });
         }
 
         // bound this worker to chunk.clk_end. Without
@@ -491,12 +489,8 @@ pub fn drive_tracing_vm_parallel_with_shapes(
         .par_iter()
         .zip(records.par_iter_mut())
         .map(|(chunk, record)| {
-            let mut vm = TracingVM::new_with_shapes(
-                program.clone(),
-                opts,
-                record,
-                maximal_shapes.clone(),
-            );
+            let mut vm =
+                TracingVM::new_with_shapes(program.clone(), opts, record, maximal_shapes.clone());
             vm.execute_from_chunk_with_streams(chunk, input_stream, proof_stream)
         })
         .collect();
@@ -747,8 +741,7 @@ mod tests {
             "a streamed chunk went out without its hint window"
         );
         let trace = MinimalTrace { chunks, ..Default::default() };
-        let records_b =
-            drive_tracing_vm_parallel(Arc::new(program), opts, &trace).expect("replay");
+        let records_b = drive_tracing_vm_parallel(Arc::new(program), opts, &trace).expect("replay");
 
         let sum = |rs: &[crate::ExecutionRecord], f: fn(&crate::ExecutionRecord) -> usize| {
             rs.iter().map(f).sum::<usize>()
@@ -832,8 +825,7 @@ mod tests {
             }
         }
         let trace = MinimalTrace { chunks, ..Default::default() };
-        let records_b =
-            drive_tracing_vm_parallel(Arc::new(program), opts, &trace).expect("replay");
+        let records_b = drive_tracing_vm_parallel(Arc::new(program), opts, &trace).expect("replay");
 
         // Per code, every event in stream order, serialized: the bytes a
         // worker would store for the controller.
@@ -861,7 +853,10 @@ mod tests {
             let b = &ev_b[code];
             assert_eq!(a.len(), b.len(), "{code:?}: event count");
             for (i, (x, y)) in a.iter().zip(b.iter()).enumerate() {
-                assert!(x == y, "{code:?}: event {i} differs between the sequential run and the replay");
+                assert!(
+                    x == y,
+                    "{code:?}: event {i} differs between the sequential run and the replay"
+                );
             }
         }
     }
@@ -885,9 +880,8 @@ mod tests {
             let pc_base = 0x1000_0000u32;
             // Enough cycles to cross several shard boundaries at a small
             // shard size, so there is more than one chunk to compare.
-            let insns: Vec<Instruction> = (0..4000)
-                .map(|_| Instruction::new(Opcode::ADD, 1, 0, 1, false, true))
-                .collect();
+            let insns: Vec<Instruction> =
+                (0..4000).map(|_| Instruction::new(Opcode::ADD, 1, 0, 1, false, true)).collect();
             Program::new(insns, pc_base, pc_base)
         }
         let mut opts = ZKMCoreOpts::default();

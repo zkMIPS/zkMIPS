@@ -599,10 +599,7 @@ impl MachineRecord for ExecutionRecord {
         stats.insert("shift_left_events".to_string(), self.shift_left_events.len());
         stats.insert("shift_left_imm_events".to_string(), self.shift_left_imm_events.len());
         stats.insert("shift_right_events".to_string(), self.shift_right_events.len());
-        stats.insert(
-            "shift_right_imm_events".to_string(),
-            self.shift_right_imm_events.len(),
-        );
+        stats.insert("shift_right_imm_events".to_string(), self.shift_right_imm_events.len());
         stats.insert("divrem_events".to_string(), self.divrem_events.len());
         stats.insert("lt_events".to_string(), self.lt_events.len());
         stats.insert("lt_imm_events".to_string(), self.lt_imm_events.len());
@@ -784,10 +781,7 @@ impl ByteRecord for ExecutionRecord {
     }
 
     #[inline]
-    fn add_byte_lookup_events_from_maps(
-        &mut self,
-        new_events: Vec<&crate::events::ByteLookupMap>,
-    ) {
+    fn add_byte_lookup_events_from_maps(&mut self, new_events: Vec<&crate::events::ByteLookupMap>) {
         for new_blu_map in new_events {
             for (blu_event, count) in new_blu_map.iter() {
                 *self.byte_lookups.entry(*blu_event).or_insert(0) += count;

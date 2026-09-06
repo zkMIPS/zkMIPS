@@ -151,10 +151,7 @@ impl ByteRecord for Vec<ByteLookupEvent> {
         self.push(blu_event);
     }
 
-    fn add_byte_lookup_events_from_maps(
-        &mut self,
-        new_events: Vec<&crate::events::ByteLookupMap>,
-    ) {
+    fn add_byte_lookup_events_from_maps(&mut self, new_events: Vec<&crate::events::ByteLookupMap>) {
         for new_blu_map in new_events {
             for (blu_event, count) in new_blu_map.iter() {
                 self.extend(std::iter::repeat_n(*blu_event, *count));
@@ -169,10 +166,7 @@ impl ByteRecord for crate::events::ByteLookupMap {
         self.entry(blu_event).and_modify(|e| *e += 1).or_insert(1);
     }
 
-    fn add_byte_lookup_events_from_maps(
-        &mut self,
-        new_events: Vec<&crate::events::ByteLookupMap>,
-    ) {
+    fn add_byte_lookup_events_from_maps(&mut self, new_events: Vec<&crate::events::ByteLookupMap>) {
         for new_blu_map in new_events {
             for (blu_event, count) in new_blu_map.iter() {
                 *self.entry(*blu_event).or_insert(0) += count;

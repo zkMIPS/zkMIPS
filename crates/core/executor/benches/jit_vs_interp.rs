@@ -111,15 +111,14 @@ fn run_jit_alu_chain(program: &Program) -> u64 {
     let mut memory = vec![0u8; 4096];
     let jump_table_ptr: *const *const u8 = ptr::null();
     let mut trace_buf = vec![0u8; 4096];
-    let mut ctx =
-        build_context(
-            0,
-            memory.as_mut_ptr(),
-            jump_table_ptr,
-            jit_fn.jump_table.len(),
-            trace_buf.as_mut_ptr(),
-            [0u32; 36],
-        );
+    let mut ctx = build_context(
+        0,
+        memory.as_mut_ptr(),
+        jump_table_ptr,
+        jit_fn.jump_table.len(),
+        trace_buf.as_mut_ptr(),
+        [0u32; 36],
+    );
 
     let start = Instant::now();
     unsafe { run_jit(&jit_fn, &mut ctx) };

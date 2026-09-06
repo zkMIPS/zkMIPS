@@ -57,9 +57,9 @@ mod platform {
     use zkm_core_jit::{
         backends::x86::{
             producer::{
-                build_producer, producer_reject, runs_in_interpreter, HeightCharge,
-                ProducerConfig, ProducerInstr, ProducerReject, MAX_CHARGES, MAX_STAMPS, POS_A,
-                POS_B, POS_C, POS_HI,
+                build_producer, producer_reject, runs_in_interpreter, HeightCharge, ProducerConfig,
+                ProducerInstr, ProducerReject, MAX_CHARGES, MAX_STAMPS, POS_A, POS_B, POS_C,
+                POS_HI,
             },
             JIT_EXIT_BAD_JUMP, JIT_EXIT_FALL_OFF, JIT_EXIT_HOST, JIT_EXIT_ORACLE_FULL,
             JIT_EXIT_SHARD_FENCE,
@@ -75,8 +75,8 @@ mod platform {
         jit_runner::{program_fingerprint_of, to_driver_instruction},
         minimal_trace::MemValue,
         program::MAX_MEMORY,
-        ExecutionError, Executor, ExecutorMode, Instruction, MipsAirId, Opcode, Program,
-        Register, NUM_REGISTERS,
+        ExecutionError, Executor, ExecutorMode, Instruction, MipsAirId, Opcode, Program, Register,
+        NUM_REGISTERS,
     };
 
     const _: () = {
@@ -215,8 +215,7 @@ mod platform {
     /// `pc` is the delay slot of a branch/jump.
     fn is_delay_slot(program: &Program, pc: u32) -> bool {
         let idx = pc.wrapping_sub(program.pc_base) / 4;
-        idx >= 1
-            && program.instructions.get(idx as usize - 1).is_some_and(is_control_flow)
+        idx >= 1 && program.instructions.get(idx as usize - 1).is_some_and(is_control_flow)
     }
 
     /// The interpreter's end-of-program test on the current pc (`exited` is

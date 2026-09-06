@@ -28,6 +28,7 @@ struct Final {
     lo: u32,
     mem: Vec<(u32, u32)>,
     clk: u32,
+    records_digest: u64,
 }
 
 fn run_words(
@@ -68,7 +69,20 @@ fn run_words_mode(
     let hi = runtime.register(Register::HI);
     let lo = runtime.register(Register::LO);
     let mem = mem_addrs.iter().map(|a| (*a, runtime.word(*a))).collect();
-    Ok(Final { regs, hi, lo, mem, clk: runtime.state.clk })
+    // Trace-level fingerprint: the serialized execution records (every event the prover will
+    // see), so determinism is checked on the trace, not only on the architectural state.
+    let records_digest = if fast {
+        0
+    } else {
+        let bytes = bincode::serialize(&runtime.records).expect("serialize records");
+        let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+        for b in bytes {
+            h ^= b as u64;
+            h = h.wrapping_mul(0x0100_0000_01b3);
+        }
+        h
+    };
+    Ok(Final { regs, hi, lo, mem, clk: runtime.state.clk, records_digest })
 }
 
 fn parse_hex(s: &str) -> u32 {

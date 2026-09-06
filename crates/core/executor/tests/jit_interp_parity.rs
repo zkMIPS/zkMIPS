@@ -474,7 +474,7 @@ fn bne_loop_jit_matches_interpreter() {
     // only if the program clears the `JIT_MIN_INSTR_COUNT` gate.  This
     // 6-instr fixture does not, so we exercise the JIT path directly to
     // validate the codegen rather than gate it.
-    
+
     use zkm_core_executor::jit_runner::{build_context, build_jit_function, run_jit, BuildParams};
     let params = BuildParams {
         program_size: program.instructions.len(),
@@ -489,8 +489,14 @@ fn bne_loop_jit_matches_interpreter() {
     let mut memory = vec![0u8; 4096];
     let mut trace_buf = vec![0u8; 4096];
     let jump_table_ptr: *const *const u8 = jit_fn.jump_table.as_ptr();
-    let mut ctx =
-        build_context(0, memory.as_mut_ptr(), jump_table_ptr, jit_fn.jump_table.len(), trace_buf.as_mut_ptr(), [0u32; 36]);
+    let mut ctx = build_context(
+        0,
+        memory.as_mut_ptr(),
+        jump_table_ptr,
+        jit_fn.jump_table.len(),
+        trace_buf.as_mut_ptr(),
+        [0u32; 36],
+    );
     // Set `delayed_jump_target` to the post-loop sentinel before
     // entering: when the loop exits via the branch falling through,
     // the delay-slot epilogue jumps to ctx.jump_table[exit_idx].  For
@@ -725,7 +731,14 @@ fn halt_syscall_jit_matches_interpreter() {
     let memory_ptr = mem_bridge.as_ptr();
     let mut trace_buf = vec![0u8; 4096];
     let jump_table_ptr: *const *const u8 = jit_fn.jump_table.as_ptr();
-    let mut ctx = build_context(0, memory_ptr, jump_table_ptr, jit_fn.jump_table.len(), trace_buf.as_mut_ptr(), [0u32; 36]);
+    let mut ctx = build_context(
+        0,
+        memory_ptr,
+        jump_table_ptr,
+        jit_fn.jump_table.len(),
+        trace_buf.as_mut_ptr(),
+        [0u32; 36],
+    );
     let executor_ptr: *mut Executor = &mut jit_executor;
     let bridge_ptr: *mut JitMemoryBridge = &mut mem_bridge;
     let mut bridge_state = JitBridgeState {
@@ -787,8 +800,14 @@ fn alu_chain_jit_matches_interpreter_for_register_file() {
     let mut memory = vec![0u8; 4096];
     let jump_table_ptr: *const *const u8 = std::ptr::null();
     let mut trace_buf = vec![0u8; 4096];
-    let mut ctx =
-        build_context(0, memory.as_mut_ptr(), jump_table_ptr, jit_fn.jump_table.len(), trace_buf.as_mut_ptr(), [0u32; 36]);
+    let mut ctx = build_context(
+        0,
+        memory.as_mut_ptr(),
+        jump_table_ptr,
+        jit_fn.jump_table.len(),
+        trace_buf.as_mut_ptr(),
+        [0u32; 36],
+    );
     unsafe { run_jit(&jit_fn, &mut ctx) };
 
     // Compare lower-32 register files.  HI/LO and reserved aren't

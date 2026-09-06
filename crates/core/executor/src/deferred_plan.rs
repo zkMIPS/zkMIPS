@@ -99,7 +99,11 @@ pub struct MemoryEventsDesc {
 impl MemoryEventsDesc {
     /// Describe an addr-SORTED event stream the caller stored under `artifact`.
     #[must_use]
-    pub fn describe(artifact: String, events: &[MemoryInitializeFinalizeEvent], memory: usize) -> Self {
+    pub fn describe(
+        artifact: String,
+        events: &[MemoryInitializeFinalizeEvent],
+        memory: usize,
+    ) -> Self {
         let boundary_addrs = events
             .chunks(memory.max(1))
             .map(|c| c.last().expect("chunks are non-empty").addr)
@@ -143,7 +147,12 @@ impl DeferredPlanner {
     /// Append one chunk's events of `code`, stored under `artifact` in stream
     /// order; `weights` gives every event's [`precompile_split_weight`] (any
     /// value for a count-cut code).
-    pub fn push_precompile(&mut self, code: SyscallCode, artifact: &str, weights: impl IntoIterator<Item = u32>) {
+    pub fn push_precompile(
+        &mut self,
+        code: SyscallCode,
+        artifact: &str,
+        weights: impl IntoIterator<Item = u32>,
+    ) {
         let a = self.artifact_id(artifact);
         let q = self.pending.entry(code).or_default();
         for (i, w) in weights.into_iter().enumerate() {
@@ -163,7 +172,8 @@ impl DeferredPlanner {
         let opts = self.opts;
         for (&code, q) in self.pending.iter_mut() {
             let threshold = precompile_split_threshold(code, &opts);
-            let by_weight = matches!(code, SyscallCode::KECCAK_SPONGE | SyscallCode::BOOLEAN_CIRCUIT_GARBLE);
+            let by_weight =
+                matches!(code, SyscallCode::KECCAK_SPONGE | SyscallCode::BOOLEAN_CIRCUIT_GARBLE);
             loop {
                 // Find the end of the next full shard.
                 let mut n = 0usize;
@@ -213,7 +223,11 @@ impl DeferredPlanner {
                         if from == to {
                             Vec::new()
                         } else {
-                            vec![EventSlice { artifact: desc.artifact.clone(), from: from as u32, to: to as u32 }]
+                            vec![EventSlice {
+                                artifact: desc.artifact.clone(),
+                                from: from as u32,
+                                to: to as u32,
+                            }]
                         }
                     };
                     let init_slice = slice(&init, n_init);
@@ -240,11 +254,18 @@ impl DeferredPlanner {
         shards
     }
 
-    fn cut(artifacts: &[String], code: SyscallCode, q: &mut VecDeque<PendingEvent>, n: usize) -> DeferredShardPlan {
+    fn cut(
+        artifacts: &[String],
+        code: SyscallCode,
+        q: &mut VecDeque<PendingEvent>,
+        n: usize,
+    ) -> DeferredShardPlan {
         let mut slices: Vec<EventSlice> = Vec::new();
         for e in q.drain(..n) {
             match slices.last_mut() {
-                Some(s) if s.artifact == artifacts[e.artifact as usize] && s.to == e.index => s.to += 1,
+                Some(s) if s.artifact == artifacts[e.artifact as usize] && s.to == e.index => {
+                    s.to += 1
+                }
                 _ => slices.push(EventSlice {
                     artifact: artifacts[e.artifact as usize].clone(),
                     from: e.index,
@@ -358,14 +379,29 @@ mod tests {
         // memory threshold = 64*8 = 512; 1000 init, 600 finalize => 2 shards
         // (zip_longest), bits from the boundary addresses.
         let mut p = DeferredPlanner::new(opts());
-        let init = MemoryEventsDesc { artifact: "i".into(), count: 1000, boundary_addrs: vec![0x1ff, 0x3e7] };
-        let fin = MemoryEventsDesc { artifact: "f".into(), count: 600, boundary_addrs: vec![0x7ff, 0xfff] };
+        let init = MemoryEventsDesc {
+            artifact: "i".into(),
+            count: 1000,
+            boundary_addrs: vec![0x1ff, 0x3e7],
+        };
+        let fin = MemoryEventsDesc {
+            artifact: "f".into(),
+            count: 600,
+            boundary_addrs: vec![0x7ff, 0xfff],
+        };
         p.push_memory(init, fin);
         let s = p.split(true);
         assert_eq!(s.len(), 2);
         let bits = |addr: u32| -> [u32; 32] { core::array::from_fn(|i| (addr >> i) & 1) };
         match &s[0] {
-            DeferredShardPlan::Memory { init, finalize, previous_init_addr_bits, last_init_addr_bits, previous_finalize_addr_bits, last_finalize_addr_bits } => {
+            DeferredShardPlan::Memory {
+                init,
+                finalize,
+                previous_init_addr_bits,
+                last_init_addr_bits,
+                previous_finalize_addr_bits,
+                last_finalize_addr_bits,
+            } => {
                 assert_eq!(init[0].to - init[0].from, 512);
                 assert_eq!(finalize[0].to - finalize[0].from, 512);
                 assert_eq!(*previous_init_addr_bits, [0; 32]);
@@ -376,7 +412,14 @@ mod tests {
             _ => unreachable!(),
         }
         match &s[1] {
-            DeferredShardPlan::Memory { init, finalize, previous_init_addr_bits, last_init_addr_bits, previous_finalize_addr_bits, last_finalize_addr_bits } => {
+            DeferredShardPlan::Memory {
+                init,
+                finalize,
+                previous_init_addr_bits,
+                last_init_addr_bits,
+                previous_finalize_addr_bits,
+                last_finalize_addr_bits,
+            } => {
                 assert_eq!((init[0].from, init[0].to), (512, 1000));
                 assert_eq!((finalize[0].from, finalize[0].to), (512, 600));
                 assert_eq!(*previous_init_addr_bits, bits(0x1ff));

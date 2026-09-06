@@ -173,7 +173,6 @@ impl Opcode {
                 | Opcode::MSUB
         )
     }
-
 }
 
 impl Display for Opcode {

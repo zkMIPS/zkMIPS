@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 use super::memory::MemoryRecordEnum;
 
 /// CPU Event.
@@ -155,4 +154,3 @@ pub enum OptionMemoryRecordEnumTag {
     Write,
     None,
 }
-

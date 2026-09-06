@@ -377,7 +377,9 @@ mod tests {
         assert_eq!(std::mem::size_of::<MemValue>(), 12);
         let mut c = TraceChunk::empty(0, 0, 0);
         let n = 1000;
-        c.mem_reads = Arc::new((0..n as u32).map(|i| MemValue { value: i, shard: 1, timestamp: i }).collect());
+        c.mem_reads = Arc::new(
+            (0..n as u32).map(|i| MemValue { value: i, shard: 1, timestamp: i }).collect(),
+        );
         let bytes = bincode::serialize(&c).unwrap();
         let empty = bincode::serialize(&TraceChunk::empty(0, 0, 0)).unwrap();
         // length prefix + 12 B per entry, no per-field framing

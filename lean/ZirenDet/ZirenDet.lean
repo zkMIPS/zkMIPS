@@ -63,3 +63,5 @@ import ZirenDet.Chips.SyscallInstrs
 import ZirenDet.Chips.SyscallPrecompile
 import ZirenDet.Chips.U256XU2048Mul
 import ZirenDet.Chips.Uint256MulMod
+import ZirenDet.Isa
+import ZirenDet.IsaVectors
