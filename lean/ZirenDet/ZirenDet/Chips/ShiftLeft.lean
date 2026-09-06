@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.ShiftLeft
 
 open ZirenDet
@@ -140,7 +144,7 @@ structure W where
   v360 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   ((((((((w.v2 + (w.v3 * (2 : F))) + (w.v4 * (4 : F))) + (w.v5 * (8 : F))) + (w.v6 * (16 : F))) + (w.v7 * (32 : F))) + (w.v8 * (64 : F))) + (w.v9 * (128 : F))) - w.v56) = 0 ∧
   (w.v10 * ((w.v2 + (w.v3 * (2 : F))) + (w.v4 * (4 : F)))) = 0 ∧
   (w.v11 * (((w.v2 + (w.v3 * (2 : F))) + (w.v4 * (4 : F))) - (1 : F))) = 0 ∧
@@ -188,7 +192,9 @@ def constraints (w : W) : Prop :=
   (w.v5 * (w.v5 - (1 : F))) = 0 ∧
   (w.v6 * (w.v6 - (1 : F))) = 0 ∧
   (w.v7 * (w.v7 - (1 : F))) = 0 ∧
-  (w.v8 * (w.v8 - (1 : F))) = 0 ∧
+  (w.v8 * (w.v8 - (1 : F))) = 0
+
+def constraints_1 (w : W) : Prop :=
   (w.v9 * (w.v9 - (1 : F))) = 0 ∧
   (w.v10 * (w.v10 - (1 : F))) = 0 ∧
   (w.v11 * (w.v11 - (1 : F))) = 0 ∧
@@ -236,7 +242,9 @@ def constraints (w : W) : Prop :=
   ((((((((w.v34 * (65536 : F)) + w.v33) + (3 : F)) - w.v48) - (1 : F)) - w.v49) * (2130673921 : F))).val ≤ ((511 : F)).val ∧
   (w.v40).val ≤ ((255 : F)).val ∧
   (w.v41).val ≤ ((255 : F)).val ∧
-  (w.v42).val ≤ ((255 : F)).val ∧
+  (w.v42).val ≤ ((255 : F)).val
+
+def constraints_2 (w : W) : Prop :=
   (w.v43).val ≤ ((255 : F)).val ∧
   (w.v44).val ≤ ((255 : F)).val ∧
   (w.v45).val ≤ ((255 : F)).val ∧
@@ -245,6 +253,11 @@ def constraints (w : W) : Prop :=
   (w.v358 - (((w.v34 * (65536 : F)) + w.v33) + (5 : F))) = 0 ∧
   (w.v359 - (w.v1 + (4 : F))) = 0 ∧
   (w.v360 - ((w.v34 * (65536 : F)) + w.v33)) = 0
+
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w
 
 def inputs (w : W) : List F :=
   [w.v0, w.v35, w.v36, w.v37, w.v38, w.v39, w.v50, w.v51, w.v52, w.v53, w.v56, w.v57, w.v58, w.v59, w.v40, w.v41, w.v42, w.v43, w.v32, w.v360, w.v1]
@@ -261,7 +274,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2]
 
 end ShiftLeft
 

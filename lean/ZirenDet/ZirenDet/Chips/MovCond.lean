@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.MovCond
 
 open ZirenDet
@@ -130,7 +134,7 @@ structure W where
   v377 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v14 - (50 : F)) = 0 ∧
   (w.v25 * (w.v37 - w.v16)) = 0 ∧
   (w.v25 * (w.v38 - w.v17)) = 0 ∧
@@ -178,7 +182,9 @@ def constraints (w : W) : Prop :=
   (((((((((w.v13 * (65536 : F)) + w.v12) + (1 : F)) - w.v47) - (1 : F)) - w.v48) * (2130673921 : F)) * ((1 : F) - w.v26))).val ≤ ((511 : F)).val ∧
   (w.v360 - (w.v20 * ((1 : F) - w.v26))) = 0 ∧
   (w.v361 - (w.v43 * ((1 : F) - w.v26))) = 0 ∧
-  ((w.v43 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val ∧
+  ((w.v43 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val
+
+def constraints_1 (w : W) : Prop :=
   (w.v362 - (w.v44 * ((1 : F) - w.v26))) = 0 ∧
   ((w.v44 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val ∧
   (w.v363 - (w.v45 * ((1 : F) - w.v26))) = 0 ∧
@@ -209,6 +215,10 @@ def constraints (w : W) : Prop :=
   (w.v376 - (w.v46 * ((1 : F) - w.v26))) = 0 ∧
   (w.v377 - ((w.v13 * (65536 : F)) + w.v12)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w
+
 def inputs (w : W) : List F :=
   [w.v0, w.v14, w.v15, w.v16, w.v17, w.v18, w.v19, w.v20, w.v21, w.v22, w.v23, w.v24, w.v25, w.v26, w.v355, w.v356, w.v357, w.v358, w.v359, w.v360, w.v361, w.v362, w.v363, w.v364, w.v27, w.v28, w.v29, w.v30, w.v11, w.v377, w.v1]
 def outputs (w : W) : List F :=
@@ -224,7 +234,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1]
 
 end MovCond_is_meq
 
@@ -350,7 +360,7 @@ structure W where
   v354 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v14 - (51 : F)) = 0 ∧
   (w.v25 * (w.v37 - w.v16)) = 0 ∧
   (w.v25 * (w.v38 - w.v17)) = 0 ∧
@@ -398,7 +408,9 @@ def constraints (w : W) : Prop :=
   (((((((((w.v13 * (65536 : F)) + w.v12) + (1 : F)) - w.v47) - (1 : F)) - w.v48) * (2130673921 : F)) * ((1 : F) - w.v26))).val ≤ ((511 : F)).val ∧
   (w.v337 - (w.v20 * ((1 : F) - w.v26))) = 0 ∧
   (w.v338 - (w.v43 * ((1 : F) - w.v26))) = 0 ∧
-  ((w.v43 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val ∧
+  ((w.v43 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val
+
+def constraints_1 (w : W) : Prop :=
   (w.v339 - (w.v44 * ((1 : F) - w.v26))) = 0 ∧
   ((w.v44 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val ∧
   (w.v340 - (w.v45 * ((1 : F) - w.v26))) = 0 ∧
@@ -429,6 +441,10 @@ def constraints (w : W) : Prop :=
   (w.v353 - (w.v46 * ((1 : F) - w.v26))) = 0 ∧
   (w.v354 - ((w.v13 * (65536 : F)) + w.v12)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w
+
 def inputs (w : W) : List F :=
   [w.v0, w.v14, w.v15, w.v16, w.v17, w.v18, w.v19, w.v20, w.v21, w.v22, w.v23, w.v24, w.v25, w.v26, w.v332, w.v333, w.v334, w.v335, w.v336, w.v337, w.v338, w.v339, w.v340, w.v341, w.v27, w.v28, w.v29, w.v30, w.v11, w.v354, w.v1]
 def outputs (w : W) : List F :=
@@ -444,7 +460,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1]
 
 end MovCond_is_mne
 
@@ -560,7 +576,7 @@ structure W where
   v400 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v14 - (52 : F)) = 0 ∧
   (w.v25 * (w.v37 - w.v16)) = 0 ∧
   (w.v25 * (w.v38 - w.v17)) = 0 ∧
@@ -608,7 +624,9 @@ def constraints (w : W) : Prop :=
   (w.v383 - (w.v20 * ((1 : F) - w.v26))) = 0 ∧
   (w.v384 - (w.v43 * ((1 : F) - w.v26))) = 0 ∧
   ((w.v43 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val ∧
-  (w.v385 - (w.v44 * ((1 : F) - w.v26))) = 0 ∧
+  (w.v385 - (w.v44 * ((1 : F) - w.v26))) = 0
+
+def constraints_1 (w : W) : Prop :=
   ((w.v44 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val ∧
   (w.v386 - (w.v45 * ((1 : F) - w.v26))) = 0 ∧
   ((w.v45 * ((1 : F) - w.v26))).val ≤ ((255 : F)).val ∧
@@ -638,6 +656,10 @@ def constraints (w : W) : Prop :=
   (w.v399 - (w.v46 * ((1 : F) - w.v26))) = 0 ∧
   (w.v400 - ((w.v13 * (65536 : F)) + w.v12)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w
+
 def inputs (w : W) : List F :=
   [w.v0, w.v14, w.v15, w.v16, w.v17, w.v18, w.v19, w.v20, w.v21, w.v22, w.v23, w.v24, w.v25, w.v26, w.v378, w.v379, w.v380, w.v381, w.v382, w.v383, w.v384, w.v385, w.v386, w.v387, w.v27, w.v28, w.v29, w.v30, w.v11, w.v400, w.v1]
 def outputs (w : W) : List F :=
@@ -653,7 +675,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1]
 
 end MovCond_is_wsbh
 
@@ -738,7 +760,7 @@ structure W where
   v46 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (((1 : F) - ((w.v8 + w.v9) + w.v10)) * ((1 : F) - w.v25)) = 0 ∧
   (((1 : F) - ((w.v8 + w.v9) + w.v10)) * ((1 : F) - w.v26)) = 0 ∧
   (((w.v8 + w.v9) + w.v10) * (w.v14 - (((w.v9 * (50 : F)) + (w.v8 * (51 : F))) + (w.v10 * (52 : F))))) = 0 ∧
@@ -780,6 +802,9 @@ def constraints (w : W) : Prop :=
   (w.v10 * (w.v10 - (1 : F))) = 0 ∧
   (((w.v8 + w.v9) + w.v10) * (((w.v8 + w.v9) + w.v10) - (1 : F))) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w
+
 def inputs (_w : W) : List F := []
 def outputs (w : W) : List F :=
   [w.v8, w.v9, w.v10]
@@ -794,7 +819,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0]
 
 /-- Selector-shape / bit postconditions implied by the constraints. -/
 theorem postconditions (w : W) (hw : constraints w) :
@@ -802,7 +827,7 @@ theorem postconditions (w : W) (hw : constraints w) :
     (w.v9 * (w.v9 - (1 : F))) = 0 ∧
     (w.v10 * (w.v10 - (1 : F))) = 0 ∧
     (((w.v8 + w.v9) + w.v10)).val < ((2 : F)).val := by
-  picus_det
+  picus_det [constraints_0]
 
 end top
 

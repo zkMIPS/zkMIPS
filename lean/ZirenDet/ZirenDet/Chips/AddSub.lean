@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.AddSub
 
 open ZirenDet
@@ -86,7 +90,7 @@ structure W where
   v308 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v2 - ((1 : F) - w.v13)) = 0 ∧
   w.v3 = 0 ∧
   (w.v2 * ((((w.v24 + w.v30) - w.v18) * (2122383361 : F)) * ((((w.v24 + w.v30) - w.v18) * (2122383361 : F)) - (1 : F)))) = 0 ∧
@@ -131,6 +135,9 @@ def constraints (w : W) : Prop :=
   (w.v307 - (w.v1 + (4 : F))) = 0 ∧
   (w.v308 - ((w.v8 * (65536 : F)) + w.v7)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w
+
 def inputs (w : W) : List F :=
   [w.v0, w.v9, w.v10, w.v11, w.v12, w.v13, w.v24, w.v25, w.v26, w.v27, w.v30, w.v31, w.v32, w.v33, w.v14, w.v15, w.v16, w.v17, w.v6, w.v308, w.v1]
 def outputs (w : W) : List F :=
@@ -146,7 +153,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0]
 
 end AddSub_is_add
 
@@ -228,7 +235,7 @@ structure W where
   v311 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   w.v2 = 0 ∧
   (w.v3 - ((1 : F) - w.v13)) = 0 ∧
   (w.v2 * ((((w.v24 + w.v30) - w.v18) * (2122383361 : F)) * ((((w.v24 + w.v30) - w.v18) * (2122383361 : F)) - (1 : F)))) = 0 ∧
@@ -273,6 +280,9 @@ def constraints (w : W) : Prop :=
   (w.v310 - (w.v1 + (4 : F))) = 0 ∧
   (w.v311 - ((w.v8 * (65536 : F)) + w.v7)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w
+
 def inputs (w : W) : List F :=
   [w.v0, w.v9, w.v10, w.v11, w.v12, w.v13, w.v24, w.v25, w.v26, w.v27, w.v30, w.v31, w.v32, w.v33, w.v14, w.v15, w.v16, w.v17, w.v6, w.v311, w.v1]
 def outputs (w : W) : List F :=
@@ -288,7 +298,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0]
 
 end AddSub_is_sub
 
@@ -335,7 +345,7 @@ structure W where
   v33 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v4 * (w.v4 - (1 : F))) = 0 ∧
   (w.v5 * (w.v5 - (1 : F))) = 0 ∧
   ((w.v4 + w.v5) * ((w.v4 + w.v5) - (1 : F))) = 0 ∧
@@ -358,6 +368,9 @@ def constraints (w : W) : Prop :=
   (w.v13 * w.v21) = 0 ∧
   ((w.v4 + w.v5) * ((w.v4 + w.v5) - (1 : F))) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w
+
 def inputs (_w : W) : List F := []
 def outputs (w : W) : List F :=
   [w.v4, w.v5]
@@ -372,14 +385,14 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0]
 
 /-- Selector-shape / bit postconditions implied by the constraints. -/
 theorem postconditions (w : W) (hw : constraints w) :
     (w.v4 * (w.v4 - (1 : F))) = 0 ∧
     (w.v5 * (w.v5 - (1 : F))) = 0 ∧
     ((w.v4 + w.v5)).val < ((2 : F)).val := by
-  picus_det
+  picus_det [constraints_0]
 
 end top
 

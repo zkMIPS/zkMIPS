@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.SysLinux
 
 open ZirenDet
@@ -249,7 +253,7 @@ structure W where
   v469 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (((1 : F) - (w.v43 * (w.v2 - (4210 : F)))) - w.v44) = 0 ∧
   (w.v44 * (w.v44 - (1 : F))) = 0 ∧
   (w.v44 * (w.v2 - (4210 : F))) = 0 ∧
@@ -297,7 +301,9 @@ def constraints (w : W) : Prop :=
   (w.v72 - (w.v54 * w.v69)) = 0 ∧
   ((w.v52 + w.v58) * (w.v19 - w.v15)) = 0 ∧
   ((w.v52 + w.v58) * (w.v20 - w.v16)) = 0 ∧
-  ((w.v52 + w.v58) * (w.v21 - w.v17)) = 0 ∧
+  ((w.v52 + w.v58) * (w.v21 - w.v17)) = 0
+
+def constraints_1 (w : W) : Prop :=
   ((w.v52 + w.v58) * (w.v22 - w.v18)) = 0 ∧
   (w.v52 * (w.v52 - (1 : F))) = 0 ∧
   (w.v52 * (w.v25 * (w.v25 - (1 : F)))) = 0 ∧
@@ -345,7 +351,9 @@ def constraints (w : W) : Prop :=
   (w.v50 * w.v12) = 0 ∧
   (w.v50 * w.v13) = 0 ∧
   (w.v50 * w.v14) = 0 ∧
-  (w.v71 * (w.v61 * w.v11)) = 0 ∧
+  (w.v71 * (w.v61 * w.v11)) = 0
+
+def constraints_2 (w : W) : Prop :=
   (w.v71 * (w.v61 * w.v12)) = 0 ∧
   (w.v71 * (w.v61 * w.v13)) = 0 ∧
   (w.v71 * (w.v61 * w.v14)) = 0 ∧
@@ -393,7 +401,9 @@ def constraints (w : W) : Prop :=
   (w.v56 * (w.v61 * w.v12)) = 0 ∧
   (w.v56 * (w.v61 * w.v13)) = 0 ∧
   (w.v56 * (w.v61 * w.v14)) = 0 ∧
-  (w.v56 * (w.v61 * w.v33)) = 0 ∧
+  (w.v56 * (w.v61 * w.v33)) = 0
+
+def constraints_3 (w : W) : Prop :=
   (w.v56 * (w.v61 * w.v34)) = 0 ∧
   (w.v56 * (w.v61 * w.v35)) = 0 ∧
   (w.v56 * (w.v61 * w.v36)) = 0 ∧
@@ -441,7 +451,9 @@ def constraints (w : W) : Prop :=
   (w.v70 * (((((w.v17 + w.v85) - w.v91) + ((((w.v16 + w.v84) - w.v90) + (((w.v15 + w.v83) - w.v89) * (2122383361 : F))) * (2122383361 : F))) * (2122383361 : F)) * (((((w.v17 + w.v85) - w.v91) + ((((w.v16 + w.v84) - w.v90) + (((w.v15 + w.v83) - w.v89) * (2122383361 : F))) * (2122383361 : F))) * (2122383361 : F)) - (1 : F)))) = 0 ∧
   (w.v70 * (((((w.v18 + w.v86) - w.v92) + ((((w.v17 + w.v85) - w.v91) + ((((w.v16 + w.v84) - w.v90) + (((w.v15 + w.v83) - w.v89) * (2122383361 : F))) * (2122383361 : F))) * (2122383361 : F))) * (2122383361 : F)) * (((((w.v18 + w.v86) - w.v92) + ((((w.v17 + w.v85) - w.v91) + ((((w.v16 + w.v84) - w.v90) + (((w.v15 + w.v83) - w.v89) * (2122383361 : F))) * (2122383361 : F))) * (2122383361 : F))) * (2122383361 : F)) - (1 : F)))) = 0 ∧
   (w.v70 * (w.v70 * (w.v70 - (1 : F)))) = 0 ∧
-  (w.v70 * (w.v19 - w.v89)) = 0 ∧
+  (w.v70 * (w.v19 - w.v89)) = 0
+
+def constraints_4 (w : W) : Prop :=
   (w.v70 * (w.v20 - w.v90)) = 0 ∧
   (w.v70 * (w.v21 - w.v91)) = 0 ∧
   (w.v70 * (w.v22 - w.v92)) = 0 ∧
@@ -489,7 +501,9 @@ def constraints (w : W) : Prop :=
   (w.v439 - (w.v16 * w.v52)) = 0 ∧
   ((w.v16 * w.v52)).val ≤ ((255 : F)).val ∧
   (w.v440 - (w.v17 * w.v52)) = 0 ∧
-  ((w.v17 * w.v52)).val ≤ ((255 : F)).val ∧
+  ((w.v17 * w.v52)).val ≤ ((255 : F)).val
+
+def constraints_5 (w : W) : Prop :=
   (w.v441 - (w.v18 * w.v52)) = 0 ∧
   ((w.v18 * w.v52)).val ≤ ((255 : F)).val ∧
   ((w.v3 * w.v52)).val ≤ ((255 : F)).val ∧
@@ -537,7 +551,9 @@ def constraints (w : W) : Prop :=
   ((w.v15 * w.v70)).val ≤ ((255 : F)).val ∧
   ((w.v16 * w.v70)).val ≤ ((255 : F)).val ∧
   ((w.v17 * w.v70)).val ≤ ((255 : F)).val ∧
-  ((w.v18 * w.v70)).val ≤ ((255 : F)).val ∧
+  ((w.v18 * w.v70)).val ≤ ((255 : F)).val
+
+def constraints_6 (w : W) : Prop :=
   ((w.v83 * w.v70)).val ≤ ((255 : F)).val ∧
   ((w.v84 * w.v70)).val ≤ ((255 : F)).val ∧
   ((w.v85 * w.v70)).val ≤ ((255 : F)).val ∧
@@ -585,7 +601,9 @@ def constraints (w : W) : Prop :=
   (w.v454 - (w.v19 * w.v58)) = 0 ∧
   (w.v455 - (w.v20 * w.v58)) = 0 ∧
   (w.v456 - (w.v21 * w.v58)) = 0 ∧
-  (w.v457 - (w.v22 * w.v58)) = 0 ∧
+  (w.v457 - (w.v22 * w.v58)) = 0
+
+def constraints_7 (w : W) : Prop :=
   (w.v458 - (w.v19 * w.v70)) = 0 ∧
   (w.v459 - (w.v20 * w.v70)) = 0 ∧
   (w.v460 - (w.v21 * w.v70)) = 0 ∧
@@ -603,6 +621,16 @@ def constraints (w : W) : Prop :=
   ((w.v7 + (w.v8 * (256 : F)))).val ≤ ((65535 : F)).val ∧
   ((w.v9 + (w.v10 * (256 : F)))).val ≤ ((65535 : F)).val
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w ∧
+  constraints_5 w ∧
+  constraints_6 w ∧
+  constraints_7 w
+
 def inputs (w : W) : List F :=
   [w.v438, w.v439, w.v440, w.v441, w.v442, w.v443, w.v444, w.v445, w.v446, w.v447, w.v448, w.v449, w.v29, w.v30, w.v31, w.v32, w.v2, w.v462, w.v463, w.v466, w.v467, w.v468, w.v469]
 def outputs (w : W) : List F :=
@@ -618,7 +646,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7]
 
 end SysLinux
 

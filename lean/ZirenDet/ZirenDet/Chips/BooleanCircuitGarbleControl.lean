@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.BooleanCircuitGarbleControl
 
 open ZirenDet
@@ -195,7 +199,7 @@ structure W where
   v415 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v28 * (w.v28 - (1 : F))) = 0 ∧
   (w.v28 * (w.v0 - w.v26)) = 0 ∧
   (w.v31 * (w.v31 - (1 : F))) = 0 ∧
@@ -243,7 +247,9 @@ def constraints (w : W) : Prop :=
   (w.v23).val ≤ ((255 : F)).val ∧
   (w.v24).val ≤ ((255 : F)).val ∧
   (w.v25).val ≤ ((255 : F)).val ∧
-  (w.v22).val ≤ ((255 : F)).val ∧
+  (w.v22).val ≤ ((255 : F)).val
+
+def constraints_1 (w : W) : Prop :=
   (w.v23).val ≤ ((255 : F)).val ∧
   (w.v24).val ≤ ((255 : F)).val ∧
   (w.v25).val ≤ ((255 : F)).val ∧
@@ -291,7 +297,9 @@ def constraints (w : W) : Prop :=
   (w.v63).val ≤ ((255 : F)).val ∧
   (w.v64).val ≤ ((255 : F)).val ∧
   (w.v65).val ≤ ((255 : F)).val ∧
-  (w.v83).val ≤ ((65535 : F)).val ∧
+  (w.v83).val ≤ ((65535 : F)).val
+
+def constraints_2 (w : W) : Prop :=
   (w.v84).val ≤ ((255 : F)).val ∧
   (w.v72).val ≤ ((255 : F)).val ∧
   (w.v73).val ≤ ((255 : F)).val ∧
@@ -312,6 +320,11 @@ def constraints (w : W) : Prop :=
   (w.v414 - (w.v3 + (16 : F))) = 0 ∧
   (w.v415 - ((w.v3 + (20 : F)) + (w.v5 * (68 : F)))) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w
+
 def inputs (w : W) : List F :=
   [w.v3, w.v22, w.v23, w.v24, w.v25, w.v406, w.v32, w.v33, w.v34, w.v35, w.v407, w.v42, w.v43, w.v44, w.v45, w.v408, w.v52, w.v53, w.v54, w.v55, w.v409, w.v62, w.v63, w.v64, w.v65, w.v4, w.v72, w.v73, w.v74, w.v75, w.v0, w.v1, w.v5, w.v415, w.v6, w.v7, w.v8, w.v9, w.v10, w.v11, w.v12, w.v13, w.v14, w.v15, w.v16, w.v17, w.v18, w.v19, w.v20, w.v21]
 def outputs (w : W) : List F :=
@@ -327,7 +340,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2]
 
 end BooleanCircuitGarbleControl
 

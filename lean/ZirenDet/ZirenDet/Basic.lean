@@ -32,22 +32,21 @@ turn every `a - b = 0` into `a = b`, split conjunctions, substitute every variab
 defined by an equation (`subst_vars` propagates the linear definitions and the input
 equalities), and close what is left by `rfl` / `ring`.  Anything that needs case analysis on
 guarded bits is left as `sorry` so the file still elaborates and the obligation is visible. -/
-syntax "picus_det" : tactic
+syntax "picus_det" (" [" term,* "]")? : tactic
 -- Hygiene off: the tactic must see the use-site `constraints`, `inputs`, `W`, `w`, … of the
--- module it closes, not names resolved at this definition site.
+-- module it closes, not names resolved at this definition site.  `ring1` rather than `ring`:
+-- `ring` falls back to `ring_nf` and *succeeds* with the goal still open.
 set_option hygiene false in
 macro_rules
-  | `(tactic| picus_det) =>
-    `(tactic| first
-        | (intros; rfl)
-        | (intros
-           all_goals (try (rename_i w w' hw hw' hin hassume))
-           all_goals (try cases w)
-           all_goals (try cases w')
-           simp only [constraints, inputs, outputs, assumed, rel, List.cons.injEq, List.nil_eq,
-             and_true, true_and, sub_eq_zero, W.mk.injEq] at *
-           all_goals (try casesm* _ ∧ _)
-           all_goals (try subst_vars)
-           all_goals (try constructorm* _ ∧ _)
-           all_goals (first | rfl | ring | (simp only [mul_comm, mul_assoc, mul_left_comm, add_comm, add_assoc, add_left_comm]; done) | sorry))
-        | sorry)
+  | `(tactic| picus_det) => `(tactic| picus_det [])
+  | `(tactic| picus_det [$ts,*]) =>
+    `(tactic| (
+        (try intros)
+        (try cases w)
+        (try cases w')
+        (try simp only [constraints, $ts,*, inputs, outputs, assumed, rel, List.cons.injEq,
+               List.nil_eq, and_true, true_and, sub_eq_zero, W.mk.injEq] at *)
+        (try casesm* _ ∧ _)
+        (try subst_vars)
+        (try constructorm* _ ∧ _)
+        all_goals (first | rfl | ring1 | sorry)))

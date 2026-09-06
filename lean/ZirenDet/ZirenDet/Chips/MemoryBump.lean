@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.MemoryBump
 
 open ZirenDet
@@ -39,7 +43,7 @@ structure W where
   v11 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v6 * (w.v6 - (1 : F))) = 0 ∧
   (w.v6 * (w.v10 - w.v4)) = 0 ∧
   (w.v9 * (w.v9 - (1 : F))) = 0 ∧
@@ -57,6 +61,9 @@ def constraints (w : W) : Prop :=
   (w.v2).val ≤ ((255 : F)).val ∧
   (w.v3).val ≤ ((255 : F)).val
 
+def constraints (w : W) : Prop :=
+  constraints_0 w
+
 def inputs (w : W) : List F :=
   [w.v11, w.v0, w.v1, w.v2, w.v3]
 def outputs (w : W) : List F :=
@@ -72,7 +79,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0]
 
 end MemoryBump
 

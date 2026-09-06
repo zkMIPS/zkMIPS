@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.SyscallCore
 
 open ZirenDet
@@ -43,7 +47,7 @@ structure W where
   v263 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v9 * (w.v9 - (1 : F))) = 0 ∧
   ((w.v9 - (1 : F)) * w.v7) = 0 ∧
   ((w.v9 - (1 : F)) * w.v8) = 0 ∧
@@ -64,6 +68,9 @@ def constraints (w : W) : Prop :=
   ((w.v5 * w.v9)).val ≤ ((65535 : F)).val ∧
   ((w.v6 * w.v9)).val ≤ ((65535 : F)).val
 
+def constraints (w : W) : Prop :=
+  constraints_0 w
+
 def inputs (w : W) : List F :=
   [w.v2, w.v256, w.v257, w.v260, w.v261, w.v262, w.v263]
 def outputs (w : W) : List F :=
@@ -79,7 +86,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0]
 
 end SyscallCore
 

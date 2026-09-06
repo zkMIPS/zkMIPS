@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.BooleanCircuitGarble
 
 open ZirenDet
@@ -634,7 +638,7 @@ structure W where
   v845 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v6 * (w.v6 - (1 : F))) = 0 ∧
   (w.v7 * (w.v7 - (1 : F))) = 0 ∧
   ((w.v6 + w.v7) - (1 : F)) = 0 ∧
@@ -682,7 +686,9 @@ def constraints (w : W) : Prop :=
   (w.v130 * (w.v0 - w.v128)) = 0 ∧
   (w.v133 * (w.v133 - (1 : F))) = 0 ∧
   (((((w.v130 * w.v1) + (((1 : F) - w.v130) * w.v0)) - ((w.v130 * w.v129) + (((1 : F) - w.v130) * w.v128))) - (1 : F)) - ((w.v131 + (w.v132 * (65536 : F))) + (w.v133 * (16777216 : F)))) = 0 ∧
-  (w.v140 * (w.v140 - (1 : F))) = 0 ∧
+  (w.v140 * (w.v140 - (1 : F))) = 0
+
+def constraints_1 (w : W) : Prop :=
   (w.v140 * (w.v0 - w.v138)) = 0 ∧
   (w.v143 * (w.v143 - (1 : F))) = 0 ∧
   (((((w.v140 * w.v1) + (((1 : F) - w.v140) * w.v0)) - ((w.v140 * w.v139) + (((1 : F) - w.v140) * w.v138))) - (1 : F)) - ((w.v141 + (w.v142 * (65536 : F))) + (w.v143 * (16777216 : F)))) = 0 ∧
@@ -730,7 +736,9 @@ def constraints (w : W) : Prop :=
   (w.v7 * (((1 : F) - (w.v242 * (w.v226 - w.v154))) - w.v243)) = 0 ∧
   (w.v7 * (w.v243 * (w.v243 - (1 : F)))) = 0 ∧
   (w.v7 * (w.v243 * (w.v226 - w.v154))) = 0 ∧
-  (w.v7 * (((1 : F) - (w.v244 * (w.v227 - w.v155))) - w.v245)) = 0 ∧
+  (w.v7 * (((1 : F) - (w.v244 * (w.v227 - w.v155))) - w.v245)) = 0
+
+def constraints_2 (w : W) : Prop :=
   (w.v7 * (w.v245 * (w.v245 - (1 : F)))) = 0 ∧
   (w.v7 * (w.v245 * (w.v227 - w.v155))) = 0 ∧
   (w.v7 * (((1 : F) - (w.v246 * (w.v228 - w.v156))) - w.v247)) = 0 ∧
@@ -778,7 +786,9 @@ def constraints (w : W) : Prop :=
   (w.v7 * (w.v258 * (w.v232 - w.v166))) = 0 ∧
   (w.v7 * (((1 : F) - (w.v259 * (w.v233 - w.v167))) - w.v260)) = 0 ∧
   (w.v7 * (w.v260 * (w.v260 - (1 : F)))) = 0 ∧
-  (w.v7 * (w.v260 * (w.v233 - w.v167))) = 0 ∧
+  (w.v7 * (w.v260 * (w.v233 - w.v167))) = 0
+
+def constraints_3 (w : W) : Prop :=
   (w.v7 * (w.v7 - (1 : F))) = 0 ∧
   (w.v7 * (w.v261 * (w.v261 - (1 : F)))) = 0 ∧
   (w.v7 * (w.v262 * (w.v262 - (1 : F)))) = 0 ∧
@@ -826,7 +836,9 @@ def constraints (w : W) : Prop :=
   (w.v7 * (w.v272 - (w.v265 * w.v267))) = 0 ∧
   (w.v7 * (w.v273 - (w.v269 * w.v271))) = 0 ∧
   (w.v7 * (w.v274 - (w.v272 * w.v273))) = 0 ∧
-  (w.v6 * (w.v6 - (1 : F))) = 0 ∧
+  (w.v6 * (w.v6 - (1 : F))) = 0
+
+def constraints_4 (w : W) : Prop :=
   (w.v6 * (((1 : F) - (w.v275 * (w.v222 - w.v184))) - w.v276)) = 0 ∧
   (w.v6 * (w.v276 * (w.v276 - (1 : F)))) = 0 ∧
   (w.v6 * (w.v276 * (w.v222 - w.v184))) = 0 ∧
@@ -874,7 +886,9 @@ def constraints (w : W) : Prop :=
   (w.v813 - (w.v3 + (68 : F))) = 0 ∧
   (w.v31).val ≤ ((65535 : F)).val ∧
   (w.v32).val ≤ ((255 : F)).val ∧
-  (w.v24).val ≤ ((255 : F)).val ∧
+  (w.v24).val ≤ ((255 : F)).val
+
+def constraints_5 (w : W) : Prop :=
   (w.v25).val ≤ ((255 : F)).val ∧
   (w.v26).val ≤ ((255 : F)).val ∧
   (w.v27).val ≤ ((255 : F)).val ∧
@@ -922,7 +936,9 @@ def constraints (w : W) : Prop :=
   (w.v66).val ≤ ((255 : F)).val ∧
   (w.v67).val ≤ ((255 : F)).val ∧
   (w.v817 - (w.v3 + (16 : F))) = 0 ∧
-  (w.v64).val ≤ ((255 : F)).val ∧
+  (w.v64).val ≤ ((255 : F)).val
+
+def constraints_6 (w : W) : Prop :=
   (w.v65).val ≤ ((255 : F)).val ∧
   (w.v66).val ≤ ((255 : F)).val ∧
   (w.v67).val ≤ ((255 : F)).val ∧
@@ -970,7 +986,9 @@ def constraints (w : W) : Prop :=
   (w.v105).val ≤ ((255 : F)).val ∧
   (w.v106).val ≤ ((255 : F)).val ∧
   (w.v107).val ≤ ((255 : F)).val ∧
-  (w.v121).val ≤ ((65535 : F)).val ∧
+  (w.v121).val ≤ ((65535 : F)).val
+
+def constraints_7 (w : W) : Prop :=
   (w.v122).val ≤ ((255 : F)).val ∧
   (w.v114).val ≤ ((255 : F)).val ∧
   (w.v115).val ≤ ((255 : F)).val ∧
@@ -1018,7 +1036,9 @@ def constraints (w : W) : Prop :=
   (w.v162).val ≤ ((255 : F)).val ∧
   (w.v154).val ≤ ((255 : F)).val ∧
   (w.v155).val ≤ ((255 : F)).val ∧
-  (w.v156).val ≤ ((255 : F)).val ∧
+  (w.v156).val ≤ ((255 : F)).val
+
+def constraints_8 (w : W) : Prop :=
   (w.v157).val ≤ ((255 : F)).val ∧
   (w.v826 - (w.v3 + (52 : F))) = 0 ∧
   (w.v154).val ≤ ((255 : F)).val ∧
@@ -1066,7 +1086,9 @@ def constraints (w : W) : Prop :=
   (w.v835 - (w.v3 + (24 : F))) = 0 ∧
   (w.v836 - (w.v3 + (28 : F))) = 0 ∧
   (w.v837 - (w.v3 + (32 : F))) = 0 ∧
-  (w.v838 - (w.v3 + (36 : F))) = 0 ∧
+  (w.v838 - (w.v3 + (36 : F))) = 0
+
+def constraints_9 (w : W) : Prop :=
   (w.v839 - (w.v3 + (40 : F))) = 0 ∧
   (w.v840 - (w.v3 + (44 : F))) = 0 ∧
   (w.v841 - (w.v3 + (48 : F))) = 0 ∧
@@ -1114,7 +1136,9 @@ def constraints (w : W) : Prop :=
   byte_xor.rel [w.v65, w.v105] [w.v207] ∧
   byte_xor.rel [w.v66, w.v106] [w.v208] ∧
   byte_xor.rel [w.v67, w.v107] [w.v209] ∧
-  byte_xor.rel [w.v206, w.v144] [w.v222] ∧
+  byte_xor.rel [w.v206, w.v144] [w.v222]
+
+def constraints_10 (w : W) : Prop :=
   byte_xor.rel [w.v207, w.v145] [w.v223] ∧
   byte_xor.rel [w.v208, w.v146] [w.v224] ∧
   byte_xor.rel [w.v209, w.v147] [w.v225] ∧
@@ -1122,6 +1146,19 @@ def constraints (w : W) : Prop :=
   byte_xor.rel [w.v223, w.v21] [w.v239] ∧
   byte_xor.rel [w.v224, w.v22] [w.v240] ∧
   byte_xor.rel [w.v225, w.v23] [w.v241]
+
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w ∧
+  constraints_5 w ∧
+  constraints_6 w ∧
+  constraints_7 w ∧
+  constraints_8 w ∧
+  constraints_9 w ∧
+  constraints_10 w
 
 def inputs (w : W) : List F :=
   [w.v3, w.v24, w.v25, w.v26, w.v27, w.v814, w.v34, w.v35, w.v36, w.v37, w.v815, w.v44, w.v45, w.v46, w.v47, w.v816, w.v54, w.v55, w.v56, w.v57, w.v817, w.v64, w.v65, w.v66, w.v67, w.v818, w.v74, w.v75, w.v76, w.v77, w.v819, w.v84, w.v85, w.v86, w.v87, w.v820, w.v94, w.v95, w.v96, w.v97, w.v821, w.v104, w.v105, w.v106, w.v107, w.v822, w.v114, w.v115, w.v116, w.v117, w.v823, w.v124, w.v125, w.v126, w.v127, w.v824, w.v134, w.v135, w.v136, w.v137, w.v825, w.v144, w.v145, w.v146, w.v147, w.v826, w.v154, w.v155, w.v156, w.v157, w.v827, w.v164, w.v165, w.v166, w.v167, w.v828, w.v174, w.v175, w.v176, w.v177, w.v829, w.v184, w.v185, w.v186, w.v187, w.v0, w.v1, w.v4, w.v5, w.v8, w.v9, w.v10, w.v11, w.v12, w.v13, w.v14, w.v15, w.v16, w.v17, w.v18, w.v19, w.v20, w.v21, w.v22, w.v23]
@@ -1139,7 +1176,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10]
 
 end BooleanCircuitGarble
 

@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.ShiftLeftImm
 
 open ZirenDet
@@ -106,7 +110,7 @@ structure W where
   v326 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (((((w.v2 + (w.v3 * (2 : F))) + (w.v4 * (4 : F))) + (w.v5 * (8 : F))) + (w.v6 * (16 : F))) - w.v27) = 0 ∧
   (w.v7 - ((((1 : F) + w.v2) * ((1 : F) + (w.v3 * (3 : F)))) * ((1 : F) + (w.v4 * (15 : F))))) = 0 ∧
   (w.v8 - ((w.v39 * w.v7) - (w.v12 * (256 : F)))) = 0 ∧
@@ -154,7 +158,9 @@ def constraints (w : W) : Prop :=
   (w.v11).val ≤ ((255 : F)).val ∧
   (w.v12).val ≤ ((255 : F)).val ∧
   (w.v13).val ≤ ((255 : F)).val ∧
-  (w.v14).val ≤ ((255 : F)).val ∧
+  (w.v14).val ≤ ((255 : F)).val
+
+def constraints_1 (w : W) : Prop :=
   (w.v15).val ≤ ((255 : F)).val ∧
   (w.v21).val ≤ ((65535 : F)).val ∧
   (w.v22).val ≤ ((65535 : F)).val ∧
@@ -179,6 +185,10 @@ def constraints (w : W) : Prop :=
   (w.v325 - (w.v1 + (4 : F))) = 0 ∧
   (w.v326 - ((w.v23 * (65536 : F)) + w.v22)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w
+
 def inputs (w : W) : List F :=
   [w.v0, w.v24, w.v25, w.v26, w.v27, w.v28, w.v39, w.v40, w.v41, w.v42, w.v29, w.v30, w.v31, w.v32, w.v21, w.v326, w.v1]
 def outputs (w : W) : List F :=
@@ -194,7 +204,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1]
 
 end ShiftLeftImm
 

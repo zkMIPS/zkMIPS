@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.KeccakSpongeControl
 
 open ZirenDet
@@ -2964,7 +2968,7 @@ structure W where
   v3175 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v4 * (w.v4 - (1 : F))) = 0 ∧
   (w.v5 * (w.v5 - (1 : F))) = 0 ∧
   (w.v6 - ((1 : F) - w.v4)) = 0 ∧
@@ -3012,7 +3016,9 @@ def constraints (w : W) : Prop :=
   (((((w.v640 * w.v1) + (((1 : F) - w.v640) * w.v0)) - ((w.v640 * w.v639) + (((1 : F) - w.v640) * w.v638))) - (1 : F)) - ((w.v641 + (w.v642 * (65536 : F))) + (w.v643 * (16777216 : F)))) = 0 ∧
   (w.v650 * (w.v650 - (1 : F))) = 0 ∧
   (w.v650 * (w.v0 - w.v648)) = 0 ∧
-  (w.v653 * (w.v653 - (1 : F))) = 0 ∧
+  (w.v653 * (w.v653 - (1 : F))) = 0
+
+def constraints_1 (w : W) : Prop :=
   (((((w.v650 * w.v1) + (((1 : F) - w.v650) * w.v0)) - ((w.v650 * w.v649) + (((1 : F) - w.v650) * w.v648))) - (1 : F)) - ((w.v651 + (w.v652 * (65536 : F))) + (w.v653 * (16777216 : F)))) = 0 ∧
   (w.v660 * (w.v660 - (1 : F))) = 0 ∧
   (w.v660 * (w.v0 - w.v658)) = 0 ∧
@@ -3060,7 +3066,9 @@ def constraints (w : W) : Prop :=
   (((((w.v760 * w.v1) + (((1 : F) - w.v760) * w.v0)) - ((w.v760 * w.v759) + (((1 : F) - w.v760) * w.v758))) - (1 : F)) - ((w.v761 + (w.v762 * (65536 : F))) + (w.v763 * (16777216 : F)))) = 0 ∧
   (w.v770 * (w.v770 - (1 : F))) = 0 ∧
   (w.v770 * (w.v0 - w.v768)) = 0 ∧
-  (w.v773 * (w.v773 - (1 : F))) = 0 ∧
+  (w.v773 * (w.v773 - (1 : F))) = 0
+
+def constraints_2 (w : W) : Prop :=
   (((((w.v770 * w.v1) + (((1 : F) - w.v770) * w.v0)) - ((w.v770 * w.v769) + (((1 : F) - w.v770) * w.v768))) - (1 : F)) - ((w.v771 + (w.v772 * (65536 : F))) + (w.v773 * (16777216 : F)))) = 0 ∧
   (w.v780 * (w.v780 - (1 : F))) = 0 ∧
   (w.v780 * (w.v0 - w.v778)) = 0 ∧
@@ -3108,7 +3116,9 @@ def constraints (w : W) : Prop :=
   (((((w.v880 * w.v1) + (((1 : F) - w.v880) * w.v0)) - ((w.v880 * w.v879) + (((1 : F) - w.v880) * w.v878))) - (1 : F)) - ((w.v881 + (w.v882 * (65536 : F))) + (w.v883 * (16777216 : F)))) = 0 ∧
   (w.v890 * (w.v890 - (1 : F))) = 0 ∧
   (w.v890 * (w.v0 - w.v888)) = 0 ∧
-  (w.v893 * (w.v893 - (1 : F))) = 0 ∧
+  (w.v893 * (w.v893 - (1 : F))) = 0
+
+def constraints_3 (w : W) : Prop :=
   (((((w.v890 * w.v1) + (((1 : F) - w.v890) * w.v0)) - ((w.v890 * w.v889) + (((1 : F) - w.v890) * w.v888))) - (1 : F)) - ((w.v891 + (w.v892 * (65536 : F))) + (w.v893 * (16777216 : F)))) = 0 ∧
   (w.v900 * (w.v900 - (1 : F))) = 0 ∧
   (w.v900 * (w.v0 - w.v898)) = 0 ∧
@@ -3156,7 +3166,9 @@ def constraints (w : W) : Prop :=
   (w.v5 * (w.v5 - (1 : F))) = 0 ∧
   (w.v5 * (w.v1032 * (w.v1032 - (1 : F)))) = 0 ∧
   (w.v5 * (w.v1032 * (w.v0 - w.v1030))) = 0 ∧
-  (w.v1035 * (w.v1035 - (1 : F))) = 0 ∧
+  (w.v1035 * (w.v1035 - (1 : F))) = 0
+
+def constraints_4 (w : W) : Prop :=
   (w.v5 * (((((w.v1032 * (w.v1 + (1 : F))) + (((1 : F) - w.v1032) * w.v0)) - ((w.v1032 * w.v1031) + (((1 : F) - w.v1032) * w.v1030))) - (1 : F)) - ((w.v1033 + (w.v1034 * (65536 : F))) + (w.v1035 * (16777216 : F))))) = 0 ∧
   (w.v5 * (w.v5 - (1 : F))) = 0 ∧
   (w.v5 * (w.v1046 * (w.v1046 - (1 : F)))) = 0 ∧
@@ -3204,7 +3216,9 @@ def constraints (w : W) : Prop :=
   (w.v4 * w.v13) = 0 ∧
   (w.v4 * w.v14) = 0 ∧
   (w.v4 * w.v15) = 0 ∧
-  (w.v4 * w.v16) = 0 ∧
+  (w.v4 * w.v16) = 0
+
+def constraints_5 (w : W) : Prop :=
   (w.v4 * w.v17) = 0 ∧
   (w.v4 * w.v18) = 0 ∧
   (w.v4 * w.v19) = 0 ∧
@@ -3252,7 +3266,9 @@ def constraints (w : W) : Prop :=
   (w.v4 * w.v61) = 0 ∧
   (w.v4 * w.v62) = 0 ∧
   (w.v4 * w.v63) = 0 ∧
-  (w.v4 * w.v64) = 0 ∧
+  (w.v4 * w.v64) = 0
+
+def constraints_6 (w : W) : Prop :=
   (w.v4 * w.v65) = 0 ∧
   (w.v4 * w.v66) = 0 ∧
   (w.v4 * w.v67) = 0 ∧
@@ -3300,7 +3316,9 @@ def constraints (w : W) : Prop :=
   (w.v4 * w.v109) = 0 ∧
   (w.v4 * w.v110) = 0 ∧
   (w.v4 * w.v111) = 0 ∧
-  (w.v4 * w.v112) = 0 ∧
+  (w.v4 * w.v112) = 0
+
+def constraints_7 (w : W) : Prop :=
   (w.v4 * w.v113) = 0 ∧
   (w.v4 * w.v114) = 0 ∧
   (w.v4 * w.v115) = 0 ∧
@@ -3348,7 +3366,9 @@ def constraints (w : W) : Prop :=
   (w.v4 * w.v157) = 0 ∧
   (w.v4 * w.v158) = 0 ∧
   (w.v4 * w.v159) = 0 ∧
-  (w.v4 * w.v160) = 0 ∧
+  (w.v4 * w.v160) = 0
+
+def constraints_8 (w : W) : Prop :=
   (w.v4 * w.v161) = 0 ∧
   (w.v4 * w.v162) = 0 ∧
   (w.v4 * w.v163) = 0 ∧
@@ -3396,7 +3416,9 @@ def constraints (w : W) : Prop :=
   (w.v4 * w.v205) = 0 ∧
   (w.v4 * w.v206) = 0 ∧
   (w.v4 * w.v207) = 0 ∧
-  (w.v4 * w.v208) = 0 ∧
+  (w.v4 * w.v208) = 0
+
+def constraints_9 (w : W) : Prop :=
   (w.v4 * w.v209) = 0 ∧
   (w.v5 * (w.v928 - w.v210)) = 0 ∧
   (w.v5 * (w.v929 - w.v211)) = 0 ∧
@@ -3444,7 +3466,9 @@ def constraints (w : W) : Prop :=
   (w.v5 * (w.v1071 - w.v253)) = 0 ∧
   (w.v5 * (w.v1082 - w.v254)) = 0 ∧
   (w.v5 * (w.v1083 - w.v255)) = 0 ∧
-  (w.v5 * (w.v1084 - w.v256)) = 0 ∧
+  (w.v5 * (w.v1084 - w.v256)) = 0
+
+def constraints_10 (w : W) : Prop :=
   (w.v5 * (w.v1085 - w.v257)) = 0 ∧
   (w.v5 * (w.v1096 - w.v258)) = 0 ∧
   (w.v5 * (w.v1097 - w.v259)) = 0 ∧
@@ -3492,7 +3516,9 @@ def constraints (w : W) : Prop :=
   (w.v564).val ≤ ((255 : F)).val ∧
   (w.v565).val ≤ ((255 : F)).val ∧
   (w.v566).val ≤ ((255 : F)).val ∧
-  (w.v567).val ≤ ((255 : F)).val ∧
+  (w.v567).val ≤ ((255 : F)).val
+
+def constraints_11 (w : W) : Prop :=
   (w.v2535 - (w.v8 + (4 : F))) = 0 ∧
   (w.v564).val ≤ ((255 : F)).val ∧
   (w.v565).val ≤ ((255 : F)).val ∧
@@ -3540,7 +3566,9 @@ def constraints (w : W) : Prop :=
   (w.v2539 - (w.v8 + (20 : F))) = 0 ∧
   (w.v604).val ≤ ((255 : F)).val ∧
   (w.v605).val ≤ ((255 : F)).val ∧
-  (w.v606).val ≤ ((255 : F)).val ∧
+  (w.v606).val ≤ ((255 : F)).val
+
+def constraints_12 (w : W) : Prop :=
   (w.v607).val ≤ ((255 : F)).val ∧
   (w.v621).val ≤ ((65535 : F)).val ∧
   (w.v622).val ≤ ((255 : F)).val ∧
@@ -3588,7 +3616,9 @@ def constraints (w : W) : Prop :=
   (w.v647).val ≤ ((255 : F)).val ∧
   (w.v661).val ≤ ((65535 : F)).val ∧
   (w.v662).val ≤ ((255 : F)).val ∧
-  (w.v654).val ≤ ((255 : F)).val ∧
+  (w.v654).val ≤ ((255 : F)).val
+
+def constraints_13 (w : W) : Prop :=
   (w.v655).val ≤ ((255 : F)).val ∧
   (w.v656).val ≤ ((255 : F)).val ∧
   (w.v657).val ≤ ((255 : F)).val ∧
@@ -3636,7 +3666,9 @@ def constraints (w : W) : Prop :=
   (w.v695).val ≤ ((255 : F)).val ∧
   (w.v696).val ≤ ((255 : F)).val ∧
   (w.v697).val ≤ ((255 : F)).val ∧
-  (w.v2548 - (w.v8 + (56 : F))) = 0 ∧
+  (w.v2548 - (w.v8 + (56 : F))) = 0
+
+def constraints_14 (w : W) : Prop :=
   (w.v694).val ≤ ((255 : F)).val ∧
   (w.v695).val ≤ ((255 : F)).val ∧
   (w.v696).val ≤ ((255 : F)).val ∧
@@ -3684,7 +3716,9 @@ def constraints (w : W) : Prop :=
   (w.v734).val ≤ ((255 : F)).val ∧
   (w.v735).val ≤ ((255 : F)).val ∧
   (w.v736).val ≤ ((255 : F)).val ∧
-  (w.v737).val ≤ ((255 : F)).val ∧
+  (w.v737).val ≤ ((255 : F)).val
+
+def constraints_15 (w : W) : Prop :=
   (w.v751).val ≤ ((65535 : F)).val ∧
   (w.v752).val ≤ ((255 : F)).val ∧
   (w.v744).val ≤ ((255 : F)).val ∧
@@ -3732,7 +3766,9 @@ def constraints (w : W) : Prop :=
   (w.v791).val ≤ ((65535 : F)).val ∧
   (w.v792).val ≤ ((255 : F)).val ∧
   (w.v784).val ≤ ((255 : F)).val ∧
-  (w.v785).val ≤ ((255 : F)).val ∧
+  (w.v785).val ≤ ((255 : F)).val
+
+def constraints_16 (w : W) : Prop :=
   (w.v786).val ≤ ((255 : F)).val ∧
   (w.v787).val ≤ ((255 : F)).val ∧
   (w.v2557 - (w.v8 + (92 : F))) = 0 ∧
@@ -3780,7 +3816,9 @@ def constraints (w : W) : Prop :=
   (w.v826).val ≤ ((255 : F)).val ∧
   (w.v827).val ≤ ((255 : F)).val ∧
   (w.v2561 - (w.v8 + (108 : F))) = 0 ∧
-  (w.v824).val ≤ ((255 : F)).val ∧
+  (w.v824).val ≤ ((255 : F)).val
+
+def constraints_17 (w : W) : Prop :=
   (w.v825).val ≤ ((255 : F)).val ∧
   (w.v826).val ≤ ((255 : F)).val ∧
   (w.v827).val ≤ ((255 : F)).val ∧
@@ -3828,7 +3866,9 @@ def constraints (w : W) : Prop :=
   (w.v865).val ≤ ((255 : F)).val ∧
   (w.v866).val ≤ ((255 : F)).val ∧
   (w.v867).val ≤ ((255 : F)).val ∧
-  (w.v881).val ≤ ((65535 : F)).val ∧
+  (w.v881).val ≤ ((65535 : F)).val
+
+def constraints_18 (w : W) : Prop :=
   (w.v882).val ≤ ((255 : F)).val ∧
   (w.v874).val ≤ ((255 : F)).val ∧
   (w.v875).val ≤ ((255 : F)).val ∧
@@ -3876,7 +3916,9 @@ def constraints (w : W) : Prop :=
   ((w.v936 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v924 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v925 * w.v5)).val ≤ ((255 : F)).val ∧
-  ((w.v926 * w.v5)).val ≤ ((255 : F)).val ∧
+  ((w.v926 * w.v5)).val ≤ ((255 : F)).val
+
+def constraints_19 (w : W) : Prop :=
   ((w.v927 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v928 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v929 * w.v5)).val ≤ ((255 : F)).val ∧
@@ -3924,7 +3966,9 @@ def constraints (w : W) : Prop :=
   (w.v2581 - (w.v952 * w.v5)) = 0 ∧
   ((w.v952 * w.v5)).val ≤ ((255 : F)).val ∧
   (w.v2582 - (w.v953 * w.v5)) = 0 ∧
-  ((w.v953 * w.v5)).val ≤ ((255 : F)).val ∧
+  ((w.v953 * w.v5)).val ≤ ((255 : F)).val
+
+def constraints_20 (w : W) : Prop :=
   (w.v2583 - (w.v954 * w.v5)) = 0 ∧
   ((w.v954 * w.v5)).val ≤ ((255 : F)).val ∧
   (w.v2584 - (w.v955 * w.v5)) = 0 ∧
@@ -3972,7 +4016,9 @@ def constraints (w : W) : Prop :=
   ((w.v994 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v995 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v996 * w.v5)).val ≤ ((255 : F)).val ∧
-  ((w.v997 * w.v5)).val ≤ ((255 : F)).val ∧
+  ((w.v997 * w.v5)).val ≤ ((255 : F)).val
+
+def constraints_21 (w : W) : Prop :=
   ((w.v998 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v999 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1000 * w.v5)).val ≤ ((255 : F)).val ∧
@@ -4020,7 +4066,9 @@ def constraints (w : W) : Prop :=
   ((w.v1022 * w.v5)).val ≤ ((255 : F)).val ∧
   (w.v2607 - (w.v1023 * w.v5)) = 0 ∧
   ((w.v1023 * w.v5)).val ≤ ((255 : F)).val ∧
-  (w.v2608 - (w.v1024 * w.v5)) = 0 ∧
+  (w.v2608 - (w.v1024 * w.v5)) = 0
+
+def constraints_22 (w : W) : Prop :=
   ((w.v1024 * w.v5)).val ≤ ((255 : F)).val ∧
   (w.v2609 - (w.v1025 * w.v5)) = 0 ∧
   ((w.v1025 * w.v5)).val ≤ ((255 : F)).val ∧
@@ -4068,7 +4116,9 @@ def constraints (w : W) : Prop :=
   ((w.v1065 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1066 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1067 * w.v5)).val ≤ ((255 : F)).val ∧
-  ((w.v1068 * w.v5)).val ≤ ((255 : F)).val ∧
+  ((w.v1068 * w.v5)).val ≤ ((255 : F)).val
+
+def constraints_23 (w : W) : Prop :=
   ((w.v1069 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1070 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1071 * w.v5)).val ≤ ((255 : F)).val ∧
@@ -4116,7 +4166,9 @@ def constraints (w : W) : Prop :=
   (w.v2632 - (w.v1093 * w.v5)) = 0 ∧
   ((w.v1093 * w.v5)).val ≤ ((255 : F)).val ∧
   (w.v2633 - (w.v1094 * w.v5)) = 0 ∧
-  ((w.v1094 * w.v5)).val ≤ ((255 : F)).val ∧
+  ((w.v1094 * w.v5)).val ≤ ((255 : F)).val
+
+def constraints_24 (w : W) : Prop :=
   (w.v2634 - (w.v1095 * w.v5)) = 0 ∧
   ((w.v1095 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1117 * w.v5)).val ≤ ((65535 : F)).val ∧
@@ -4164,7 +4216,9 @@ def constraints (w : W) : Prop :=
   ((w.v1136 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1137 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1138 * w.v5)).val ≤ ((255 : F)).val ∧
-  ((w.v1139 * w.v5)).val ≤ ((255 : F)).val ∧
+  ((w.v1139 * w.v5)).val ≤ ((255 : F)).val
+
+def constraints_25 (w : W) : Prop :=
   ((w.v1140 * w.v5)).val ≤ ((255 : F)).val ∧
   ((w.v1141 * w.v5)).val ≤ ((255 : F)).val ∧
   (w.v2645 - ((w.v9 + (60 : F)) * w.v5)) = 0 ∧
@@ -4212,7 +4266,9 @@ def constraints (w : W) : Prop :=
   (w.v2683 - (w.v476 + (w.v477 * (256 : F)))) = 0 ∧
   (w.v2684 - (w.v478 + (w.v479 * (256 : F)))) = 0 ∧
   (w.v2685 - (w.v480 + (w.v481 * (256 : F)))) = 0 ∧
-  (w.v2686 - (w.v482 + (w.v483 * (256 : F)))) = 0 ∧
+  (w.v2686 - (w.v482 + (w.v483 * (256 : F)))) = 0
+
+def constraints_26 (w : W) : Prop :=
   (w.v2687 - (w.v484 + (w.v485 * (256 : F)))) = 0 ∧
   (w.v2688 - (w.v486 + (w.v487 * (256 : F)))) = 0 ∧
   (w.v2689 - (w.v488 + (w.v489 * (256 : F)))) = 0 ∧
@@ -4260,7 +4316,9 @@ def constraints (w : W) : Prop :=
   (w.v2731 - (w.v172 + (w.v173 * (256 : F)))) = 0 ∧
   (w.v2732 - (w.v174 + (w.v175 * (256 : F)))) = 0 ∧
   (w.v2733 - (w.v176 + (w.v177 * (256 : F)))) = 0 ∧
-  (w.v2734 - (w.v178 + (w.v179 * (256 : F)))) = 0 ∧
+  (w.v2734 - (w.v178 + (w.v179 * (256 : F)))) = 0
+
+def constraints_27 (w : W) : Prop :=
   (w.v2735 - (w.v180 + (w.v181 * (256 : F)))) = 0 ∧
   (w.v2736 - (w.v182 + (w.v183 * (256 : F)))) = 0 ∧
   (w.v2737 - (w.v184 + (w.v185 * (256 : F)))) = 0 ∧
@@ -4308,7 +4366,9 @@ def constraints (w : W) : Prop :=
   (w.v2779 - ((w.v264 + (w.v265 * (256 : F))) * w.v7)) = 0 ∧
   (w.v2780 - ((w.v266 + (w.v267 * (256 : F))) * w.v7)) = 0 ∧
   (w.v2781 - ((w.v268 + (w.v269 * (256 : F))) * w.v7)) = 0 ∧
-  (w.v2782 - ((w.v270 + (w.v271 * (256 : F))) * w.v7)) = 0 ∧
+  (w.v2782 - ((w.v270 + (w.v271 * (256 : F))) * w.v7)) = 0
+
+def constraints_28 (w : W) : Prop :=
   (w.v2783 - ((w.v272 + (w.v273 * (256 : F))) * w.v7)) = 0 ∧
   (w.v2784 - ((w.v274 + (w.v275 * (256 : F))) * w.v7)) = 0 ∧
   (w.v2785 - ((w.v276 + (w.v277 * (256 : F))) * w.v7)) = 0 ∧
@@ -4356,7 +4416,9 @@ def constraints (w : W) : Prop :=
   (w.v2827 - ((w.v360 + (w.v361 * (256 : F))) * w.v7)) = 0 ∧
   (w.v2828 - ((w.v362 + (w.v363 * (256 : F))) * w.v7)) = 0 ∧
   (w.v2829 - ((w.v364 + (w.v365 * (256 : F))) * w.v7)) = 0 ∧
-  (w.v2830 - ((w.v366 + (w.v367 * (256 : F))) * w.v7)) = 0 ∧
+  (w.v2830 - ((w.v366 + (w.v367 * (256 : F))) * w.v7)) = 0
+
+def constraints_29 (w : W) : Prop :=
   (w.v2831 - ((w.v368 + (w.v369 * (256 : F))) * w.v7)) = 0 ∧
   (w.v2832 - ((w.v370 + (w.v371 * (256 : F))) * w.v7)) = 0 ∧
   (w.v2833 - ((w.v372 + (w.v373 * (256 : F))) * w.v7)) = 0 ∧
@@ -4404,7 +4466,9 @@ def constraints (w : W) : Prop :=
   (w.v2875 - (w.v8 + (68 : F))) = 0 ∧
   (w.v2876 - (w.v8 + (72 : F))) = 0 ∧
   (w.v2877 - (w.v8 + (76 : F))) = 0 ∧
-  (w.v2878 - (w.v8 + (80 : F))) = 0 ∧
+  (w.v2878 - (w.v8 + (80 : F))) = 0
+
+def constraints_30 (w : W) : Prop :=
   (w.v2879 - (w.v8 + (84 : F))) = 0 ∧
   (w.v2880 - (w.v8 + (88 : F))) = 0 ∧
   (w.v2881 - (w.v8 + (92 : F))) = 0 ∧
@@ -4452,7 +4516,9 @@ def constraints (w : W) : Prop :=
   (w.v2923 - (w.v1001 * w.v5)) = 0 ∧
   (w.v2924 - ((w.v9 + (24 : F)) * w.v5)) = 0 ∧
   (w.v2925 - (w.v1012 * w.v5)) = 0 ∧
-  (w.v2926 - (w.v1013 * w.v5)) = 0 ∧
+  (w.v2926 - (w.v1013 * w.v5)) = 0
+
+def constraints_31 (w : W) : Prop :=
   (w.v2927 - (w.v1014 * w.v5)) = 0 ∧
   (w.v2928 - (w.v1015 * w.v5)) = 0 ∧
   (w.v2929 - ((w.v9 + (28 : F)) * w.v5)) = 0 ∧
@@ -4500,7 +4566,9 @@ def constraints (w : W) : Prop :=
   (w.v2971 - (w.v1139 * w.v5)) = 0 ∧
   (w.v2972 - (w.v1140 * w.v5)) = 0 ∧
   (w.v2973 - (w.v1141 * w.v5)) = 0 ∧
-  (w.v2974 - (w.v210 + (w.v211 * (256 : F)))) = 0 ∧
+  (w.v2974 - (w.v210 + (w.v211 * (256 : F)))) = 0
+
+def constraints_32 (w : W) : Prop :=
   (w.v2975 - (w.v212 + (w.v213 * (256 : F)))) = 0 ∧
   (w.v2976 - (w.v214 + (w.v215 * (256 : F)))) = 0 ∧
   (w.v2977 - (w.v216 + (w.v217 * (256 : F)))) = 0 ∧
@@ -4548,7 +4616,9 @@ def constraints (w : W) : Prop :=
   (w.v3019 - (w.v300 + (w.v301 * (256 : F)))) = 0 ∧
   (w.v3020 - (w.v302 + (w.v303 * (256 : F)))) = 0 ∧
   (w.v3021 - (w.v304 + (w.v305 * (256 : F)))) = 0 ∧
-  (w.v3022 - (w.v306 + (w.v307 * (256 : F)))) = 0 ∧
+  (w.v3022 - (w.v306 + (w.v307 * (256 : F)))) = 0
+
+def constraints_33 (w : W) : Prop :=
   (w.v3023 - (w.v308 + (w.v309 * (256 : F)))) = 0 ∧
   (w.v3024 - (w.v310 + (w.v311 * (256 : F)))) = 0 ∧
   (w.v3025 - (w.v312 + (w.v313 * (256 : F)))) = 0 ∧
@@ -4596,7 +4666,9 @@ def constraints (w : W) : Prop :=
   (w.v3067 - (w.v396 + (w.v397 * (256 : F)))) = 0 ∧
   (w.v3068 - (w.v398 + (w.v399 * (256 : F)))) = 0 ∧
   (w.v3069 - (w.v400 + (w.v401 * (256 : F)))) = 0 ∧
-  (w.v3070 - (w.v402 + (w.v403 * (256 : F)))) = 0 ∧
+  (w.v3070 - (w.v402 + (w.v403 * (256 : F)))) = 0
+
+def constraints_34 (w : W) : Prop :=
   (w.v3071 - (w.v404 + (w.v405 * (256 : F)))) = 0 ∧
   (w.v3072 - (w.v406 + (w.v407 * (256 : F)))) = 0 ∧
   (w.v3073 - (w.v408 + (w.v409 * (256 : F)))) = 0 ∧
@@ -4644,7 +4716,9 @@ def constraints (w : W) : Prop :=
   (w.v3115 - ((w.v88 + (w.v89 * (256 : F))) * w.v6)) = 0 ∧
   (w.v3116 - ((w.v90 + (w.v91 * (256 : F))) * w.v6)) = 0 ∧
   (w.v3117 - ((w.v92 + (w.v93 * (256 : F))) * w.v6)) = 0 ∧
-  (w.v3118 - ((w.v94 + (w.v95 * (256 : F))) * w.v6)) = 0 ∧
+  (w.v3118 - ((w.v94 + (w.v95 * (256 : F))) * w.v6)) = 0
+
+def constraints_35 (w : W) : Prop :=
   (w.v3119 - ((w.v96 + (w.v97 * (256 : F))) * w.v6)) = 0 ∧
   (w.v3120 - ((w.v98 + (w.v99 * (256 : F))) * w.v6)) = 0 ∧
   (w.v3121 - ((w.v100 + (w.v101 * (256 : F))) * w.v6)) = 0 ∧
@@ -4692,7 +4766,9 @@ def constraints (w : W) : Prop :=
   (w.v3163 - ((w.v184 + (w.v185 * (256 : F))) * w.v6)) = 0 ∧
   (w.v3164 - ((w.v186 + (w.v187 * (256 : F))) * w.v6)) = 0 ∧
   (w.v3165 - ((w.v188 + (w.v189 * (256 : F))) * w.v6)) = 0 ∧
-  (w.v3166 - ((w.v190 + (w.v191 * (256 : F))) * w.v6)) = 0 ∧
+  (w.v3166 - ((w.v190 + (w.v191 * (256 : F))) * w.v6)) = 0
+
+def constraints_36 (w : W) : Prop :=
   (w.v3167 - ((w.v192 + (w.v193 * (256 : F))) * w.v6)) = 0 ∧
   (w.v3168 - ((w.v194 + (w.v195 * (256 : F))) * w.v6)) = 0 ∧
   (w.v3169 - ((w.v196 + (w.v197 * (256 : F))) * w.v6)) = 0 ∧
@@ -4740,7 +4816,9 @@ def constraints (w : W) : Prop :=
   byte_xor.rel [w.v45, w.v637] [w.v445] ∧
   byte_xor.rel [w.v46, w.v644] [w.v446] ∧
   byte_xor.rel [w.v47, w.v645] [w.v447] ∧
-  byte_xor.rel [w.v48, w.v646] [w.v448] ∧
+  byte_xor.rel [w.v48, w.v646] [w.v448]
+
+def constraints_37 (w : W) : Prop :=
   byte_xor.rel [w.v49, w.v647] [w.v449] ∧
   byte_xor.rel [w.v50, w.v654] [w.v450] ∧
   byte_xor.rel [w.v51, w.v655] [w.v451] ∧
@@ -4788,7 +4866,9 @@ def constraints (w : W) : Prop :=
   byte_xor.rel [w.v93, w.v757] [w.v493] ∧
   byte_xor.rel [w.v94, w.v764] [w.v494] ∧
   byte_xor.rel [w.v95, w.v765] [w.v495] ∧
-  byte_xor.rel [w.v96, w.v766] [w.v496] ∧
+  byte_xor.rel [w.v96, w.v766] [w.v496]
+
+def constraints_38 (w : W) : Prop :=
   byte_xor.rel [w.v97, w.v767] [w.v497] ∧
   byte_xor.rel [w.v98, w.v774] [w.v498] ∧
   byte_xor.rel [w.v99, w.v775] [w.v499] ∧
@@ -4836,7 +4916,9 @@ def constraints (w : W) : Prop :=
   byte_xor.rel [w.v141, w.v877] [w.v541] ∧
   byte_xor.rel [w.v142, w.v884] [w.v542] ∧
   byte_xor.rel [w.v143, w.v885] [w.v543] ∧
-  byte_xor.rel [w.v144, w.v886] [w.v544] ∧
+  byte_xor.rel [w.v144, w.v886] [w.v544]
+
+def constraints_39 (w : W) : Prop :=
   byte_xor.rel [w.v145, w.v887] [w.v545] ∧
   byte_xor.rel [w.v146, w.v894] [w.v546] ∧
   byte_xor.rel [w.v147, w.v895] [w.v547] ∧
@@ -4846,6 +4928,48 @@ def constraints (w : W) : Prop :=
   byte_xor.rel [w.v151, w.v905] [w.v551] ∧
   byte_xor.rel [w.v152, w.v906] [w.v552] ∧
   byte_xor.rel [w.v153, w.v907] [w.v553]
+
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w ∧
+  constraints_5 w ∧
+  constraints_6 w ∧
+  constraints_7 w ∧
+  constraints_8 w ∧
+  constraints_9 w ∧
+  constraints_10 w ∧
+  constraints_11 w ∧
+  constraints_12 w ∧
+  constraints_13 w ∧
+  constraints_14 w ∧
+  constraints_15 w ∧
+  constraints_16 w ∧
+  constraints_17 w ∧
+  constraints_18 w ∧
+  constraints_19 w ∧
+  constraints_20 w ∧
+  constraints_21 w ∧
+  constraints_22 w ∧
+  constraints_23 w ∧
+  constraints_24 w ∧
+  constraints_25 w ∧
+  constraints_26 w ∧
+  constraints_27 w ∧
+  constraints_28 w ∧
+  constraints_29 w ∧
+  constraints_30 w ∧
+  constraints_31 w ∧
+  constraints_32 w ∧
+  constraints_33 w ∧
+  constraints_34 w ∧
+  constraints_35 w ∧
+  constraints_36 w ∧
+  constraints_37 w ∧
+  constraints_38 w ∧
+  constraints_39 w
 
 def inputs (w : W) : List F :=
   [w.v2530, w.v2531, w.v2532, w.v2533, w.v2534, w.v8, w.v554, w.v555, w.v556, w.v557, w.v2535, w.v564, w.v565, w.v566, w.v567, w.v2536, w.v574, w.v575, w.v576, w.v577, w.v2537, w.v584, w.v585, w.v586, w.v587, w.v2538, w.v594, w.v595, w.v596, w.v597, w.v2539, w.v604, w.v605, w.v606, w.v607, w.v2540, w.v614, w.v615, w.v616, w.v617, w.v2541, w.v624, w.v625, w.v626, w.v627, w.v2542, w.v634, w.v635, w.v636, w.v637, w.v2543, w.v644, w.v645, w.v646, w.v647, w.v2544, w.v654, w.v655, w.v656, w.v657, w.v2545, w.v664, w.v665, w.v666, w.v667, w.v2546, w.v674, w.v675, w.v676, w.v677, w.v2547, w.v684, w.v685, w.v686, w.v687, w.v2548, w.v694, w.v695, w.v696, w.v697, w.v2549, w.v704, w.v705, w.v706, w.v707, w.v2550, w.v714, w.v715, w.v716, w.v717, w.v2551, w.v724, w.v725, w.v726, w.v727, w.v2552, w.v734, w.v735, w.v736, w.v737, w.v2553, w.v744, w.v745, w.v746, w.v747, w.v2554, w.v754, w.v755, w.v756, w.v757, w.v2555, w.v764, w.v765, w.v766, w.v767, w.v2556, w.v774, w.v775, w.v776, w.v777, w.v2557, w.v784, w.v785, w.v786, w.v787, w.v2558, w.v794, w.v795, w.v796, w.v797, w.v2559, w.v804, w.v805, w.v806, w.v807, w.v2560, w.v814, w.v815, w.v816, w.v817, w.v2561, w.v824, w.v825, w.v826, w.v827, w.v2562, w.v834, w.v835, w.v836, w.v837, w.v2563, w.v844, w.v845, w.v846, w.v847, w.v2564, w.v854, w.v855, w.v856, w.v857, w.v2565, w.v864, w.v865, w.v866, w.v867, w.v2566, w.v874, w.v875, w.v876, w.v877, w.v2567, w.v884, w.v885, w.v886, w.v887, w.v2568, w.v894, w.v895, w.v896, w.v897, w.v2569, w.v904, w.v905, w.v906, w.v907, w.v2570, w.v2571, w.v2572, w.v2573, w.v2574, w.v2575, w.v2576, w.v2577, w.v2578, w.v2579, w.v2580, w.v2581, w.v2582, w.v2583, w.v2584, w.v2585, w.v2586, w.v2587, w.v2588, w.v2589, w.v2590, w.v2591, w.v2592, w.v2593, w.v2594, w.v2595, w.v2596, w.v2597, w.v2598, w.v2599, w.v2600, w.v2601, w.v2602, w.v2603, w.v2604, w.v2605, w.v2606, w.v2607, w.v2608, w.v2609, w.v2610, w.v2611, w.v2612, w.v2613, w.v2614, w.v2615, w.v2616, w.v2617, w.v2618, w.v2619, w.v2620, w.v2621, w.v2622, w.v2623, w.v2624, w.v2625, w.v2626, w.v2627, w.v2628, w.v2629, w.v2630, w.v2631, w.v2632, w.v2633, w.v2634, w.v2635, w.v2636, w.v2637, w.v2638, w.v2639, w.v2640, w.v2641, w.v2642, w.v2643, w.v2644, w.v2645, w.v2646, w.v2647, w.v2648, w.v2649, w.v2852, w.v2853, w.v1, w.v3, w.v2974, w.v2975, w.v2976, w.v2977, w.v2978, w.v2979, w.v2980, w.v2981, w.v2982, w.v2983, w.v2984, w.v2985, w.v2986, w.v2987, w.v2988, w.v2989, w.v2990, w.v2991, w.v2992, w.v2993, w.v2994, w.v2995, w.v2996, w.v2997, w.v2998, w.v2999, w.v3000, w.v3001, w.v3002, w.v3003, w.v3004, w.v3005, w.v3006, w.v3007, w.v3008, w.v3009, w.v3010, w.v3011, w.v3012, w.v3013, w.v3014, w.v3015, w.v3016, w.v3017, w.v3018, w.v3019, w.v3020, w.v3021, w.v3022, w.v3023, w.v3024, w.v3025, w.v3026, w.v3027, w.v3028, w.v3029, w.v3030, w.v3031, w.v3032, w.v3033, w.v3034, w.v3035, w.v3036, w.v3037, w.v3038, w.v3039, w.v3040, w.v3041, w.v3042, w.v3043, w.v3044, w.v3045, w.v3046, w.v3047, w.v3048, w.v3049, w.v3050, w.v3051, w.v3052, w.v3053, w.v3054, w.v3055, w.v3056, w.v3057, w.v3058, w.v3059, w.v3060, w.v3061, w.v3062, w.v3063, w.v3064, w.v3065, w.v3066, w.v3067, w.v3068, w.v3069, w.v3070, w.v3071, w.v3072, w.v3073, w.v3074, w.v3075, w.v3076, w.v3077, w.v3078, w.v3079, w.v3080, w.v3081, w.v3082, w.v3083, w.v3084, w.v3085, w.v3086, w.v3087, w.v3088, w.v3089, w.v3090, w.v3091, w.v3092, w.v3093, w.v3094, w.v3095, w.v3096, w.v3097, w.v3098, w.v3099, w.v3100, w.v3101, w.v3102, w.v3103, w.v3104, w.v3105, w.v3106, w.v3107, w.v3108, w.v3109, w.v3110, w.v3111, w.v3112, w.v3113, w.v3114, w.v3115, w.v3116, w.v3117, w.v3118, w.v3119, w.v3120, w.v3121, w.v3122, w.v3123, w.v3124, w.v3125, w.v3126, w.v3127, w.v3128, w.v3129, w.v3130, w.v3131, w.v3132, w.v3133, w.v3134, w.v3135, w.v3136, w.v3137, w.v3138, w.v3139, w.v3140, w.v3141, w.v3142, w.v3143, w.v3144, w.v3145, w.v3146, w.v3147, w.v3148, w.v3149, w.v3150, w.v3151, w.v3152, w.v3153, w.v3154, w.v3155, w.v3156, w.v3157, w.v3158, w.v3159, w.v3160, w.v3161, w.v3162, w.v3163, w.v3164, w.v3165, w.v3166, w.v3167, w.v3168, w.v3169, w.v3170, w.v3171, w.v3172, w.v3173, w.v3174, w.v3175]
@@ -4863,7 +4987,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13, constraints_14, constraints_15, constraints_16, constraints_17, constraints_18, constraints_19, constraints_20, constraints_21, constraints_22, constraints_23, constraints_24, constraints_25, constraints_26, constraints_27, constraints_28, constraints_29, constraints_30, constraints_31, constraints_32, constraints_33, constraints_34, constraints_35, constraints_36, constraints_37, constraints_38, constraints_39]
 
 end KeccakSpongeControl
 

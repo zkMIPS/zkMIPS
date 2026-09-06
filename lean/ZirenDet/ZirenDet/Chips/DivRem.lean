@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.DivRem
 
 open ZirenDet
@@ -345,7 +349,7 @@ structure W where
   v571 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v143 - w.v146) = 0 ∧
   (w.v144 - w.v147) = 0 ∧
   (w.v145 - w.v148) = 0 ∧
@@ -393,7 +397,9 @@ def constraints (w : W) : Prop :=
   (w.v137 * (w.v137 - (1 : F))) = 0 ∧
   (w.v137 * (w.v116 - (255 : F))) = 0 ∧
   (((1 : F) - (w.v138 * (w.v117 - (255 : F)))) - w.v139) = 0 ∧
-  (w.v139 * (w.v139 - (1 : F))) = 0 ∧
+  (w.v139 * (w.v139 - (1 : F))) = 0
+
+def constraints_1 (w : W) : Prop :=
   (w.v139 * (w.v117 - (255 : F))) = 0 ∧
   (w.v140 * (w.v140 - (1 : F))) = 0 ∧
   (w.v141 * (w.v141 - (1 : F))) = 0 ∧
@@ -441,7 +447,9 @@ def constraints (w : W) : Prop :=
   w.v85 = 0 ∧
   ((w.v148 - (1 : F)) * (w.v114 - w.v14)) = 0 ∧
   ((w.v147 - (1 : F)) * (w.v6 - w.v10)) = 0 ∧
-  ((w.v148 - (1 : F)) * (w.v115 - w.v15)) = 0 ∧
+  ((w.v148 - (1 : F)) * (w.v115 - w.v15)) = 0
+
+def constraints_2 (w : W) : Prop :=
   ((w.v147 - (1 : F)) * (w.v7 - w.v11)) = 0 ∧
   ((w.v148 - (1 : F)) * (w.v116 - w.v16)) = 0 ∧
   ((w.v147 - (1 : F)) * (w.v8 - w.v12)) = 0 ∧
@@ -489,7 +497,9 @@ def constraints (w : W) : Prop :=
   (w.v53 * w.v57) = 0 ∧
   (((w.v57 + w.v56) - (1 : F)) * (w.v12 - w.v20)) = 0 ∧
   (w.v53 * (w.v57 + w.v56)) = 0 ∧
-  ((((w.v57 + w.v56) + w.v55) - (1 : F)) * (w.v11 - w.v19)) = 0 ∧
+  ((((w.v57 + w.v56) + w.v55) - (1 : F)) * (w.v11 - w.v19)) = 0
+
+def constraints_3 (w : W) : Prop :=
   (w.v53 * ((w.v57 + w.v56) + w.v55)) = 0 ∧
   (((((w.v57 + w.v56) + w.v55) + w.v54) - (1 : F)) * (w.v10 - w.v18)) = 0 ∧
   (w.v53 * (((w.v57 + w.v56) + w.v55) + w.v54)) = 0 ∧
@@ -537,7 +547,9 @@ def constraints (w : W) : Prop :=
   (w.v117 - ((w.v39 * (128 : F)) + w.v563)) = 0 ∧
   (w.v22).val ≤ ((65535 : F)).val ∧
   (w.v23).val ≤ ((65535 : F)).val ∧
-  (w.v24).val ≤ ((65535 : F)).val ∧
+  (w.v24).val ≤ ((65535 : F)).val
+
+def constraints_4 (w : W) : Prop :=
   (w.v25).val ≤ ((65535 : F)).val ∧
   (w.v26).val ≤ ((65535 : F)).val ∧
   (w.v27).val ≤ ((65535 : F)).val ∧
@@ -585,7 +597,9 @@ def constraints (w : W) : Prop :=
   ((w.v52 - (1 : F)) = 0 ↔ (w.v59).val < (w.v60).val) ∧
   (w.v566).val ≤ ((127 : F)).val ∧
   (w.v143 * (w.v143 - (1 : F))) = 0 ∧
-  (w.v111 - ((w.v143 * (128 : F)) + w.v566)) = 0 ∧
+  (w.v111 - ((w.v143 * (128 : F)) + w.v566)) = 0
+
+def constraints_5 (w : W) : Prop :=
   (w.v567).val ≤ ((127 : F)).val ∧
   (w.v145 * (w.v145 - (1 : F))) = 0 ∧
   (w.v117 - ((w.v145 * (128 : F)) + w.v567)) = 0 ∧
@@ -633,7 +647,9 @@ def constraints (w : W) : Prop :=
   (w.v151).val ≤ ((255 : F)).val ∧
   (w.v152).val ≤ ((255 : F)).val ∧
   (w.v153).val ≤ ((255 : F)).val ∧
-  (w.v154).val ≤ ((255 : F)).val ∧
+  (w.v154).val ≤ ((255 : F)).val
+
+def constraints_6 (w : W) : Prop :=
   (w.v155).val ≤ ((255 : F)).val ∧
   (w.v156).val ≤ ((255 : F)).val ∧
   (w.v157).val ≤ ((255 : F)).val ∧
@@ -642,6 +658,15 @@ def constraints (w : W) : Prop :=
   (w.v152).val ≤ ((255 : F)).val ∧
   (w.v153).val ≤ ((255 : F)).val ∧
   (w.v571 - ((w.v92 * (65536 : F)) + w.v91)) = 0
+
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w ∧
+  constraints_5 w ∧
+  constraints_6 w
 
 def inputs (w : W) : List F :=
   [w.v0, w.v93, w.v94, w.v95, w.v96, w.v97, w.v108, w.v109, w.v110, w.v111, w.v114, w.v115, w.v116, w.v117, w.v98, w.v99, w.v100, w.v101, w.v150, w.v151, w.v152, w.v153, w.v90, w.v571, w.v1]
@@ -658,7 +683,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6]
 
 end DivRem_is_div
 
@@ -999,7 +1024,7 @@ structure W where
   v581 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   ((0 : F) - w.v146) = 0 ∧
   ((0 : F) - w.v147) = 0 ∧
   ((0 : F) - w.v148) = 0 ∧
@@ -1047,7 +1072,9 @@ def constraints (w : W) : Prop :=
   (w.v137 * (w.v137 - (1 : F))) = 0 ∧
   (w.v137 * (w.v116 - (255 : F))) = 0 ∧
   (((1 : F) - (w.v138 * (w.v117 - (255 : F)))) - w.v139) = 0 ∧
-  (w.v139 * (w.v139 - (1 : F))) = 0 ∧
+  (w.v139 * (w.v139 - (1 : F))) = 0
+
+def constraints_1 (w : W) : Prop :=
   (w.v139 * (w.v117 - (255 : F))) = 0 ∧
   (w.v140 * (w.v140 - (1 : F))) = 0 ∧
   (w.v141 * (w.v141 - (1 : F))) = 0 ∧
@@ -1095,7 +1122,9 @@ def constraints (w : W) : Prop :=
   w.v85 = 0 ∧
   ((w.v148 - (1 : F)) * (w.v114 - w.v14)) = 0 ∧
   ((w.v147 - (1 : F)) * (w.v6 - w.v10)) = 0 ∧
-  ((w.v148 - (1 : F)) * (w.v115 - w.v15)) = 0 ∧
+  ((w.v148 - (1 : F)) * (w.v115 - w.v15)) = 0
+
+def constraints_2 (w : W) : Prop :=
   ((w.v147 - (1 : F)) * (w.v7 - w.v11)) = 0 ∧
   ((w.v148 - (1 : F)) * (w.v116 - w.v16)) = 0 ∧
   ((w.v147 - (1 : F)) * (w.v8 - w.v12)) = 0 ∧
@@ -1143,7 +1172,9 @@ def constraints (w : W) : Prop :=
   (w.v53 * w.v57) = 0 ∧
   (((w.v57 + w.v56) - (1 : F)) * (w.v12 - w.v20)) = 0 ∧
   (w.v53 * (w.v57 + w.v56)) = 0 ∧
-  ((((w.v57 + w.v56) + w.v55) - (1 : F)) * (w.v11 - w.v19)) = 0 ∧
+  ((((w.v57 + w.v56) + w.v55) - (1 : F)) * (w.v11 - w.v19)) = 0
+
+def constraints_3 (w : W) : Prop :=
   (w.v53 * ((w.v57 + w.v56) + w.v55)) = 0 ∧
   (((((w.v57 + w.v56) + w.v55) + w.v54) - (1 : F)) * (w.v10 - w.v18)) = 0 ∧
   (w.v53 * (((w.v57 + w.v56) + w.v55) + w.v54)) = 0 ∧
@@ -1191,7 +1222,9 @@ def constraints (w : W) : Prop :=
   (w.v117 - ((w.v39 * (128 : F)) + w.v573)) = 0 ∧
   (w.v22).val ≤ ((65535 : F)).val ∧
   (w.v23).val ≤ ((65535 : F)).val ∧
-  (w.v24).val ≤ ((65535 : F)).val ∧
+  (w.v24).val ≤ ((65535 : F)).val
+
+def constraints_4 (w : W) : Prop :=
   (w.v25).val ≤ ((65535 : F)).val ∧
   (w.v26).val ≤ ((65535 : F)).val ∧
   (w.v27).val ≤ ((65535 : F)).val ∧
@@ -1239,7 +1272,9 @@ def constraints (w : W) : Prop :=
   ((w.v52 - (1 : F)) = 0 ↔ (w.v59).val < (w.v60).val) ∧
   (w.v576).val ≤ ((127 : F)).val ∧
   (w.v143 * (w.v143 - (1 : F))) = 0 ∧
-  (w.v111 - ((w.v143 * (128 : F)) + w.v576)) = 0 ∧
+  (w.v111 - ((w.v143 * (128 : F)) + w.v576)) = 0
+
+def constraints_5 (w : W) : Prop :=
   (w.v577).val ≤ ((127 : F)).val ∧
   (w.v145 * (w.v145 - (1 : F))) = 0 ∧
   (w.v117 - ((w.v145 * (128 : F)) + w.v577)) = 0 ∧
@@ -1287,7 +1322,9 @@ def constraints (w : W) : Prop :=
   (w.v151).val ≤ ((255 : F)).val ∧
   (w.v152).val ≤ ((255 : F)).val ∧
   (w.v153).val ≤ ((255 : F)).val ∧
-  (w.v154).val ≤ ((255 : F)).val ∧
+  (w.v154).val ≤ ((255 : F)).val
+
+def constraints_6 (w : W) : Prop :=
   (w.v155).val ≤ ((255 : F)).val ∧
   (w.v156).val ≤ ((255 : F)).val ∧
   (w.v157).val ≤ ((255 : F)).val ∧
@@ -1296,6 +1333,15 @@ def constraints (w : W) : Prop :=
   (w.v152).val ≤ ((255 : F)).val ∧
   (w.v153).val ≤ ((255 : F)).val ∧
   (w.v581 - ((w.v92 * (65536 : F)) + w.v91)) = 0
+
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w ∧
+  constraints_5 w ∧
+  constraints_6 w
 
 def inputs (w : W) : List F :=
   [w.v0, w.v93, w.v94, w.v95, w.v96, w.v97, w.v108, w.v109, w.v110, w.v111, w.v114, w.v115, w.v116, w.v117, w.v98, w.v99, w.v100, w.v101, w.v150, w.v151, w.v152, w.v153, w.v90, w.v581, w.v1]
@@ -1312,7 +1358,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6]
 
 end DivRem_is_divu
 
@@ -1627,7 +1673,7 @@ structure W where
   v591 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v143 - w.v146) = 0 ∧
   (w.v144 - w.v147) = 0 ∧
   (w.v145 - w.v148) = 0 ∧
@@ -1675,7 +1721,9 @@ def constraints (w : W) : Prop :=
   (w.v137 * (w.v137 - (1 : F))) = 0 ∧
   (w.v137 * (w.v116 - (255 : F))) = 0 ∧
   (((1 : F) - (w.v138 * (w.v117 - (255 : F)))) - w.v139) = 0 ∧
-  (w.v139 * (w.v139 - (1 : F))) = 0 ∧
+  (w.v139 * (w.v139 - (1 : F))) = 0
+
+def constraints_1 (w : W) : Prop :=
   (w.v139 * (w.v117 - (255 : F))) = 0 ∧
   (w.v140 * (w.v140 - (1 : F))) = 0 ∧
   (w.v141 * (w.v141 - (1 : F))) = 0 ∧
@@ -1723,7 +1771,9 @@ def constraints (w : W) : Prop :=
   w.v85 = 0 ∧
   ((w.v148 - (1 : F)) * (w.v114 - w.v14)) = 0 ∧
   ((w.v147 - (1 : F)) * (w.v6 - w.v10)) = 0 ∧
-  ((w.v148 - (1 : F)) * (w.v115 - w.v15)) = 0 ∧
+  ((w.v148 - (1 : F)) * (w.v115 - w.v15)) = 0
+
+def constraints_2 (w : W) : Prop :=
   ((w.v147 - (1 : F)) * (w.v7 - w.v11)) = 0 ∧
   ((w.v148 - (1 : F)) * (w.v116 - w.v16)) = 0 ∧
   ((w.v147 - (1 : F)) * (w.v8 - w.v12)) = 0 ∧
@@ -1771,7 +1821,9 @@ def constraints (w : W) : Prop :=
   (w.v53 * w.v57) = 0 ∧
   (((w.v57 + w.v56) - (1 : F)) * (w.v12 - w.v20)) = 0 ∧
   (w.v53 * (w.v57 + w.v56)) = 0 ∧
-  ((((w.v57 + w.v56) + w.v55) - (1 : F)) * (w.v11 - w.v19)) = 0 ∧
+  ((((w.v57 + w.v56) + w.v55) - (1 : F)) * (w.v11 - w.v19)) = 0
+
+def constraints_3 (w : W) : Prop :=
   (w.v53 * ((w.v57 + w.v56) + w.v55)) = 0 ∧
   (((((w.v57 + w.v56) + w.v55) + w.v54) - (1 : F)) * (w.v10 - w.v18)) = 0 ∧
   (w.v53 * (((w.v57 + w.v56) + w.v55) + w.v54)) = 0 ∧
@@ -1819,7 +1871,9 @@ def constraints (w : W) : Prop :=
   (w.v28).val ≤ ((65535 : F)).val ∧
   (w.v29).val ≤ ((65535 : F)).val ∧
   (w.v30).val ≤ ((255 : F)).val ∧
-  (w.v31).val ≤ ((255 : F)).val ∧
+  (w.v31).val ≤ ((255 : F)).val
+
+def constraints_4 (w : W) : Prop :=
   (w.v32).val ≤ ((255 : F)).val ∧
   (w.v33).val ≤ ((255 : F)).val ∧
   (w.v34).val ≤ ((255 : F)).val ∧
@@ -1867,7 +1921,9 @@ def constraints (w : W) : Prop :=
   (w.v588).val ≤ ((127 : F)).val ∧
   (w.v144 * (w.v144 - (1 : F))) = 0 ∧
   (w.v9 - ((w.v144 * (128 : F)) + w.v588)) = 0 ∧
-  (w.v2).val ≤ ((255 : F)).val ∧
+  (w.v2).val ≤ ((255 : F)).val
+
+def constraints_5 (w : W) : Prop :=
   (w.v3).val ≤ ((255 : F)).val ∧
   (w.v4).val ≤ ((255 : F)).val ∧
   (w.v5).val ≤ ((255 : F)).val ∧
@@ -1904,6 +1960,14 @@ def constraints (w : W) : Prop :=
   (w.v590 - (w.v1 + (4 : F))) = 0 ∧
   (w.v591 - ((w.v92 * (65536 : F)) + w.v91)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w ∧
+  constraints_5 w
+
 def inputs (w : W) : List F :=
   [w.v0, w.v93, w.v94, w.v95, w.v96, w.v97, w.v108, w.v109, w.v110, w.v111, w.v114, w.v115, w.v116, w.v117, w.v98, w.v99, w.v100, w.v101, w.v90, w.v591, w.v1]
 def outputs (w : W) : List F :=
@@ -1919,7 +1983,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5]
 
 end DivRem_is_mod
 
@@ -2234,7 +2298,7 @@ structure W where
   v601 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   ((0 : F) - w.v146) = 0 ∧
   ((0 : F) - w.v147) = 0 ∧
   ((0 : F) - w.v148) = 0 ∧
@@ -2282,7 +2346,9 @@ def constraints (w : W) : Prop :=
   (w.v137 * (w.v137 - (1 : F))) = 0 ∧
   (w.v137 * (w.v116 - (255 : F))) = 0 ∧
   (((1 : F) - (w.v138 * (w.v117 - (255 : F)))) - w.v139) = 0 ∧
-  (w.v139 * (w.v139 - (1 : F))) = 0 ∧
+  (w.v139 * (w.v139 - (1 : F))) = 0
+
+def constraints_1 (w : W) : Prop :=
   (w.v139 * (w.v117 - (255 : F))) = 0 ∧
   (w.v140 * (w.v140 - (1 : F))) = 0 ∧
   (w.v141 * (w.v141 - (1 : F))) = 0 ∧
@@ -2330,7 +2396,9 @@ def constraints (w : W) : Prop :=
   w.v85 = 0 ∧
   ((w.v148 - (1 : F)) * (w.v114 - w.v14)) = 0 ∧
   ((w.v147 - (1 : F)) * (w.v6 - w.v10)) = 0 ∧
-  ((w.v148 - (1 : F)) * (w.v115 - w.v15)) = 0 ∧
+  ((w.v148 - (1 : F)) * (w.v115 - w.v15)) = 0
+
+def constraints_2 (w : W) : Prop :=
   ((w.v147 - (1 : F)) * (w.v7 - w.v11)) = 0 ∧
   ((w.v148 - (1 : F)) * (w.v116 - w.v16)) = 0 ∧
   ((w.v147 - (1 : F)) * (w.v8 - w.v12)) = 0 ∧
@@ -2378,7 +2446,9 @@ def constraints (w : W) : Prop :=
   (w.v53 * w.v57) = 0 ∧
   (((w.v57 + w.v56) - (1 : F)) * (w.v12 - w.v20)) = 0 ∧
   (w.v53 * (w.v57 + w.v56)) = 0 ∧
-  ((((w.v57 + w.v56) + w.v55) - (1 : F)) * (w.v11 - w.v19)) = 0 ∧
+  ((((w.v57 + w.v56) + w.v55) - (1 : F)) * (w.v11 - w.v19)) = 0
+
+def constraints_3 (w : W) : Prop :=
   (w.v53 * ((w.v57 + w.v56) + w.v55)) = 0 ∧
   (((((w.v57 + w.v56) + w.v55) + w.v54) - (1 : F)) * (w.v10 - w.v18)) = 0 ∧
   (w.v53 * (((w.v57 + w.v56) + w.v55) + w.v54)) = 0 ∧
@@ -2426,7 +2496,9 @@ def constraints (w : W) : Prop :=
   (w.v28).val ≤ ((65535 : F)).val ∧
   (w.v29).val ≤ ((65535 : F)).val ∧
   (w.v30).val ≤ ((255 : F)).val ∧
-  (w.v31).val ≤ ((255 : F)).val ∧
+  (w.v31).val ≤ ((255 : F)).val
+
+def constraints_4 (w : W) : Prop :=
   (w.v32).val ≤ ((255 : F)).val ∧
   (w.v33).val ≤ ((255 : F)).val ∧
   (w.v34).val ≤ ((255 : F)).val ∧
@@ -2474,7 +2546,9 @@ def constraints (w : W) : Prop :=
   (w.v598).val ≤ ((127 : F)).val ∧
   (w.v144 * (w.v144 - (1 : F))) = 0 ∧
   (w.v9 - ((w.v144 * (128 : F)) + w.v598)) = 0 ∧
-  (w.v2).val ≤ ((255 : F)).val ∧
+  (w.v2).val ≤ ((255 : F)).val
+
+def constraints_5 (w : W) : Prop :=
   (w.v3).val ≤ ((255 : F)).val ∧
   (w.v4).val ≤ ((255 : F)).val ∧
   (w.v5).val ≤ ((255 : F)).val ∧
@@ -2511,6 +2585,14 @@ def constraints (w : W) : Prop :=
   (w.v600 - (w.v1 + (4 : F))) = 0 ∧
   (w.v601 - ((w.v92 * (65536 : F)) + w.v91)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w ∧
+  constraints_5 w
+
 def inputs (w : W) : List F :=
   [w.v0, w.v93, w.v94, w.v95, w.v96, w.v97, w.v108, w.v109, w.v110, w.v111, w.v114, w.v115, w.v116, w.v117, w.v98, w.v99, w.v100, w.v101, w.v90, w.v601, w.v1]
 def outputs (w : W) : List F :=
@@ -2526,7 +2608,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5]
 
 end DivRem_is_modu
 
@@ -2827,7 +2909,7 @@ structure W where
   v163 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   ((w.v143 * (w.v86 + w.v88)) - w.v146) = 0 ∧
   ((w.v144 * (w.v86 + w.v88)) - w.v147) = 0 ∧
   ((w.v145 * (w.v86 + w.v88)) - w.v148) = 0 ∧
@@ -2875,7 +2957,9 @@ def constraints (w : W) : Prop :=
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v135 * (w.v135 - (1 : F)))) = 0 ∧
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v135 * (w.v115 - (255 : F)))) = 0 ∧
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (((1 : F) - (w.v136 * (w.v116 - (255 : F)))) - w.v137)) = 0 ∧
-  ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v137 * (w.v137 - (1 : F)))) = 0 ∧
+  ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v137 * (w.v137 - (1 : F)))) = 0
+
+def constraints_1 (w : W) : Prop :=
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v137 * (w.v116 - (255 : F)))) = 0 ∧
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (((1 : F) - (w.v138 * (w.v117 - (255 : F)))) - w.v139)) = 0 ∧
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v139 * (w.v139 - (1 : F)))) = 0 ∧
@@ -2923,7 +3007,9 @@ def constraints (w : W) : Prop :=
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v84 * (w.v84 - (1 : F)))) = 0 ∧
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v85 * (w.v85 - (1 : F)))) = 0 ∧
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v83 - (w.v76 * w.v78))) = 0 ∧
-  ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v84 - (w.v80 * w.v82))) = 0 ∧
+  ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v84 - (w.v80 * w.v82))) = 0
+
+def constraints_2 (w : W) : Prop :=
   ((((w.v86 + w.v87) + w.v88) + w.v89) * (w.v85 - (w.v83 * w.v84))) = 0 ∧
   ((((w.v86 + w.v87) + w.v88) + w.v89) * w.v85) = 0 ∧
   ((w.v148 - (1 : F)) * (w.v114 - w.v14)) = 0 ∧
@@ -2971,7 +3057,9 @@ def constraints (w : W) : Prop :=
   (w.v57 * (w.v57 - (1 : F))) = 0 ∧
   ((((w.v54 + w.v55) + w.v56) + w.v57) * ((((w.v54 + w.v55) + w.v56) + w.v57) - (1 : F))) = 0 ∧
   (w.v149 * (((1 : F) - w.v53) - (((w.v54 + w.v55) + w.v56) + w.v57))) = 0 ∧
-  (w.v53 * (w.v53 - (1 : F))) = 0 ∧
+  (w.v53 * (w.v53 - (1 : F))) = 0
+
+def constraints_3 (w : W) : Prop :=
   ((w.v57 - (1 : F)) * ((w.v13 * w.v149) - (w.v21 * w.v149))) = 0 ∧
   (w.v53 * w.v57) = 0 ∧
   (((w.v57 + w.v56) - (1 : F)) * (w.v12 - w.v20)) = 0 ∧
@@ -3019,7 +3107,9 @@ def constraints (w : W) : Prop :=
   (w.v97 * w.v103) = 0 ∧
   (w.v97 * w.v104) = 0 ∧
   (w.v97 * w.v105) = 0 ∧
-  ((((w.v86 + w.v87) + w.v88) + w.v89) * ((((w.v86 + w.v87) + w.v88) + w.v89) - (1 : F))) = 0 ∧
+  ((((w.v86 + w.v87) + w.v88) + w.v89) * ((((w.v86 + w.v87) + w.v88) + w.v89) - (1 : F))) = 0
+
+def constraints_4 (w : W) : Prop :=
   ((w.v86 + w.v87) * ((w.v86 + w.v87) - (1 : F))) = 0 ∧
   ((w.v86 + w.v87) * (w.v160 * (w.v160 - (1 : F)))) = 0 ∧
   ((w.v86 + w.v87) * (w.v160 * (w.v90 - w.v158))) = 0 ∧
@@ -3029,6 +3119,13 @@ def constraints (w : W) : Prop :=
   ((w.v86 + w.v87) * (w.v7 - w.v155)) = 0 ∧
   ((w.v86 + w.v87) * (w.v8 - w.v156)) = 0 ∧
   ((w.v86 + w.v87) * (w.v9 - w.v157)) = 0
+
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w
 
 def inputs (_w : W) : List F := []
 def outputs (w : W) : List F :=
@@ -3044,7 +3141,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4]
 
 /-- Selector-shape / bit postconditions implied by the constraints. -/
 theorem postconditions (w : W) (hw : constraints w) :
@@ -3053,7 +3150,7 @@ theorem postconditions (w : W) (hw : constraints w) :
     (w.v88 * (w.v88 - (1 : F))) = 0 ∧
     (w.v89 * (w.v89 - (1 : F))) = 0 ∧
     ((((w.v86 + w.v87) + w.v88) + w.v89)).val < ((2 : F)).val := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4]
 
 end top
 

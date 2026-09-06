@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.SyscallInstrs
 
 open ZirenDet
@@ -243,7 +247,7 @@ structure W where
   v381 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (((1 : F) - (w.v47 * (w.v8 + (w.v9 * (256 : F))))) - w.v48) = 0 ∧
   (w.v48 * (w.v48 - (1 : F))) = 0 ∧
   (w.v48 * (w.v8 + (w.v9 * (256 : F)))) = 0 ∧
@@ -291,7 +295,9 @@ def constraints (w : W) : Prop :=
   (((1 : F) - (w.v45 * ((w.v8 + (w.v9 * (256 : F))) - (240 : F)))) - w.v46) = 0 ∧
   (w.v46 * (w.v46 - (1 : F))) = 0 ∧
   (w.v46 * ((w.v8 + (w.v9 * (256 : F))) - (240 : F))) = 0 ∧
-  (w.v44 * w.v39) = 0 ∧
+  (w.v44 * w.v39) = 0
+
+def constraints_1 (w : W) : Prop :=
   (w.v44 * w.v40) = 0 ∧
   (w.v44 * w.v41) = 0 ∧
   (w.v44 * w.v42) = 0 ∧
@@ -339,7 +345,9 @@ def constraints (w : W) : Prop :=
   (w.v23).val ≤ ((65535 : F)).val ∧
   ((((((((w.v2 * (65536 : F)) + w.v1) + (2 : F)) - w.v22) - (1 : F)) - w.v23) * (2130673921 : F))).val ≤ ((511 : F)).val ∧
   (w.v18).val ≤ ((255 : F)).val ∧
-  (w.v19).val ≤ ((255 : F)).val ∧
+  (w.v19).val ≤ ((255 : F)).val
+
+def constraints_2 (w : W) : Prop :=
   (w.v20).val ≤ ((255 : F)).val ∧
   (w.v21).val ≤ ((255 : F)).val ∧
   (w.v29).val ≤ ((65535 : F)).val ∧
@@ -377,6 +385,11 @@ def constraints (w : W) : Prop :=
   (((w.v26 + (w.v27 * (256 : F))) * w.v35)).val ≤ ((65535 : F)).val ∧
   (w.v381 - ((w.v2 * (65536 : F)) + w.v1)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w
+
 def inputs (w : W) : List F :=
   [w.v30, w.v3, w.v4, w.v5, w.v6, w.v7, w.v18, w.v19, w.v20, w.v21, w.v24, w.v25, w.v26, w.v27, w.v8, w.v9, w.v10, w.v11, w.v377, w.v378, w.v379, w.v380, w.v0, w.v381, w.v33]
 def outputs (w : W) : List F :=
@@ -392,7 +405,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2]
 
 end SyscallInstrs
 

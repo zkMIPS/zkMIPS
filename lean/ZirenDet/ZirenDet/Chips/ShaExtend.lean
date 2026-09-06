@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.ShaExtend
 
 open ZirenDet
@@ -384,7 +388,7 @@ structure W where
   v586 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v10 * (w.v10 - (1 : F))) = 0 ∧
   (w.v10 * (w.v0 - w.v8)) = 0 ∧
   (w.v13 * (w.v13 - (1 : F))) = 0 ∧
@@ -432,7 +436,9 @@ def constraints (w : W) : Prop :=
   ((((w.v136 + w.v140) + w.v144) + w.v148) - (1 : F)) = 0 ∧
   (w.v137 * (w.v137 - (1 : F))) = 0 ∧
   (w.v141 * (w.v141 - (1 : F))) = 0 ∧
-  (w.v145 * (w.v145 - (1 : F))) = 0 ∧
+  (w.v145 * (w.v145 - (1 : F))) = 0
+
+def constraints_1 (w : W) : Prop :=
   (w.v149 * (w.v149 - (1 : F))) = 0 ∧
   ((((w.v137 + w.v141) + w.v145) + w.v149) - (1 : F)) = 0 ∧
   (w.v138 * (w.v138 - (1 : F))) = 0 ∧
@@ -480,7 +486,9 @@ def constraints (w : W) : Prop :=
   (w.v60).val ≤ ((255 : F)).val ∧
   (w.v61).val ≤ ((255 : F)).val ∧
   (w.v578 - (w.v2 + ((w.v3 - (2 : F)) * (4 : F)))) = 0 ∧
-  (w.v58).val ≤ ((255 : F)).val ∧
+  (w.v58).val ≤ ((255 : F)).val
+
+def constraints_2 (w : W) : Prop :=
   (w.v59).val ≤ ((255 : F)).val ∧
   (w.v60).val ≤ ((255 : F)).val ∧
   (w.v61).val ≤ ((255 : F)).val ∧
@@ -528,7 +536,9 @@ def constraints (w : W) : Prop :=
   (w.v135).val ≤ ((255 : F)).val ∧
   (w.v167).val ≤ ((65535 : F)).val ∧
   (w.v168).val ≤ ((255 : F)).val ∧
-  (w.v156).val ≤ ((255 : F)).val ∧
+  (w.v156).val ≤ ((255 : F)).val
+
+def constraints_3 (w : W) : Prop :=
   (w.v157).val ≤ ((255 : F)).val ∧
   (w.v158).val ≤ ((255 : F)).val ∧
   (w.v159).val ≤ ((255 : F)).val ∧
@@ -576,7 +586,9 @@ def constraints (w : W) : Prop :=
   byte_shr_carry.rel [w.v60, (3 : F)] [w.v84, w.v88] ∧
   byte_shr_carry.rel [(0 : F), (2 : F)] [w.v99, w.v103] ∧
   byte_shr_carry.rel [w.v61, (2 : F)] [w.v98, w.v102] ∧
-  byte_shr_carry.rel [w.v60, (2 : F)] [w.v97, w.v101] ∧
+  byte_shr_carry.rel [w.v60, (2 : F)] [w.v97, w.v101]
+
+def constraints_4 (w : W) : Prop :=
   byte_shr_carry.rel [w.v59, (2 : F)] [w.v96, w.v100] ∧
   byte_xor.rel [w.v68, w.v80] [w.v104] ∧
   byte_xor.rel [w.v69, w.v81] [w.v105] ∧
@@ -586,6 +598,13 @@ def constraints (w : W) : Prop :=
   byte_xor.rel [w.v105, w.v93] [w.v109] ∧
   byte_xor.rel [w.v106, w.v94] [w.v110] ∧
   byte_xor.rel [w.v107, w.v95] [w.v111]
+
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w ∧
+  constraints_3 w ∧
+  constraints_4 w
 
 def inputs (w : W) : List F :=
   [w.v577, w.v4, w.v5, w.v6, w.v7, w.v578, w.v58, w.v59, w.v60, w.v61, w.v579, w.v112, w.v113, w.v114, w.v115, w.v580, w.v122, w.v123, w.v124, w.v125, w.v581, w.v156, w.v157, w.v158, w.v159, w.v0, w.v1, w.v2, w.v3]
@@ -604,7 +623,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4]
 
 end ShaExtend
 

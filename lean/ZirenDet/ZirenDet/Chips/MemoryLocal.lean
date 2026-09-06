@@ -4,6 +4,10 @@
 -/
 import ZirenDet.Basic
 
+set_option maxRecDepth 100000
+set_option maxHeartbeats 4000000
+set_option linter.dupNamespace false
+
 namespace ZirenDet.Chips.MemoryLocal
 
 open ZirenDet
@@ -231,7 +235,7 @@ structure W where
   v449 : F
 
 /-- Every polynomial identity, range fact and helper-module call of the module. -/
-def constraints (w : W) : Prop :=
+def constraints_0 (w : W) : Prop :=
   (w.v13 * (w.v13 - (1 : F))) = 0 ∧
   (w.v27 * (w.v27 - (1 : F))) = 0 ∧
   (w.v41 * (w.v41 - (1 : F))) = 0 ∧
@@ -279,7 +283,9 @@ def constraints (w : W) : Prop :=
   (w.v382 - (w.v27 * w.v27)) = 0 ∧
   (w.v383 - (w.v14 * w.v27)) = 0 ∧
   (w.v384 - (w.v23 * w.v27)) = 0 ∧
-  ((w.v23 * w.v27)).val ≤ ((255 : F)).val ∧
+  ((w.v23 * w.v27)).val ≤ ((255 : F)).val
+
+def constraints_1 (w : W) : Prop :=
   (w.v385 - (w.v24 * w.v27)) = 0 ∧
   ((w.v24 * w.v27)).val ≤ ((255 : F)).val ∧
   (w.v386 - (w.v25 * w.v27)) = 0 ∧
@@ -327,7 +333,9 @@ def constraints (w : W) : Prop :=
   (w.v422 - (w.v53 * w.v55)) = 0 ∧
   (w.v423 - (w.v54 * w.v55)) = 0 ∧
   (w.v424 - (w.v55 * w.v55)) = 0 ∧
-  (w.v425 - (w.v42 * w.v55)) = 0 ∧
+  (w.v425 - (w.v42 * w.v55)) = 0
+
+def constraints_2 (w : W) : Prop :=
   (w.v426 - (w.v51 * w.v55)) = 0 ∧
   ((w.v51 * w.v55)).val ≤ ((255 : F)).val ∧
   (w.v427 - (w.v52 * w.v55)) = 0 ∧
@@ -357,6 +365,11 @@ def constraints (w : W) : Prop :=
   (w.v448 - (w.v49 * w.v55)) = 0 ∧
   (w.v449 - (w.v50 * w.v55)) = 0
 
+def constraints (w : W) : Prop :=
+  constraints_0 w ∧
+  constraints_1 w ∧
+  constraints_2 w
+
 def inputs (w : W) : List F :=
   [w.v362, w.v363, w.v364, w.v365, w.v366, w.v383, w.v384, w.v385, w.v386, w.v387, w.v404, w.v405, w.v406, w.v407, w.v408, w.v425, w.v426, w.v427, w.v428, w.v429]
 def outputs (w : W) : List F :=
@@ -372,7 +385,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det
+  picus_det [constraints_0, constraints_1, constraints_2]
 
 end MemoryLocal
 
