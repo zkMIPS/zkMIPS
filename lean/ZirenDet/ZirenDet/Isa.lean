@@ -360,4 +360,160 @@ def check (code : W) (words : List W) (image : List (W × W)) (regs : List W) (h
       s.hi == hi && s.lo == lo &&
       mem.all (fun (a, v) => s.mem.readWord a == v)
 
+/-! ## The executor's internal instruction form
+
+`Instruction::decode_from` in `crates/core/executor/src/instruction.rs` lowers every MIPS word to
+`(opcode, op_a, op_b, op_c, imm_b, imm_c)` with its own opcode numbering (`Opcode` in
+`opcode.rs`).  `toInternal` transcribes that table, so `decode` followed by `toInternal` can be
+checked word by word against the executor's own decoding (`ZirenDet/IsaDecode.lean`, generated
+from the executor's dump).  The chip modules speak this internal form: their program-fetch
+inputs are exactly these fields. -/
+
+structure Internal where
+  opcode : Nat
+  opA : Nat
+  opB : Nat
+  opC : Nat
+  immB : Bool
+  immC : Bool
+  deriving Repr, DecidableEq
+
+namespace Opc
+def ADD := 0
+def SUB := 1
+def MUL := 2
+def MULT := 3
+def MULTU := 4
+def DIV := 5
+def DIVU := 6
+def SLL := 9
+def SRL := 10
+def SRA := 11
+def ROR := 12
+def SLT := 13
+def SLTU := 14
+def AND := 15
+def OR := 16
+def XOR := 17
+def NOR := 18
+def CLZ := 19
+def CLO := 20
+def BEQ := 21
+def BGEZ := 22
+def BGTZ := 23
+def BLEZ := 24
+def BLTZ := 25
+def BNE := 26
+def Jump := 27
+def Jumpi := 28
+def JumpDirect := 29
+def LB := 31
+def LBU := 32
+def LH := 33
+def LHU := 34
+def LW := 35
+def LWL := 36
+def LWR := 37
+def LL := 38
+def SB := 39
+def SH := 40
+def SW := 41
+def SWL := 42
+def SWR := 43
+def SC := 44
+def INS := 45
+def MADDU := 46
+def MSUBU := 47
+def MADD := 48
+def MSUB := 49
+def MEQ := 50
+def MNE := 51
+def WSBH := 52
+def EXT := 53
+def TEQ := 54
+def SEXT := 55
+end Opc
+
+/-- Register index as the executor stores it (`$hi` = 33, `$lo` = 32). -/
+def regIdx (r : Fin 32) : Nat := r.val
+def sextN (i : BitVec 16) : Nat := (sext16 i).toNat
+def boffN (i : BitVec 16) : Nat := (boff i).toNat
+
+def toInternal : Insn → Internal
+  | .add rd rs rt | .addu rd rs rt => ⟨Opc.ADD, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .sub rd rs rt | .subu rd rs rt => ⟨Opc.SUB, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .and rd rs rt => ⟨Opc.AND, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .or rd rs rt => ⟨Opc.OR, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .xor rd rs rt => ⟨Opc.XOR, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .nor rd rs rt => ⟨Opc.NOR, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .slt rd rs rt => ⟨Opc.SLT, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .sltu rd rs rt => ⟨Opc.SLTU, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .mul rd rs rt => ⟨Opc.MUL, regIdx rd, regIdx rt, regIdx rs, false, false⟩
+  | .addi rt rs imm | .addiu rt rs imm => ⟨Opc.ADD, regIdx rt, regIdx rs, sextN imm, false, true⟩
+  | .andi rt rs imm => ⟨Opc.AND, regIdx rt, regIdx rs, imm.toNat, false, true⟩
+  | .ori rt rs imm => ⟨Opc.OR, regIdx rt, regIdx rs, imm.toNat, false, true⟩
+  | .xori rt rs imm => ⟨Opc.XOR, regIdx rt, regIdx rs, imm.toNat, false, true⟩
+  | .slti rt rs imm => ⟨Opc.SLT, regIdx rt, regIdx rs, sextN imm, false, true⟩
+  | .sltiu rt rs imm => ⟨Opc.SLTU, regIdx rt, regIdx rs, sextN imm, false, true⟩
+  | .lui rt imm => ⟨Opc.ADD, regIdx rt, 0, ((zext16 imm) <<< 16).toNat, false, true⟩
+  | .sll rd rt sa => ⟨Opc.SLL, regIdx rd, regIdx rt, sa.toNat, false, true⟩
+  | .srl rd rt sa => ⟨Opc.SRL, regIdx rd, regIdx rt, sa.toNat, false, true⟩
+  | .sra rd rt sa => ⟨Opc.SRA, regIdx rd, regIdx rt, sa.toNat, false, true⟩
+  | .rotr rd rt sa => ⟨Opc.ROR, regIdx rd, regIdx rt, sa.toNat, false, true⟩
+  | .sllv rd rt rs => ⟨Opc.SLL, regIdx rd, regIdx rt, regIdx rs, false, false⟩
+  | .srlv rd rt rs => ⟨Opc.SRL, regIdx rd, regIdx rt, regIdx rs, false, false⟩
+  | .srav rd rt rs => ⟨Opc.SRA, regIdx rd, regIdx rt, regIdx rs, false, false⟩
+  | .rotrv rd rt rs => ⟨Opc.ROR, regIdx rd, regIdx rt, regIdx rs, false, false⟩
+  | .beq rs rt off => ⟨Opc.BEQ, regIdx rs, regIdx rt, boffN off, false, true⟩
+  | .bne rs rt off => ⟨Opc.BNE, regIdx rs, regIdx rt, boffN off, false, true⟩
+  | .bgez rs off => ⟨Opc.BGEZ, regIdx rs, 0, boffN off, false, true⟩
+  | .bgtz rs off => ⟨Opc.BGTZ, regIdx rs, 0, boffN off, false, true⟩
+  | .blez rs off => ⟨Opc.BLEZ, regIdx rs, 0, boffN off, false, true⟩
+  | .bltz rs off => ⟨Opc.BLTZ, regIdx rs, 0, boffN off, false, true⟩
+  | .bal off => ⟨Opc.JumpDirect, 31, boffN off, 0, true, true⟩
+  | .j t => ⟨Opc.Jumpi, 0, ((t.zeroExtend 32) <<< 2).toNat, 0, true, true⟩
+  | .jal t => ⟨Opc.Jumpi, 31, ((t.zeroExtend 32) <<< 2).toNat, 0, true, true⟩
+  | .jr rs => ⟨Opc.Jump, 0, regIdx rs, 0, false, true⟩
+  | .jalr rd rs => ⟨Opc.Jump, regIdx rd, regIdx rs, 0, false, true⟩
+  | .lb rt b off => ⟨Opc.LB, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .lbu rt b off => ⟨Opc.LBU, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .lh rt b off => ⟨Opc.LH, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .lhu rt b off => ⟨Opc.LHU, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .lw rt b off => ⟨Opc.LW, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .lwl rt b off => ⟨Opc.LWL, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .lwr rt b off => ⟨Opc.LWR, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .ll rt b off => ⟨Opc.LL, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .sb rt b off => ⟨Opc.SB, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .sh rt b off => ⟨Opc.SH, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .sw rt b off => ⟨Opc.SW, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .swl rt b off => ⟨Opc.SWL, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .swr rt b off => ⟨Opc.SWR, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .sc rt b off => ⟨Opc.SC, regIdx rt, regIdx b, sextN off, false, true⟩
+  | .mfhi rd => ⟨Opc.ADD, regIdx rd, 33, 0, false, true⟩
+  | .mflo rd => ⟨Opc.ADD, regIdx rd, 32, 0, false, true⟩
+  | .mthi rs => ⟨Opc.ADD, 33, regIdx rs, 0, false, true⟩
+  | .mtlo rs => ⟨Opc.ADD, 32, regIdx rs, 0, false, true⟩
+  | .mult rs rt => ⟨Opc.MULT, 32, regIdx rt, regIdx rs, false, false⟩
+  | .multu rs rt => ⟨Opc.MULTU, 32, regIdx rt, regIdx rs, false, false⟩
+  | .div rs rt => ⟨Opc.DIV, 32, regIdx rs, regIdx rt, false, false⟩
+  | .divu rs rt => ⟨Opc.DIVU, 32, regIdx rs, regIdx rt, false, false⟩
+  | .madd rs rt => ⟨Opc.MADD, 32, regIdx rt, regIdx rs, false, false⟩
+  | .maddu rs rt => ⟨Opc.MADDU, 32, regIdx rt, regIdx rs, false, false⟩
+  | .msub rs rt => ⟨Opc.MSUB, 32, regIdx rt, regIdx rs, false, false⟩
+  | .msubu rs rt => ⟨Opc.MSUBU, 32, regIdx rt, regIdx rs, false, false⟩
+  | .clo rd rs => ⟨Opc.CLO, regIdx rd, regIdx rs, 0, false, true⟩
+  | .clz rd rs => ⟨Opc.CLZ, regIdx rd, regIdx rs, 0, false, true⟩
+  | .seb rd rt => ⟨Opc.SEXT, regIdx rd, regIdx rt, 0, false, true⟩
+  | .seh rd rt => ⟨Opc.SEXT, regIdx rd, regIdx rt, 1, false, true⟩
+  | .wsbh rd rt => ⟨Opc.WSBH, regIdx rd, regIdx rt, 0, false, true⟩
+  | .ext rt rs msbd lsb => ⟨Opc.EXT, regIdx rt, regIdx rs, msbd.toNat * 32 + lsb.toNat, false, true⟩
+  | .ins rt rs msb lsb => ⟨Opc.INS, regIdx rt, regIdx rs, msb.toNat * 32 + lsb.toNat, false, true⟩
+  | .movn rd rs rt => ⟨Opc.MNE, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .movz rd rs rt => ⟨Opc.MEQ, regIdx rd, regIdx rs, regIdx rt, false, false⟩
+  | .teq rs rt => ⟨Opc.TEQ, regIdx rs, regIdx rt, 0, false, true⟩
+  | .nop => ⟨Opc.ADD, 0, 0, 0, false, true⟩
+
+/-- Executor-form decoding of a word, for the generated word-by-word checks. -/
+def decodeInternal (w : W) : Option Internal := (decode w).map toInternal
+
 end ZirenDet.Isa

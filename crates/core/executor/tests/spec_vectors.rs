@@ -189,6 +189,32 @@ fn spec_vectors_match_the_oracle() {
             failures.insert(name, [vec![format!("asm: {}", asm.join(" ; "))], problems].concat());
         }
     }
+    // Optional: dump the executor's own decoding of every vector word (opcode id and operands),
+    // so the Lean ISA model can be checked against `Instruction::decode_from` as well as against
+    // the oracle's results (see `spec_vectors/gen_lean.py`).
+    if let Ok(path) = std::env::var("SPEC_DUMP_DECODED") {
+        let mut decoded: BTreeMap<String, Value> = BTreeMap::new();
+        for v in vectors {
+            for w in v["words"].as_array().unwrap() {
+                let word = parse_hex(w.as_str().unwrap());
+                let key = format!("{word:08x}");
+                if decoded.contains_key(&key) {
+                    continue;
+                }
+                let entry = match Instruction::decode_from(word) {
+                    Ok(i) => serde_json::json!({
+                        "opcode": i.opcode as u32, "opcode_name": format!("{:?}", i.opcode),
+                        "op_a": i.op_a, "op_b": i.op_b, "op_c": i.op_c, "imm_b": i.imm_b, "imm_c": i.imm_c,
+                    }),
+                    Err(e) => serde_json::json!({ "error": e.to_string() }),
+                };
+                decoded.insert(key, entry);
+            }
+        }
+        std::fs::write(&path, serde_json::to_string_pretty(&decoded).unwrap())
+            .expect("write decoded dump");
+        eprintln!("wrote {} decoded words to {path}", decoded.len());
+    }
     eprintln!("spec vector conformance (passed/total per instruction):");
     for (mn, (total, ok)) in &per_mnemonic {
         eprintln!("  {mn:8} {ok:3}/{total}");
