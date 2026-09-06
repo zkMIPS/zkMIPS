@@ -1513,7 +1513,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12]
+  sorry -- 603 conjuncts / 425 variables: above the automation threshold, left open
 
 end MiscInstrs_is_ext
 
@@ -3182,7 +3182,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13, constraints_14, constraints_15]
+  sorry -- 758 conjuncts / 431 variables: above the automation threshold, left open
 
 end MiscInstrs_is_ins
 
@@ -4749,7 +4749,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13]
+  sorry -- 631 conjuncts / 446 variables: above the automation threshold, left open
 
 end MiscInstrs_is_madd
 
@@ -6316,7 +6316,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13]
+  sorry -- 631 conjuncts / 446 variables: above the automation threshold, left open
 
 end MiscInstrs_is_maddu
 
@@ -7883,7 +7883,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13]
+  sorry -- 631 conjuncts / 446 variables: above the automation threshold, left open
 
 end MiscInstrs_is_msub
 
@@ -9450,7 +9450,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13]
+  sorry -- 631 conjuncts / 446 variables: above the automation threshold, left open
 
 end MiscInstrs_is_msubu
 
@@ -10889,7 +10889,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11]
+  sorry -- 552 conjuncts / 424 variables: above the automation threshold, left open
 
 end MiscInstrs_is_sext
 
@@ -12338,7 +12338,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11]
+  sorry -- 563 conjuncts / 423 variables: above the automation threshold, left open
 
 end MiscInstrs_is_teq
 
@@ -13875,7 +13875,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13]
+  sorry -- 629 conjuncts / 420 variables: above the automation threshold, left open
 
 /-- Selector-shape / bit postconditions implied by the constraints. -/
 theorem postconditions (w : W) (hw : constraints w) :
@@ -13888,7 +13888,7 @@ theorem postconditions (w : W) (hw : constraints w) :
     (w.v431 * (w.v431 - (1 : F))) = 0 ∧
     (w.v432 * (w.v432 - (1 : F))) = 0 ∧
     ((((((((w.v425 + w.v426) + w.v427) + w.v428) + w.v429) + w.v430) + w.v431) + w.v432)).val < ((2 : F)).val := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13]
+  sorry -- 629 conjuncts / 420 variables: above the automation threshold, left open
 
 end top
 

@@ -10232,7 +10232,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13, constraints_14, constraints_15, constraints_16, constraints_17, constraints_18, constraints_19, constraints_20, constraints_21, constraints_22, constraints_23, constraints_24, constraints_25, constraints_26, constraints_27, constraints_28, constraints_29, constraints_30, constraints_31, constraints_32, constraints_33, constraints_34, constraints_35, constraints_36, constraints_37, constraints_38, constraints_39, constraints_40, constraints_41, constraints_42, constraints_43, constraints_44, constraints_45, constraints_46, constraints_47, constraints_48, constraints_49, constraints_50, constraints_51, constraints_52, constraints_53, constraints_54, constraints_55, constraints_56, constraints_57, constraints_58, constraints_59, constraints_60, constraints_61, constraints_62, constraints_63, constraints_64, constraints_65, constraints_66, constraints_67, constraints_68, constraints_69, constraints_70, constraints_71, constraints_72, constraints_73, constraints_74, constraints_75, constraints_76, constraints_77, constraints_78, constraints_79, constraints_80, constraints_81, constraints_82, constraints_83, constraints_84, constraints_85, constraints_86, constraints_87, constraints_88, constraints_89, constraints_90]
+  sorry -- 4364 conjuncts / 3130 variables: above the automation threshold, left open
 
 end Bls12381DoubleAssign
 

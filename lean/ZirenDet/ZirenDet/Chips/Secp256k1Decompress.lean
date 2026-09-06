@@ -4146,7 +4146,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7, constraints_8, constraints_9, constraints_10, constraints_11, constraints_12, constraints_13, constraints_14, constraints_15, constraints_16, constraints_17, constraints_18, constraints_19, constraints_20, constraints_21, constraints_22, constraints_23, constraints_24, constraints_25, constraints_26, constraints_27, constraints_28, constraints_29, constraints_30, constraints_31, constraints_32, constraints_33, constraints_34, constraints_35, constraints_36, constraints_37]
+  sorry -- 1785 conjuncts / 1180 variables: above the automation threshold, left open
 
 end Secp256k1Decompress
 

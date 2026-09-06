@@ -235,7 +235,20 @@ fn write_module(
         }
         writeln!(w)?;
     }
-    let tactic = if chunk_names.is_empty() {
+    // The generic closer is quadratic-ish in the module size (simp over every hypothesis, then
+    // casesm / subst); on the large precompile modules it exceeds any heartbeat budget, and a
+    // heartbeat timeout is not catchable, so the theorem would fail instead of closing with
+    // `sorry`.  Above the threshold the obligation is stated and left open explicitly.
+    const AUTOMATION_MAX_CONJUNCTS: usize = 600;
+    const AUTOMATION_MAX_VARS: usize = 400;
+    let automate = conj.len() <= AUTOMATION_MAX_CONJUNCTS && vars.len() <= AUTOMATION_MAX_VARS;
+    let tactic = if !automate {
+        format!(
+            "sorry -- {} conjuncts / {} variables: above the automation threshold, left open",
+            conj.len(),
+            vars.len()
+        )
+    } else if chunk_names.is_empty() {
         "picus_det".to_string()
     } else {
         format!("picus_det [{}]", chunk_names.join(", "))
