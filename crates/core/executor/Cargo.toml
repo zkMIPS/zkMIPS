@@ -61,6 +61,7 @@ libc = "0.2"
 [dev-dependencies]
 test-artifacts = { path = "../../test-artifacts" }
 zkm-instruction-test-defs = { workspace = true }
+serde_json = { workspace = true }
 
 [features]
 bigint-rug = ["zkm-curves/bigint-rug"]
