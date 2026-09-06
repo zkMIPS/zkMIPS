@@ -218,10 +218,15 @@ where
         observe_ext::<F, EF, _>(challenger, round_proof.denominator_1);
 
         // Take the reduced point from the sumcheck as the base for the
-        // next layer's eval_point; extend by the line challenge.
+        // next layer's eval_point; extend by the line challenge.  The layer
+        // transition pairs ADJACENT rows, i.e. peels the row LSB (variable
+        // `num_interaction_variables` of the LSB-first flat index), so the
+        // line challenge is INSERTED there and the reduced point's row
+        // coordinates shift up by one.  Must match `shard_level/verifier.rs`
+        // and the recursion circuit (`logup_gkr.rs`).
         let mut next_eval_point = round_proof.sumcheck_proof.point_and_eval.0.clone();
         let line_challenge: EF = challenger.sample_algebra_element::<EF>();
-        next_eval_point.push(line_challenge);
+        next_eval_point.insert(num_interaction_variables, line_challenge);
 
         // Line-formula: at the sumcheck's reduced point + line_challenge,
         //   n_eval = n_0 + line · (n_1 - n_0) = (1 - line) · n_0 + line · n_1

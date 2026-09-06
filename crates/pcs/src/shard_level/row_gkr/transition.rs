@@ -8,37 +8,40 @@
 //! ## Algorithm
 //!
 //! For each chip's `(numerator_0, denominator_0, numerator_1, denominator_1)`
-//! tables (each of shape `2^R × num_interactions`):
-//!   - Split rows into an **upper half** (`k ∈ 0..2^{R-1}`) and a
-//!     **lower half** (`k + 2^{R-1}`).  Fuse each source cell's two
-//!     fractions into one, then pack:
+//! tables (each of shape `2^(R-1) × num_interactions`, quadrant `b` holding
+//! the rows of the full layer whose LSB is `b`):
+//!   - Fuse each source row `k`'s two fractions (full-layer rows `2k` and
+//!     `2k+1`) into one, then split the fused rows by PARITY again:
 //!     ```text
-//!       next_n0[k, i] = d_01[i] * n_00[i] + d_00[i] * n_01[i]
-//!       next_d0[k, i] = d_00[i] * d_01[i]
-//!       next_n1[k, i] = d_11[i] * n_10[i] + d_10[i] * n_11[i]
-//!       next_d1[k, i] = d_10[i] * d_11[i]
+//!       fused_n[k, i] = d_1[k, i] * n_0[k, i] + d_0[k, i] * n_1[k, i]
+//!       fused_d[k, i] = d_0[k, i] * d_1[k, i]
+//!       next_n0[j, i] = fused_n[2j, i]      next_d0[j, i] = fused_d[2j, i]
+//!       next_n1[j, i] = fused_n[2j + 1, i]  next_d1[j, i] = fused_d[2j + 1, i]
 //!     ```
-//!     where `n_{a,b}[i]` reads as "row `k + a·2^{R-1}` of the layer's
-//!     numerator_b table, column `i`".  The even-row pair lives in
-//!     `next_n0/d0`, the odd-row pair (upper half) in `next_n1/d1`.
 //!
-//! ## Why halves-split, not even/odd pairs
+//! ## Why adjacent pairs (LSB), not halves (MSB)
 //!
-//! The GKR "line challenge" appended to `reduced_point` gets bound to
-//! the MLE's HIGHEST variable (via `eval_point.push(line)`).  In the
-//! LSB-first flatten layout (bit 0 of flat_idx = col LSB, ..., bit
-//! `num_int_vars` = row LSB, ..., bit `num_int_vars + log_rows - 1` =
-//! row MSB), the line challenge therefore binds to the row MSB of the
-//! PREVIOUS (larger) layer.  Packing `next_n0 = upper half`,
-//! `next_n1 = lower half` makes the line bit = prev row MSB; even/odd
-//! pairing would make line bit = prev row LSB, desyncing the combined
-//! MLE from `prev_layer.flatten` at round N > 0.
+//! Each layer peels ONE row variable off the layer's MLE, and the verifier
+//! binds the line challenge to that variable.  Peeling the row LSB pairs
+//! adjacent rows, so a chip with `h` real rows has `ceil(h / 2)` real rows
+//! in the next layer whatever the logical layer height is: every chip
+//! halves at every layer and the layer stack is geometric (Σ = 2× the first
+//! layer).  Peeling the MSB (rows `k` and `k + 2^(R-1)`) left every chip
+//! shorter than half the layer as a pass-through copy in each layer above
+//! its own height — on reth the layer stack summed to 5.2× the first layer
+//! and the GKR moved ~2.6× the bytes it needed.
+//!
+//! In the LSB-first flatten layout (bit 0 of flat_idx = col LSB, ..., bit
+//! `num_int_vars` = row LSB, ..., bit `num_int_vars + log_rows - 1` = row
+//! MSB) the peeled variable is bit `num_int_vars`, so the verifier
+//! `insert`s the line challenge at index `num_interaction_variables` of the
+//! reduced point (`top_level.rs`, `shard_level/verifier.rs`, and the
+//! recursion circuit's `logup_gkr.rs` all agree on this).
 //!
 //! The output layer has `num_row_variables - 1` and the same
 //! `num_interaction_variables`.  Numerator type promotes from `NumF`
 //! (possibly base field at the first transition) to `EF` (the
 //! multiplication `denom * numer` forces EF arithmetic).
-
 use alloc::vec::Vec;
 
 use p3_field::{ExtensionField, Field};
@@ -46,8 +49,9 @@ use p3_field::{ExtensionField, Field};
 use super::layer::{LogUpGkrCpuLayer, RowMajorTable};
 
 /// Transition the layer one step bottom-up: halve the row dimension
-/// by combining pairs of consecutive rows via the fraction-sum identity
-/// `(a, b) ⊕ (c, d) = (a·d + b·c, b·d)`.
+/// by combining pairs of ADJACENT rows `(2k, 2k+1)` via the fraction-sum
+/// identity `(a, b) ⊕ (c, d) = (a·d + b·c, b·d)`; the fused rows are split
+/// by parity into the next layer's quadrants.
 ///
 /// Numerator type promotes from `NumF` to `EF` (multiplication
 /// `denominator * numerator` lives in `EF`).
@@ -103,29 +107,21 @@ where
 
             let next_rows = 1usize << next_num_row_variables;
             let int_count = chip_num_interactions;
-
             // PaddedMle row optimisation: only materialise
             // rows that pull from at least one real input cell.
-            //   next_n0/d0 reads row k (upper half, indices [0, next_rows))
-            //   → real iff k < src_real_rows.
-            //   next_n1/d1 reads row k + next_rows (lower half, indices
-            //   [next_rows, 2*next_rows))
-            //   → real iff k + next_rows < src_real_rows.
-            // The src real-row count is the same across all four
-            // quadrants (they share an underlying logical row count).
-            // An output row k (upper half) reads index k from ALL FOUR source
-            // quadrants (see the combine loop below), so it is real iff k is
-            // below the MAX of the four real-row counts — not just n0's.  The
-            // quadrants can legitimately differ: for a contiguous real-row
-            // prefix the upper half (n0/d0) fills before the lower (n1/d1), so
-            // e.g. n0=d0=8192, n1=d1=0.  `n0` is therefore always the max, but
-            // take it explicitly so the sizing is correct regardless of order.
+            // Fused row k reads index k from ALL FOUR source quadrants (see
+            // the combine loop below), so it is real iff k is below the MAX
+            // of the four real-row counts.  For a parity split quadrant 0
+            // has `ceil(h/2)` real rows and quadrant 1 `floor(h/2)`, so the
+            // max is quadrant 0's, but take it explicitly.
+            //   next_n0/d0[j] = fused row 2j   → real iff 2j < src_real
+            //   next_n1/d1[j] = fused row 2j+1 → real iff 2j+1 < src_real
             let src_real =
                 n0.num_real_rows.max(d0.num_real_rows).max(n1.num_real_rows).max(d1.num_real_rows);
-
-            let next_n0_real = src_real.min(next_rows);
+            debug_assert!(src_real <= next_rows * 2);
+            let next_n0_real = src_real.div_ceil(2);
             let next_d0_real = next_n0_real;
-            let next_n1_real = src_real.saturating_sub(next_rows).min(next_rows);
+            let next_n1_real = src_real / 2;
             let next_d1_real = next_n1_real;
 
             // Allocate ZEROed buffers sized to the real-only prefix of
@@ -136,17 +132,14 @@ where
             let mut next_d1_cells: Vec<EF> = vec![EF::ZERO; next_d1_real * int_count];
 
             if int_count > 0 {
-                // Compute the upper-half outputs (next_n0, next_d0).  Reads
-                // row_upper = k from src; pad value applies for
-                // k ∈ [src_real, next_rows) but we only materialise
-                // k ∈ [0, next_n0_real = min(src_real, next_rows)).
+                // Even outputs (next_n0, next_d0): fused row 2k.
                 if next_n0_real > 0 {
                     next_n0_cells
                         .par_chunks_exact_mut(int_count)
                         .zip(next_d0_cells.par_chunks_exact_mut(int_count))
                         .enumerate()
                         .for_each(|(k, (n0_row, d0_row))| {
-                            let row_upper = k;
+                            let row_upper = 2 * k;
                             // Each source quadrant has its own
                             // num_real_rows; substitute the identity-
                             // fraction in the padding region.
@@ -169,17 +162,15 @@ where
                         });
                 }
 
-                // Lower-half outputs (next_n1, next_d1).  Reads
-                // row_lower = k + next_rows from src; row_lower is real
-                // iff k + next_rows < src_real, i.e. k < next_n1_real.
+                // Odd outputs (next_n1, next_d1): fused row 2k + 1.
                 if next_n1_real > 0 {
                     next_n1_cells
                         .par_chunks_exact_mut(int_count)
                         .zip(next_d1_cells.par_chunks_exact_mut(int_count))
                         .enumerate()
                         .for_each(|(k, (n1_row, d1_row))| {
-                            let row_lower = k + next_rows;
-                            // Per-quadrant real-rows check, same as upper-half block.
+                            let row_lower = 2 * k + 1;
+                            // Per-quadrant real-rows check, same as the even block.
                             let n0_real = row_lower < n0.num_real_rows;
                             let d0_real = row_lower < d0.num_real_rows;
                             let n1_real = row_lower < n1.num_real_rows;

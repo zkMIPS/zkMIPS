@@ -485,16 +485,15 @@ pub fn verify_logup_gkr<C, SC, A, FC, EVPV>(
         observe_ext_element::<C, FC>(builder, challenger, round_proof.denominator_0);
         observe_ext_element::<C, FC>(builder, challenger, round_proof.denominator_1);
 
-        // Update eval_point: take the sumcheck-reduced point and
-        // append a freshly-sampled last coordinate.
-        //
-        // LSB-fold convention: `eval_point.push(last)` —
-        // `eval_point` grows on the back, mirroring the prover's
-        // packed-layer-then-line-challenge structure where the new
-        // coordinate is the high-bit (next layer's MSB).
+        // Update eval_point: take the sumcheck-reduced point and INSERT a
+        // freshly-sampled line coordinate at index `log_num_interactions`
+        // (the row LSB of the LSB-first flat index).  The prover's layer
+        // transition pairs ADJACENT rows, so the peeled variable is the row
+        // LSB and the reduced point's row coordinates shift up by one.
+        // Mirrors `row_gkr/top_level.rs` and `shard_level/verifier.rs`.
         eval_point = sumcheck_point.clone();
         let last_coordinate = challenger.sample_ext(builder);
-        eval_point.push(last_coordinate);
+        eval_point.insert(chip_metadata.log_num_interactions, last_coordinate);
 
         // Update numerator/denominator evals via the linear
         // interpolation at last_coordinate:

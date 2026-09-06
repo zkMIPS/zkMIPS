@@ -1770,10 +1770,14 @@ where
             }
         }
 
-        // Update eval_point: sumcheck-reduced point + line challenge.
+        // Update eval_point: sumcheck-reduced point + line challenge.  The
+        // prover's layer transition pairs ADJACENT rows (peels the row LSB =
+        // variable `log_num_interactions` of the LSB-first flat index), so
+        // the line challenge is INSERTED there — mirrors
+        // `row_gkr/top_level.rs` and the recursion circuit.
         eval_point = sumcheck_point.clone();
         let line: Challenge<SC> = challenger.sample_algebra_element::<Challenge<SC>>();
-        eval_point.push(line);
+        eval_point.insert(initial_num_variables - 1, line);
 
         // Update n/d evals via linear interpolation at `line`.
         numerator_eval = n0 + (n1 - n0) * line;

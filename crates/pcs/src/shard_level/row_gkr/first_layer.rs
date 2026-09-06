@@ -4,11 +4,13 @@
 //! per row, pack into a row-major `(height × num_interactions)`
 //! table, pad rows to the shared `num_row_variables` (zero-fill for
 //! numerator, one-fill for denominator to preserve the
-//! sum-of-fractions identity), then split on the row MSB.
+//! sum-of-fractions identity), then split by row PARITY (quadrant 0 =
+//! even rows, quadrant 1 = odd rows) — the row LSB is the bit each layer
+//! transition peels off.
 //!
 //! Row-major flat storage: `cells[row * num_interactions + col]`.
-//! Viewed as an MLE, the row MSB is the "last variable" — so
-//! `fix_last_variable(0)` selects rows `0 .. 2^(R-1)`.
+//! Viewed as an MLE, the row LSB is variable `num_interaction_variables`;
+//! quadrant `b` holds the rows whose LSB is `b`, i.e. `row = 2k + b`.
 
 use alloc::vec::Vec;
 
@@ -119,49 +121,38 @@ pub fn build_chip_interaction_tables<
     )
 }
 
-/// PaddedMle-aware MSB split.  Split a row-major
-/// `(real_rows × num_cols)` buffer at the logical row MSB
-/// (`half_logical = 2^(log_rows - 1)`) and return the **real-only**
-/// prefix of each half:
-///   * upper half = rows `[0, real_upper) ⊂ [0, half_logical)`.
-///   * lower half = rows `[half_logical, half_logical + real_lower)`
-///     of the original buffer, returned as the prefix `[0, real_lower)`
-///     of the lower output.
+/// PaddedMle-aware PARITY split.  Split a row-major `(real_rows ×
+/// num_cols)` buffer into its even rows (quadrant 0) and odd rows
+/// (quadrant 1), returning the **real-only** prefix of each:
+///   * quadrant 0 = rows `0, 2, 4, …` → `ceil(real_rows / 2)` rows,
+///   * quadrant 1 = rows `1, 3, 5, …` → `floor(real_rows / 2)` rows.
 ///
-/// Caller must precompute:
-///   * `real_upper = min(real_rows, half_logical)`
-///   * `real_lower = saturating_sub(real_rows, half_logical).min(half_logical)`
+/// The layer transition pairs ADJACENT rows `(2k, 2k+1)` (the row LSB is the
+/// bit each GKR layer peels off, and the verifier binds the line challenge
+/// there), so every chip halves at every layer regardless of how short it is
+/// relative to the logical layer height.  The previous MSB split paired rows
+/// `(k, k + 2^(R-1))`, which left every chip shorter than half the layer as a
+/// pass-through copy in each layer above its own height.
 ///
-/// This is the `PaddedMle::padded` shape: virtual rows beyond
-/// `real_*` are NOT materialized; consumers (`ChipLayerState`)
-/// resolve them via the per-quadrant pad constant.
-fn split_real_msb<F: Clone>(
-    mut values: Vec<F>,
-    num_cols: usize,
-    half_logical: usize,
-    real_upper: usize,
-    real_lower: usize,
-) -> (Vec<F>, Vec<F>) {
-    if num_cols == 0 {
+/// Virtual rows beyond the real prefix are NOT materialized; consumers
+/// (`ChipLayerState`) resolve them via the per-quadrant pad constant.
+fn split_real_parity<F: Clone>(values: &[F], num_cols: usize, real_rows: usize) -> (Vec<F>, Vec<F>) {
+    if num_cols == 0 || real_rows == 0 {
         return (Vec::new(), Vec::new());
     }
-    let upper_len = real_upper * num_cols;
-    let lower_off = half_logical * num_cols;
-    let lower_len = real_lower * num_cols;
-    debug_assert!(upper_len <= values.len());
-    // The upper half keeps the source allocation (real rows are a
-    // contiguous prefix, so a chip that fits in the upper half splits
-    // with zero copies); only a lower half that exists is moved out.
-    let lower = if real_lower == 0 {
-        Vec::new()
-    } else {
-        debug_assert!(lower_off + lower_len <= values.len());
-        let mut lower = values.split_off(lower_off);
-        lower.truncate(lower_len);
-        lower
-    };
-    values.truncate(upper_len);
-    (values, lower)
+    debug_assert!(real_rows * num_cols <= values.len());
+    let even_rows = real_rows.div_ceil(2);
+    let odd_rows = real_rows / 2;
+    let mut even: Vec<F> = Vec::with_capacity(even_rows * num_cols);
+    let mut odd: Vec<F> = Vec::with_capacity(odd_rows * num_cols);
+    for (r, row) in values.chunks_exact(num_cols).take(real_rows).enumerate() {
+        if r & 1 == 0 {
+            even.extend_from_slice(row);
+        } else {
+            odd.extend_from_slice(row);
+        }
+    }
+    (even, odd)
 }
 
 /// Generate the GKR circuit's first layer from raw chip data.
@@ -268,24 +259,14 @@ where
         // pad value (n* → 0, d* → 1).
         let chip_height: usize =
             if num_interactions == 0 { 0 } else { numer_mat.values.len() / num_interactions };
-        let half_logical = 1usize << (num_row_variables - 1);
-        let real_upper = chip_height.min(half_logical);
-        let real_lower = chip_height.saturating_sub(half_logical).min(half_logical);
-
-        let (n_upper, n_lower) = split_real_msb(
-            numer_mat.values,
-            num_interactions,
-            half_logical,
-            real_upper,
-            real_lower,
-        );
-        let (d_upper, d_lower) = split_real_msb(
-            denom_mat.values,
-            num_interactions,
-            half_logical,
-            real_upper,
-            real_lower,
-        );
+        debug_assert!(chip_height <= 1usize << num_row_variables);
+        // Parity split: quadrant 0 = even rows, quadrant 1 = odd rows.
+        let real_upper = chip_height.div_ceil(2);
+        let real_lower = chip_height / 2;
+        let (n_upper, n_lower) =
+            split_real_parity(&numer_mat.values, num_interactions, chip_height);
+        let (d_upper, d_lower) =
+            split_real_parity(&denom_mat.values, num_interactions, chip_height);
 
         // Encode each half as a `RowMajorTable` with raw per-chip
         // `num_interactions` storage (no per-chip column padding —
@@ -342,20 +323,21 @@ mod tests {
     type EF = Challenge<SC>;
 
     #[test]
-    fn split_real_msb_reuses_the_source_allocation() {
-        // 3 real rows × 2 cols in a 2-row-per-half (half_logical=2)
-        // logical table: upper gets rows 0-1, lower gets row 2.
+    fn split_real_parity_deinterleaves_rows() {
+        // 3 real rows × 2 cols: quadrant 0 gets rows 0 and 2, quadrant 1
+        // gets row 1.
         let values: Vec<u32> = vec![10, 11, 20, 21, 30, 31];
-        let (upper, lower) = split_real_msb(values, 2, 2, 2, 1);
-        assert_eq!(upper, vec![10, 11, 20, 21]);
-        assert_eq!(lower, vec![30, 31]);
-
-        // Chip fits entirely in the upper half → lower is empty and
-        // the upper IS the source vec.
-        let values: Vec<u32> = vec![1, 2, 3, 4];
-        let (upper, lower) = split_real_msb(values, 2, 4, 2, 0);
-        assert_eq!(upper, vec![1, 2, 3, 4]);
-        assert!(lower.is_empty());
+        let (even, odd) = split_real_parity(&values, 2, 3);
+        assert_eq!(even, vec![10, 11, 30, 31]);
+        assert_eq!(odd, vec![20, 21]);
+        // A single real row has no odd partner.
+        let values: Vec<u32> = vec![1, 2];
+        let (even, odd) = split_real_parity(&values, 2, 1);
+        assert_eq!(even, vec![1, 2]);
+        assert!(odd.is_empty());
+        // Nothing real → nothing materialised.
+        let (even, odd) = split_real_parity::<u32>(&[], 2, 0);
+        assert!(even.is_empty() && odd.is_empty());
     }
 
     #[test]
