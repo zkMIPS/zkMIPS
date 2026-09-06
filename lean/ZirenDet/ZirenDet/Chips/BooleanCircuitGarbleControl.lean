@@ -325,6 +325,38 @@ def constraints (w : W) : Prop :=
   constraints_1 w ∧
   constraints_2 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v3 = mem_read[0].addr, v22 = mem_read[0].val[0], v23 = mem_read[0].val[1], v24 = mem_read[0].val[2], v25 = mem_read[0].val[3], v406 = mem_read[1].addr, v32 = mem_read[1].val[0], v33 = mem_read[1].val[1], v34 = mem_read[1].val[2], v35 = mem_read[1].val[3], v407 = mem_read[2].addr, v42 = mem_read[2].val[0], v43 = mem_read[2].val[1], v44 = mem_read[2].val[2], v45 = mem_read[2].val[3], v408 = mem_read[3].addr, v52 = mem_read[3].val[0], v53 = mem_read[3].val[1], v54 = mem_read[3].val[2], v55 = mem_read[3].val[3], v409 = mem_read[4].addr, v62 = mem_read[4].val[0], v63 = mem_read[4].val[1], v64 = mem_read[4].val[2], v65 = mem_read[4].val[3], v4 = mem_read[5].addr, v72 = mem_read[5].val[0], v73 = mem_read[5].val[1], v74 = mem_read[5].val[2], v75 = mem_read[5].val[3], v0 = precompilechain_recv[1], v1 = precompilechain_recv[2], v5 = precompilechain_recv[3], v415 = precompilechain_recv[5], v6 = precompilechain_recv[6], v7 = precompilechain_recv[7], v8 = precompilechain_recv[8], v9 = precompilechain_recv[9], v10 = precompilechain_recv[10], v11 = precompilechain_recv[11], v12 = precompilechain_recv[12], v13 = precompilechain_recv[13], v14 = precompilechain_recv[14], v15 = precompilechain_recv[15], v16 = precompilechain_recv[16], v17 = precompilechain_recv[17], v18 = precompilechain_recv[18], v19 = precompilechain_recv[19], v20 = precompilechain_recv[20], v21 = precompilechain_recv[21]
+  outputs: v0 = precompilechain_send[1], v1 = precompilechain_send[2], v5 = precompilechain_send[4], v410 = precompilechain_send[5], v6 = precompilechain_send[6], v7 = precompilechain_send[7], v8 = precompilechain_send[8], v9 = precompilechain_send[9], v10 = precompilechain_send[10], v11 = precompilechain_send[11], v12 = precompilechain_send[12], v13 = precompilechain_send[13], v14 = precompilechain_send[14], v15 = precompilechain_send[15], v16 = precompilechain_send[16], v17 = precompilechain_send[17], v18 = precompilechain_send[18], v19 = precompilechain_send[19], v20 = precompilechain_send[20], v21 = precompilechain_send[21], v3 = mem_write[0].addr, v22 = mem_write[0].val[0], v23 = mem_write[0].val[1], v24 = mem_write[0].val[2], v25 = mem_write[0].val[3], v411 = mem_write[1].addr, v32 = mem_write[1].val[0], v33 = mem_write[1].val[1], v34 = mem_write[1].val[2], v35 = mem_write[1].val[3], v412 = mem_write[2].addr, v42 = mem_write[2].val[0], v43 = mem_write[2].val[1], v44 = mem_write[2].val[2], v45 = mem_write[2].val[3], v413 = mem_write[3].addr, v52 = mem_write[3].val[0], v53 = mem_write[3].val[1], v54 = mem_write[3].val[2], v55 = mem_write[3].val[3], v414 = mem_write[4].addr, v62 = mem_write[4].val[0], v63 = mem_write[4].val[1], v64 = mem_write[4].val[2], v65 = mem_write[4].val[3], v4 = mem_write[5].addr, v76 = mem_write[5].val[0], v77 = mem_write[5].val[1], v78 = mem_write[5].val[2], v79 = mem_write[5].val[3] -/
+def input_origins : List String := ["mem_read[0].addr", "mem_read[0].val[0]", "mem_read[0].val[1]", "mem_read[0].val[2]", "mem_read[0].val[3]", "mem_read[1].addr", "mem_read[1].val[0]", "mem_read[1].val[1]", "mem_read[1].val[2]", "mem_read[1].val[3]", "mem_read[2].addr", "mem_read[2].val[0]", "mem_read[2].val[1]", "mem_read[2].val[2]", "mem_read[2].val[3]", "mem_read[3].addr", "mem_read[3].val[0]", "mem_read[3].val[1]", "mem_read[3].val[2]", "mem_read[3].val[3]", "mem_read[4].addr", "mem_read[4].val[0]", "mem_read[4].val[1]", "mem_read[4].val[2]", "mem_read[4].val[3]", "mem_read[5].addr", "mem_read[5].val[0]", "mem_read[5].val[1]", "mem_read[5].val[2]", "mem_read[5].val[3]", "precompilechain_recv[1]", "precompilechain_recv[2]", "precompilechain_recv[3]", "precompilechain_recv[5]", "precompilechain_recv[6]", "precompilechain_recv[7]", "precompilechain_recv[8]", "precompilechain_recv[9]", "precompilechain_recv[10]", "precompilechain_recv[11]", "precompilechain_recv[12]", "precompilechain_recv[13]", "precompilechain_recv[14]", "precompilechain_recv[15]", "precompilechain_recv[16]", "precompilechain_recv[17]", "precompilechain_recv[18]", "precompilechain_recv[19]", "precompilechain_recv[20]", "precompilechain_recv[21]"]
+def output_origins : List String := ["precompilechain_send[1]", "precompilechain_send[2]", "precompilechain_send[4]", "precompilechain_send[5]", "precompilechain_send[6]", "precompilechain_send[7]", "precompilechain_send[8]", "precompilechain_send[9]", "precompilechain_send[10]", "precompilechain_send[11]", "precompilechain_send[12]", "precompilechain_send[13]", "precompilechain_send[14]", "precompilechain_send[15]", "precompilechain_send[16]", "precompilechain_send[17]", "precompilechain_send[18]", "precompilechain_send[19]", "precompilechain_send[20]", "precompilechain_send[21]", "mem_write[0].addr", "mem_write[0].val[0]", "mem_write[0].val[1]", "mem_write[0].val[2]", "mem_write[0].val[3]", "mem_write[1].addr", "mem_write[1].val[0]", "mem_write[1].val[1]", "mem_write[1].val[2]", "mem_write[1].val[3]", "mem_write[2].addr", "mem_write[2].val[0]", "mem_write[2].val[1]", "mem_write[2].val[2]", "mem_write[2].val[3]", "mem_write[3].addr", "mem_write[3].val[0]", "mem_write[3].val[1]", "mem_write[3].val[2]", "mem_write[3].val[3]", "mem_write[4].addr", "mem_write[4].val[0]", "mem_write[4].val[1]", "mem_write[4].val[2]", "mem_write[4].val[3]", "mem_write[5].addr", "mem_write[5].val[0]", "mem_write[5].val[1]", "mem_write[5].val[2]", "mem_write[5].val[3]"]
+def in_mem_read_0_addr (w : W) : F := w.v3
+def in_mem_read_0_val (w : W) : List F := [w.v22, w.v23, w.v24, w.v25]
+def in_mem_read_1_addr (w : W) : F := w.v406
+def in_mem_read_1_val (w : W) : List F := [w.v32, w.v33, w.v34, w.v35]
+def in_mem_read_2_addr (w : W) : F := w.v407
+def in_mem_read_2_val (w : W) : List F := [w.v42, w.v43, w.v44, w.v45]
+def in_mem_read_3_addr (w : W) : F := w.v408
+def in_mem_read_3_val (w : W) : List F := [w.v52, w.v53, w.v54, w.v55]
+def in_mem_read_4_addr (w : W) : F := w.v409
+def in_mem_read_4_val (w : W) : List F := [w.v62, w.v63, w.v64, w.v65]
+def in_mem_read_5_addr (w : W) : F := w.v4
+def in_mem_read_5_val (w : W) : List F := [w.v72, w.v73, w.v74, w.v75]
+def in_precompilechain_recv (w : W) : List F := [w.v0, w.v1, w.v5, w.v415, w.v6, w.v7, w.v8, w.v9, w.v10, w.v11, w.v12, w.v13, w.v14, w.v15, w.v16, w.v17, w.v18, w.v19, w.v20, w.v21]
+def out_precompilechain_send (w : W) : List F := [w.v0, w.v1, w.v5, w.v410, w.v6, w.v7, w.v8, w.v9, w.v10, w.v11, w.v12, w.v13, w.v14, w.v15, w.v16, w.v17, w.v18, w.v19, w.v20, w.v21]
+def out_mem_write_0_addr (w : W) : F := w.v3
+def out_mem_write_0_val (w : W) : List F := [w.v22, w.v23, w.v24, w.v25]
+def out_mem_write_1_addr (w : W) : F := w.v411
+def out_mem_write_1_val (w : W) : List F := [w.v32, w.v33, w.v34, w.v35]
+def out_mem_write_2_addr (w : W) : F := w.v412
+def out_mem_write_2_val (w : W) : List F := [w.v42, w.v43, w.v44, w.v45]
+def out_mem_write_3_addr (w : W) : F := w.v413
+def out_mem_write_3_val (w : W) : List F := [w.v52, w.v53, w.v54, w.v55]
+def out_mem_write_4_addr (w : W) : F := w.v414
+def out_mem_write_4_val (w : W) : List F := [w.v62, w.v63, w.v64, w.v65]
+def out_mem_write_5_addr (w : W) : F := w.v4
+def out_mem_write_5_val (w : W) : List F := [w.v76, w.v77, w.v78, w.v79]
+
 def inputs (w : W) : List F :=
   [w.v3, w.v22, w.v23, w.v24, w.v25, w.v406, w.v32, w.v33, w.v34, w.v35, w.v407, w.v42, w.v43, w.v44, w.v45, w.v408, w.v52, w.v53, w.v54, w.v55, w.v409, w.v62, w.v63, w.v64, w.v65, w.v4, w.v72, w.v73, w.v74, w.v75, w.v0, w.v1, w.v5, w.v415, w.v6, w.v7, w.v8, w.v9, w.v10, w.v11, w.v12, w.v13, w.v14, w.v15, w.v16, w.v17, w.v18, w.v19, w.v20, w.v21]
 def outputs (w : W) : List F :=

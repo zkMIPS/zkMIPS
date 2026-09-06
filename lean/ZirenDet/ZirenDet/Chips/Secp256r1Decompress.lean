@@ -4025,6 +4025,77 @@ def constraints (w : W) : Prop :=
   constraints_35 w ∧
   constraints_36 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v2356 = mem_read[0].addr, v5 = mem_read[0].val[0], v6 = mem_read[0].val[1], v7 = mem_read[0].val[2], v8 = mem_read[0].val[3], v2357 = mem_read[1].addr, v15 = mem_read[1].val[0], v16 = mem_read[1].val[1], v17 = mem_read[1].val[2], v18 = mem_read[1].val[3], v2358 = mem_read[2].addr, v25 = mem_read[2].val[0], v26 = mem_read[2].val[1], v27 = mem_read[2].val[2], v28 = mem_read[2].val[3], v2359 = mem_read[3].addr, v35 = mem_read[3].val[0], v36 = mem_read[3].val[1], v37 = mem_read[3].val[2], v38 = mem_read[3].val[3], v2360 = mem_read[4].addr, v45 = mem_read[4].val[0], v46 = mem_read[4].val[1], v47 = mem_read[4].val[2], v48 = mem_read[4].val[3], v2361 = mem_read[5].addr, v55 = mem_read[5].val[0], v56 = mem_read[5].val[1], v57 = mem_read[5].val[2], v58 = mem_read[5].val[3], v2362 = mem_read[6].addr, v65 = mem_read[6].val[0], v66 = mem_read[6].val[1], v67 = mem_read[6].val[2], v68 = mem_read[6].val[3], v2363 = mem_read[7].addr, v75 = mem_read[7].val[0], v76 = mem_read[7].val[1], v77 = mem_read[7].val[2], v78 = mem_read[7].val[3], v3 = mem_read[8].addr, v85 = mem_read[8].val[0], v86 = mem_read[8].val[1], v87 = mem_read[8].val[2], v88 = mem_read[8].val[3], v2364 = mem_read[9].addr, v99 = mem_read[9].val[0], v100 = mem_read[9].val[1], v101 = mem_read[9].val[2], v102 = mem_read[9].val[3], v2365 = mem_read[10].addr, v113 = mem_read[10].val[0], v114 = mem_read[10].val[1], v115 = mem_read[10].val[2], v116 = mem_read[10].val[3], v2366 = mem_read[11].addr, v127 = mem_read[11].val[0], v128 = mem_read[11].val[1], v129 = mem_read[11].val[2], v130 = mem_read[11].val[3], v2367 = mem_read[12].addr, v141 = mem_read[12].val[0], v142 = mem_read[12].val[1], v143 = mem_read[12].val[2], v144 = mem_read[12].val[3], v2368 = mem_read[13].addr, v155 = mem_read[13].val[0], v156 = mem_read[13].val[1], v157 = mem_read[13].val[2], v158 = mem_read[13].val[3], v2369 = mem_read[14].addr, v169 = mem_read[14].val[0], v170 = mem_read[14].val[1], v171 = mem_read[14].val[2], v172 = mem_read[14].val[3], v2370 = mem_read[15].addr, v183 = mem_read[15].val[0], v184 = mem_read[15].val[1], v185 = mem_read[15].val[2], v186 = mem_read[15].val[3], v4 = syscall_recv[2]
+  outputs: v2371 = mem_write[0].addr, v5 = mem_write[0].val[0], v6 = mem_write[0].val[1], v7 = mem_write[0].val[2], v8 = mem_write[0].val[3], v2372 = mem_write[1].addr, v15 = mem_write[1].val[0], v16 = mem_write[1].val[1], v17 = mem_write[1].val[2], v18 = mem_write[1].val[3], v2373 = mem_write[2].addr, v25 = mem_write[2].val[0], v26 = mem_write[2].val[1], v27 = mem_write[2].val[2], v28 = mem_write[2].val[3], v2374 = mem_write[3].addr, v35 = mem_write[3].val[0], v36 = mem_write[3].val[1], v37 = mem_write[3].val[2], v38 = mem_write[3].val[3], v2375 = mem_write[4].addr, v45 = mem_write[4].val[0], v46 = mem_write[4].val[1], v47 = mem_write[4].val[2], v48 = mem_write[4].val[3], v2376 = mem_write[5].addr, v55 = mem_write[5].val[0], v56 = mem_write[5].val[1], v57 = mem_write[5].val[2], v58 = mem_write[5].val[3], v2377 = mem_write[6].addr, v65 = mem_write[6].val[0], v66 = mem_write[6].val[1], v67 = mem_write[6].val[2], v68 = mem_write[6].val[3], v2378 = mem_write[7].addr, v75 = mem_write[7].val[0], v76 = mem_write[7].val[1], v77 = mem_write[7].val[2], v78 = mem_write[7].val[3], v3 = mem_write[8].addr, v89 = mem_write[8].val[0], v90 = mem_write[8].val[1], v91 = mem_write[8].val[2], v92 = mem_write[8].val[3], v2379 = mem_write[9].addr, v103 = mem_write[9].val[0], v104 = mem_write[9].val[1], v105 = mem_write[9].val[2], v106 = mem_write[9].val[3], v2380 = mem_write[10].addr, v117 = mem_write[10].val[0], v118 = mem_write[10].val[1], v119 = mem_write[10].val[2], v120 = mem_write[10].val[3], v2381 = mem_write[11].addr, v131 = mem_write[11].val[0], v132 = mem_write[11].val[1], v133 = mem_write[11].val[2], v134 = mem_write[11].val[3], v2382 = mem_write[12].addr, v145 = mem_write[12].val[0], v146 = mem_write[12].val[1], v147 = mem_write[12].val[2], v148 = mem_write[12].val[3], v2383 = mem_write[13].addr, v159 = mem_write[13].val[0], v160 = mem_write[13].val[1], v161 = mem_write[13].val[2], v162 = mem_write[13].val[3], v2384 = mem_write[14].addr, v173 = mem_write[14].val[0], v174 = mem_write[14].val[1], v175 = mem_write[14].val[2], v176 = mem_write[14].val[3], v2385 = mem_write[15].addr, v187 = mem_write[15].val[0], v188 = mem_write[15].val[1], v189 = mem_write[15].val[2], v190 = mem_write[15].val[3] -/
+def input_origins : List String := ["mem_read[0].addr", "mem_read[0].val[0]", "mem_read[0].val[1]", "mem_read[0].val[2]", "mem_read[0].val[3]", "mem_read[1].addr", "mem_read[1].val[0]", "mem_read[1].val[1]", "mem_read[1].val[2]", "mem_read[1].val[3]", "mem_read[2].addr", "mem_read[2].val[0]", "mem_read[2].val[1]", "mem_read[2].val[2]", "mem_read[2].val[3]", "mem_read[3].addr", "mem_read[3].val[0]", "mem_read[3].val[1]", "mem_read[3].val[2]", "mem_read[3].val[3]", "mem_read[4].addr", "mem_read[4].val[0]", "mem_read[4].val[1]", "mem_read[4].val[2]", "mem_read[4].val[3]", "mem_read[5].addr", "mem_read[5].val[0]", "mem_read[5].val[1]", "mem_read[5].val[2]", "mem_read[5].val[3]", "mem_read[6].addr", "mem_read[6].val[0]", "mem_read[6].val[1]", "mem_read[6].val[2]", "mem_read[6].val[3]", "mem_read[7].addr", "mem_read[7].val[0]", "mem_read[7].val[1]", "mem_read[7].val[2]", "mem_read[7].val[3]", "mem_read[8].addr", "mem_read[8].val[0]", "mem_read[8].val[1]", "mem_read[8].val[2]", "mem_read[8].val[3]", "mem_read[9].addr", "mem_read[9].val[0]", "mem_read[9].val[1]", "mem_read[9].val[2]", "mem_read[9].val[3]", "mem_read[10].addr", "mem_read[10].val[0]", "mem_read[10].val[1]", "mem_read[10].val[2]", "mem_read[10].val[3]", "mem_read[11].addr", "mem_read[11].val[0]", "mem_read[11].val[1]", "mem_read[11].val[2]", "mem_read[11].val[3]", "mem_read[12].addr", "mem_read[12].val[0]", "mem_read[12].val[1]", "mem_read[12].val[2]", "mem_read[12].val[3]", "mem_read[13].addr", "mem_read[13].val[0]", "mem_read[13].val[1]", "mem_read[13].val[2]", "mem_read[13].val[3]", "mem_read[14].addr", "mem_read[14].val[0]", "mem_read[14].val[1]", "mem_read[14].val[2]", "mem_read[14].val[3]", "mem_read[15].addr", "mem_read[15].val[0]", "mem_read[15].val[1]", "mem_read[15].val[2]", "mem_read[15].val[3]", "syscall_recv[2]"]
+def output_origins : List String := ["mem_write[0].addr", "mem_write[0].val[0]", "mem_write[0].val[1]", "mem_write[0].val[2]", "mem_write[0].val[3]", "mem_write[1].addr", "mem_write[1].val[0]", "mem_write[1].val[1]", "mem_write[1].val[2]", "mem_write[1].val[3]", "mem_write[2].addr", "mem_write[2].val[0]", "mem_write[2].val[1]", "mem_write[2].val[2]", "mem_write[2].val[3]", "mem_write[3].addr", "mem_write[3].val[0]", "mem_write[3].val[1]", "mem_write[3].val[2]", "mem_write[3].val[3]", "mem_write[4].addr", "mem_write[4].val[0]", "mem_write[4].val[1]", "mem_write[4].val[2]", "mem_write[4].val[3]", "mem_write[5].addr", "mem_write[5].val[0]", "mem_write[5].val[1]", "mem_write[5].val[2]", "mem_write[5].val[3]", "mem_write[6].addr", "mem_write[6].val[0]", "mem_write[6].val[1]", "mem_write[6].val[2]", "mem_write[6].val[3]", "mem_write[7].addr", "mem_write[7].val[0]", "mem_write[7].val[1]", "mem_write[7].val[2]", "mem_write[7].val[3]", "mem_write[8].addr", "mem_write[8].val[0]", "mem_write[8].val[1]", "mem_write[8].val[2]", "mem_write[8].val[3]", "mem_write[9].addr", "mem_write[9].val[0]", "mem_write[9].val[1]", "mem_write[9].val[2]", "mem_write[9].val[3]", "mem_write[10].addr", "mem_write[10].val[0]", "mem_write[10].val[1]", "mem_write[10].val[2]", "mem_write[10].val[3]", "mem_write[11].addr", "mem_write[11].val[0]", "mem_write[11].val[1]", "mem_write[11].val[2]", "mem_write[11].val[3]", "mem_write[12].addr", "mem_write[12].val[0]", "mem_write[12].val[1]", "mem_write[12].val[2]", "mem_write[12].val[3]", "mem_write[13].addr", "mem_write[13].val[0]", "mem_write[13].val[1]", "mem_write[13].val[2]", "mem_write[13].val[3]", "mem_write[14].addr", "mem_write[14].val[0]", "mem_write[14].val[1]", "mem_write[14].val[2]", "mem_write[14].val[3]", "mem_write[15].addr", "mem_write[15].val[0]", "mem_write[15].val[1]", "mem_write[15].val[2]", "mem_write[15].val[3]"]
+def in_mem_read_0_addr (w : W) : F := w.v2356
+def in_mem_read_0_val (w : W) : List F := [w.v5, w.v6, w.v7, w.v8]
+def in_mem_read_1_addr (w : W) : F := w.v2357
+def in_mem_read_1_val (w : W) : List F := [w.v15, w.v16, w.v17, w.v18]
+def in_mem_read_2_addr (w : W) : F := w.v2358
+def in_mem_read_2_val (w : W) : List F := [w.v25, w.v26, w.v27, w.v28]
+def in_mem_read_3_addr (w : W) : F := w.v2359
+def in_mem_read_3_val (w : W) : List F := [w.v35, w.v36, w.v37, w.v38]
+def in_mem_read_4_addr (w : W) : F := w.v2360
+def in_mem_read_4_val (w : W) : List F := [w.v45, w.v46, w.v47, w.v48]
+def in_mem_read_5_addr (w : W) : F := w.v2361
+def in_mem_read_5_val (w : W) : List F := [w.v55, w.v56, w.v57, w.v58]
+def in_mem_read_6_addr (w : W) : F := w.v2362
+def in_mem_read_6_val (w : W) : List F := [w.v65, w.v66, w.v67, w.v68]
+def in_mem_read_7_addr (w : W) : F := w.v2363
+def in_mem_read_7_val (w : W) : List F := [w.v75, w.v76, w.v77, w.v78]
+def in_mem_read_8_addr (w : W) : F := w.v3
+def in_mem_read_8_val (w : W) : List F := [w.v85, w.v86, w.v87, w.v88]
+def in_mem_read_9_addr (w : W) : F := w.v2364
+def in_mem_read_9_val (w : W) : List F := [w.v99, w.v100, w.v101, w.v102]
+def in_mem_read_10_addr (w : W) : F := w.v2365
+def in_mem_read_10_val (w : W) : List F := [w.v113, w.v114, w.v115, w.v116]
+def in_mem_read_11_addr (w : W) : F := w.v2366
+def in_mem_read_11_val (w : W) : List F := [w.v127, w.v128, w.v129, w.v130]
+def in_mem_read_12_addr (w : W) : F := w.v2367
+def in_mem_read_12_val (w : W) : List F := [w.v141, w.v142, w.v143, w.v144]
+def in_mem_read_13_addr (w : W) : F := w.v2368
+def in_mem_read_13_val (w : W) : List F := [w.v155, w.v156, w.v157, w.v158]
+def in_mem_read_14_addr (w : W) : F := w.v2369
+def in_mem_read_14_val (w : W) : List F := [w.v169, w.v170, w.v171, w.v172]
+def in_mem_read_15_addr (w : W) : F := w.v2370
+def in_mem_read_15_val (w : W) : List F := [w.v183, w.v184, w.v185, w.v186]
+def in_syscall_recv (w : W) : F := w.v4
+def out_mem_write_0_addr (w : W) : F := w.v2371
+def out_mem_write_0_val (w : W) : List F := [w.v5, w.v6, w.v7, w.v8]
+def out_mem_write_1_addr (w : W) : F := w.v2372
+def out_mem_write_1_val (w : W) : List F := [w.v15, w.v16, w.v17, w.v18]
+def out_mem_write_2_addr (w : W) : F := w.v2373
+def out_mem_write_2_val (w : W) : List F := [w.v25, w.v26, w.v27, w.v28]
+def out_mem_write_3_addr (w : W) : F := w.v2374
+def out_mem_write_3_val (w : W) : List F := [w.v35, w.v36, w.v37, w.v38]
+def out_mem_write_4_addr (w : W) : F := w.v2375
+def out_mem_write_4_val (w : W) : List F := [w.v45, w.v46, w.v47, w.v48]
+def out_mem_write_5_addr (w : W) : F := w.v2376
+def out_mem_write_5_val (w : W) : List F := [w.v55, w.v56, w.v57, w.v58]
+def out_mem_write_6_addr (w : W) : F := w.v2377
+def out_mem_write_6_val (w : W) : List F := [w.v65, w.v66, w.v67, w.v68]
+def out_mem_write_7_addr (w : W) : F := w.v2378
+def out_mem_write_7_val (w : W) : List F := [w.v75, w.v76, w.v77, w.v78]
+def out_mem_write_8_addr (w : W) : F := w.v3
+def out_mem_write_8_val (w : W) : List F := [w.v89, w.v90, w.v91, w.v92]
+def out_mem_write_9_addr (w : W) : F := w.v2379
+def out_mem_write_9_val (w : W) : List F := [w.v103, w.v104, w.v105, w.v106]
+def out_mem_write_10_addr (w : W) : F := w.v2380
+def out_mem_write_10_val (w : W) : List F := [w.v117, w.v118, w.v119, w.v120]
+def out_mem_write_11_addr (w : W) : F := w.v2381
+def out_mem_write_11_val (w : W) : List F := [w.v131, w.v132, w.v133, w.v134]
+def out_mem_write_12_addr (w : W) : F := w.v2382
+def out_mem_write_12_val (w : W) : List F := [w.v145, w.v146, w.v147, w.v148]
+def out_mem_write_13_addr (w : W) : F := w.v2383
+def out_mem_write_13_val (w : W) : List F := [w.v159, w.v160, w.v161, w.v162]
+def out_mem_write_14_addr (w : W) : F := w.v2384
+def out_mem_write_14_val (w : W) : List F := [w.v173, w.v174, w.v175, w.v176]
+def out_mem_write_15_addr (w : W) : F := w.v2385
+def out_mem_write_15_val (w : W) : List F := [w.v187, w.v188, w.v189, w.v190]
+
 def inputs (w : W) : List F :=
   [w.v2356, w.v5, w.v6, w.v7, w.v8, w.v2357, w.v15, w.v16, w.v17, w.v18, w.v2358, w.v25, w.v26, w.v27, w.v28, w.v2359, w.v35, w.v36, w.v37, w.v38, w.v2360, w.v45, w.v46, w.v47, w.v48, w.v2361, w.v55, w.v56, w.v57, w.v58, w.v2362, w.v65, w.v66, w.v67, w.v68, w.v2363, w.v75, w.v76, w.v77, w.v78, w.v3, w.v85, w.v86, w.v87, w.v88, w.v2364, w.v99, w.v100, w.v101, w.v102, w.v2365, w.v113, w.v114, w.v115, w.v116, w.v2366, w.v127, w.v128, w.v129, w.v130, w.v2367, w.v141, w.v142, w.v143, w.v144, w.v2368, w.v155, w.v156, w.v157, w.v158, w.v2369, w.v169, w.v170, w.v171, w.v172, w.v2370, w.v183, w.v184, w.v185, w.v186, w.v4]
 def outputs (w : W) : List F :=

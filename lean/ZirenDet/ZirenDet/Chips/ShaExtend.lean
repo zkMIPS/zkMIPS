@@ -606,6 +606,34 @@ def constraints (w : W) : Prop :=
   constraints_3 w ∧
   constraints_4 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v577 = mem_read[0].addr, v4 = mem_read[0].val[0], v5 = mem_read[0].val[1], v6 = mem_read[0].val[2], v7 = mem_read[0].val[3], v578 = mem_read[1].addr, v58 = mem_read[1].val[0], v59 = mem_read[1].val[1], v60 = mem_read[1].val[2], v61 = mem_read[1].val[3], v579 = mem_read[2].addr, v112 = mem_read[2].val[0], v113 = mem_read[2].val[1], v114 = mem_read[2].val[2], v115 = mem_read[2].val[3], v580 = mem_read[3].addr, v122 = mem_read[3].val[0], v123 = mem_read[3].val[1], v124 = mem_read[3].val[2], v125 = mem_read[3].val[3], v581 = mem_read[4].addr, v156 = mem_read[4].val[0], v157 = mem_read[4].val[1], v158 = mem_read[4].val[2], v159 = mem_read[4].val[3], v0 = precompilechain_recv[1], v1 = precompilechain_recv[2], v2 = precompilechain_recv[3], v3 = precompilechain_recv[4]
+  outputs: v0 = precompilechain_send[1], v1 = precompilechain_send[2], v2 = precompilechain_send[3], v576 = precompilechain_send[4], v582 = mem_write[0].addr, v4 = mem_write[0].val[0], v5 = mem_write[0].val[1], v6 = mem_write[0].val[2], v7 = mem_write[0].val[3], v583 = mem_write[1].addr, v58 = mem_write[1].val[0], v59 = mem_write[1].val[1], v60 = mem_write[1].val[2], v61 = mem_write[1].val[3], v584 = mem_write[2].addr, v112 = mem_write[2].val[0], v113 = mem_write[2].val[1], v114 = mem_write[2].val[2], v115 = mem_write[2].val[3], v585 = mem_write[3].addr, v122 = mem_write[3].val[0], v123 = mem_write[3].val[1], v124 = mem_write[3].val[2], v125 = mem_write[3].val[3], v586 = mem_write[4].addr, v160 = mem_write[4].val[0], v161 = mem_write[4].val[1], v162 = mem_write[4].val[2], v163 = mem_write[4].val[3] -/
+def input_origins : List String := ["mem_read[0].addr", "mem_read[0].val[0]", "mem_read[0].val[1]", "mem_read[0].val[2]", "mem_read[0].val[3]", "mem_read[1].addr", "mem_read[1].val[0]", "mem_read[1].val[1]", "mem_read[1].val[2]", "mem_read[1].val[3]", "mem_read[2].addr", "mem_read[2].val[0]", "mem_read[2].val[1]", "mem_read[2].val[2]", "mem_read[2].val[3]", "mem_read[3].addr", "mem_read[3].val[0]", "mem_read[3].val[1]", "mem_read[3].val[2]", "mem_read[3].val[3]", "mem_read[4].addr", "mem_read[4].val[0]", "mem_read[4].val[1]", "mem_read[4].val[2]", "mem_read[4].val[3]", "precompilechain_recv[1]", "precompilechain_recv[2]", "precompilechain_recv[3]", "precompilechain_recv[4]"]
+def output_origins : List String := ["precompilechain_send[1]", "precompilechain_send[2]", "precompilechain_send[3]", "precompilechain_send[4]", "mem_write[0].addr", "mem_write[0].val[0]", "mem_write[0].val[1]", "mem_write[0].val[2]", "mem_write[0].val[3]", "mem_write[1].addr", "mem_write[1].val[0]", "mem_write[1].val[1]", "mem_write[1].val[2]", "mem_write[1].val[3]", "mem_write[2].addr", "mem_write[2].val[0]", "mem_write[2].val[1]", "mem_write[2].val[2]", "mem_write[2].val[3]", "mem_write[3].addr", "mem_write[3].val[0]", "mem_write[3].val[1]", "mem_write[3].val[2]", "mem_write[3].val[3]", "mem_write[4].addr", "mem_write[4].val[0]", "mem_write[4].val[1]", "mem_write[4].val[2]", "mem_write[4].val[3]"]
+def in_mem_read_0_addr (w : W) : F := w.v577
+def in_mem_read_0_val (w : W) : List F := [w.v4, w.v5, w.v6, w.v7]
+def in_mem_read_1_addr (w : W) : F := w.v578
+def in_mem_read_1_val (w : W) : List F := [w.v58, w.v59, w.v60, w.v61]
+def in_mem_read_2_addr (w : W) : F := w.v579
+def in_mem_read_2_val (w : W) : List F := [w.v112, w.v113, w.v114, w.v115]
+def in_mem_read_3_addr (w : W) : F := w.v580
+def in_mem_read_3_val (w : W) : List F := [w.v122, w.v123, w.v124, w.v125]
+def in_mem_read_4_addr (w : W) : F := w.v581
+def in_mem_read_4_val (w : W) : List F := [w.v156, w.v157, w.v158, w.v159]
+def in_precompilechain_recv (w : W) : List F := [w.v0, w.v1, w.v2, w.v3]
+def out_precompilechain_send (w : W) : List F := [w.v0, w.v1, w.v2, w.v576]
+def out_mem_write_0_addr (w : W) : F := w.v582
+def out_mem_write_0_val (w : W) : List F := [w.v4, w.v5, w.v6, w.v7]
+def out_mem_write_1_addr (w : W) : F := w.v583
+def out_mem_write_1_val (w : W) : List F := [w.v58, w.v59, w.v60, w.v61]
+def out_mem_write_2_addr (w : W) : F := w.v584
+def out_mem_write_2_val (w : W) : List F := [w.v112, w.v113, w.v114, w.v115]
+def out_mem_write_3_addr (w : W) : F := w.v585
+def out_mem_write_3_val (w : W) : List F := [w.v122, w.v123, w.v124, w.v125]
+def out_mem_write_4_addr (w : W) : F := w.v586
+def out_mem_write_4_val (w : W) : List F := [w.v160, w.v161, w.v162, w.v163]
+
 def inputs (w : W) : List F :=
   [w.v577, w.v4, w.v5, w.v6, w.v7, w.v578, w.v58, w.v59, w.v60, w.v61, w.v579, w.v112, w.v113, w.v114, w.v115, w.v580, w.v122, w.v123, w.v124, w.v125, w.v581, w.v156, w.v157, w.v158, w.v159, w.v0, w.v1, w.v2, w.v3]
 def outputs (w : W) : List F :=

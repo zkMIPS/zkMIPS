@@ -71,6 +71,16 @@ def constraints_0 (w : W) : Prop :=
 def constraints (w : W) : Prop :=
   constraints_0 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v2 = syscall_recv[0], v256 = syscall_recv[1], v257 = syscall_recv[2], v260 = syscall_result.arg[0], v261 = syscall_result.arg[1], v262 = syscall_result.arg[2], v263 = syscall_result.arg[3]
+  outputs: v0 = global_send[0], v1 = global_send[1], v2 = global_send[2], v3 = global_send[3], v4 = global_send[4], v5 = global_send[5], v6 = global_send[6], v7 = global_send[3], v8 = global_send[4], v258 = syscall_result.result[0], v259 = syscall_result.result[1] -/
+def input_origins : List String := ["syscall_recv[0]", "syscall_recv[1]", "syscall_recv[2]", "syscall_result.arg[0]", "syscall_result.arg[1]", "syscall_result.arg[2]", "syscall_result.arg[3]"]
+def output_origins : List String := ["global_send[0]", "global_send[1]", "global_send[2]", "global_send[3]", "global_send[4]", "global_send[5]", "global_send[6]", "global_send[3]", "global_send[4]", "syscall_result.result[0]", "syscall_result.result[1]"]
+def in_syscall_recv (w : W) : List F := [w.v2, w.v256, w.v257]
+def in_syscall_result_arg (w : W) : List F := [w.v260, w.v261, w.v262, w.v263]
+def out_global_send (w : W) : List F := [w.v0, w.v1, w.v2, w.v3, w.v4, w.v5, w.v6, w.v7, w.v8]
+def out_syscall_result_result (w : W) : List F := [w.v258, w.v259]
+
 def inputs (w : W) : List F :=
   [w.v2, w.v256, w.v257, w.v260, w.v261, w.v262, w.v263]
 def outputs (w : W) : List F :=

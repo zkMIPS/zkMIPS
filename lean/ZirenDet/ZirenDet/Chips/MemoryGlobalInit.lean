@@ -577,6 +577,15 @@ def constraints (w : W) : Prop :=
   constraints_3 w ∧
   constraints_4 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v3 = memoryglobalinitcontrol_recv[0], v4 = memoryglobalinitcontrol_recv[1], v43 = memoryglobalinitcontrol_recv[2]
+  outputs: v2 = global_send[2], v542 = global_send[3], v543 = global_send[4], v544 = global_send[5], v545 = global_send[6], v546 = memoryglobalinitcontrol_send[0], v147 = memoryglobalinitcontrol_send[2] -/
+def input_origins : List String := ["memoryglobalinitcontrol_recv[0]", "memoryglobalinitcontrol_recv[1]", "memoryglobalinitcontrol_recv[2]"]
+def output_origins : List String := ["global_send[2]", "global_send[3]", "global_send[4]", "global_send[5]", "global_send[6]", "memoryglobalinitcontrol_send[0]", "memoryglobalinitcontrol_send[2]"]
+def in_memoryglobalinitcontrol_recv (w : W) : List F := [w.v3, w.v4, w.v43]
+def out_global_send (w : W) : List F := [w.v2, w.v542, w.v543, w.v544, w.v545]
+def out_memoryglobalinitcontrol_send (w : W) : List F := [w.v546, w.v147]
+
 def inputs (w : W) : List F :=
   [w.v3, w.v4, w.v43]
 def outputs (w : W) : List F :=

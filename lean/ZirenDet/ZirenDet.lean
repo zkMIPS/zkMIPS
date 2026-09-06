@@ -66,3 +66,4 @@ import ZirenDet.Chips.Uint256MulMod
 import ZirenDet.Isa
 import ZirenDet.IsaVectors
 import ZirenDet.IsaDecode
+import ZirenDet.Bridge.AddSub

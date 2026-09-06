@@ -297,6 +297,31 @@ def constraints (w : W) : Prop :=
   constraints_1 w ∧
   constraints_2 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v0 = program.pc, v48 = program.opcode, v49 = program.op_a, v50 = program.op_b[0], v51 = program.op_c[0], v52 = program.op_a_0, v63 = mem_read[0].val[0], v64 = mem_read[0].val[1], v65 = mem_read[0].val[2], v66 = mem_read[0].val[3], v69 = mem_read[1].val[0], v70 = mem_read[1].val[1], v71 = mem_read[1].val[2], v72 = mem_read[1].val[3], v53 = mem_read[2].val[0], v54 = mem_read[2].val[1], v55 = mem_read[2].val[2], v56 = mem_read[2].val[3], v388 = mem_read[3].val[0], v389 = mem_read[3].val[1], v390 = mem_read[3].val[2], v391 = mem_read[3].val[3], v45 = state_recv[0], v392 = state_recv[1], v1 = state_recv[3]
+  outputs: v45 = state_send[0], v386 = state_send[1], v1 = state_send[2], v387 = state_send[3], v50 = mem_write[0].addr, v63 = mem_write[0].val[0], v64 = mem_write[0].val[1], v65 = mem_write[0].val[2], v66 = mem_write[0].val[3], v51 = mem_write[1].addr, v69 = mem_write[1].val[0], v70 = mem_write[1].val[1], v71 = mem_write[1].val[2], v72 = mem_write[1].val[3], v49 = mem_write[2].addr, v57 = mem_write[2].val[0], v58 = mem_write[2].val[1], v59 = mem_write[2].val[2], v60 = mem_write[2].val[3], v393 = mem_write[3].val[0], v394 = mem_write[3].val[1], v395 = mem_write[3].val[2], v396 = mem_write[3].val[3] -/
+def input_origins : List String := ["program.pc", "program.opcode", "program.op_a", "program.op_b[0]", "program.op_c[0]", "program.op_a_0", "mem_read[0].val[0]", "mem_read[0].val[1]", "mem_read[0].val[2]", "mem_read[0].val[3]", "mem_read[1].val[0]", "mem_read[1].val[1]", "mem_read[1].val[2]", "mem_read[1].val[3]", "mem_read[2].val[0]", "mem_read[2].val[1]", "mem_read[2].val[2]", "mem_read[2].val[3]", "mem_read[3].val[0]", "mem_read[3].val[1]", "mem_read[3].val[2]", "mem_read[3].val[3]", "state_recv[0]", "state_recv[1]", "state_recv[3]"]
+def output_origins : List String := ["state_send[0]", "state_send[1]", "state_send[2]", "state_send[3]", "mem_write[0].addr", "mem_write[0].val[0]", "mem_write[0].val[1]", "mem_write[0].val[2]", "mem_write[0].val[3]", "mem_write[1].addr", "mem_write[1].val[0]", "mem_write[1].val[1]", "mem_write[1].val[2]", "mem_write[1].val[3]", "mem_write[2].addr", "mem_write[2].val[0]", "mem_write[2].val[1]", "mem_write[2].val[2]", "mem_write[2].val[3]", "mem_write[3].val[0]", "mem_write[3].val[1]", "mem_write[3].val[2]", "mem_write[3].val[3]"]
+def in_program_pc (w : W) : F := w.v0
+def in_program_opcode (w : W) : F := w.v48
+def in_program_op_a (w : W) : F := w.v49
+def in_program_op_b (w : W) : F := w.v50
+def in_program_op_c (w : W) : F := w.v51
+def in_program_op_a_0 (w : W) : F := w.v52
+def in_mem_read_0_val (w : W) : List F := [w.v63, w.v64, w.v65, w.v66]
+def in_mem_read_1_val (w : W) : List F := [w.v69, w.v70, w.v71, w.v72]
+def in_mem_read_2_val (w : W) : List F := [w.v53, w.v54, w.v55, w.v56]
+def in_mem_read_3_val (w : W) : List F := [w.v388, w.v389, w.v390, w.v391]
+def in_state_recv (w : W) : List F := [w.v45, w.v392, w.v1]
+def out_state_send (w : W) : List F := [w.v45, w.v386, w.v1, w.v387]
+def out_mem_write_0_addr (w : W) : F := w.v50
+def out_mem_write_0_val (w : W) : List F := [w.v63, w.v64, w.v65, w.v66]
+def out_mem_write_1_addr (w : W) : F := w.v51
+def out_mem_write_1_val (w : W) : List F := [w.v69, w.v70, w.v71, w.v72]
+def out_mem_write_2_addr (w : W) : F := w.v49
+def out_mem_write_2_val (w : W) : List F := [w.v57, w.v58, w.v59, w.v60]
+def out_mem_write_3_val (w : W) : List F := [w.v393, w.v394, w.v395, w.v396]
+
 def inputs (w : W) : List F :=
   [w.v0, w.v48, w.v49, w.v50, w.v51, w.v52, w.v63, w.v64, w.v65, w.v66, w.v69, w.v70, w.v71, w.v72, w.v53, w.v54, w.v55, w.v56, w.v388, w.v389, w.v390, w.v391, w.v45, w.v392, w.v1]
 def outputs (w : W) : List F :=
@@ -600,6 +625,31 @@ def constraints (w : W) : Prop :=
   constraints_0 w ∧
   constraints_1 w ∧
   constraints_2 w
+
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v0 = program.pc, v48 = program.opcode, v49 = program.op_a, v50 = program.op_b[0], v51 = program.op_c[0], v52 = program.op_a_0, v63 = mem_read[0].val[0], v64 = mem_read[0].val[1], v65 = mem_read[0].val[2], v66 = mem_read[0].val[3], v69 = mem_read[1].val[0], v70 = mem_read[1].val[1], v71 = mem_read[1].val[2], v72 = mem_read[1].val[3], v53 = mem_read[2].val[0], v54 = mem_read[2].val[1], v55 = mem_read[2].val[2], v56 = mem_read[2].val[3], v401 = mem_read[3].val[0], v402 = mem_read[3].val[1], v403 = mem_read[3].val[2], v404 = mem_read[3].val[3], v45 = state_recv[0], v405 = state_recv[1], v1 = state_recv[3]
+  outputs: v45 = state_send[0], v399 = state_send[1], v1 = state_send[2], v400 = state_send[3], v50 = mem_write[0].addr, v63 = mem_write[0].val[0], v64 = mem_write[0].val[1], v65 = mem_write[0].val[2], v66 = mem_write[0].val[3], v51 = mem_write[1].addr, v69 = mem_write[1].val[0], v70 = mem_write[1].val[1], v71 = mem_write[1].val[2], v72 = mem_write[1].val[3], v49 = mem_write[2].addr, v57 = mem_write[2].val[0], v58 = mem_write[2].val[1], v59 = mem_write[2].val[2], v60 = mem_write[2].val[3], v406 = mem_write[3].val[0], v407 = mem_write[3].val[1], v408 = mem_write[3].val[2], v409 = mem_write[3].val[3] -/
+def input_origins : List String := ["program.pc", "program.opcode", "program.op_a", "program.op_b[0]", "program.op_c[0]", "program.op_a_0", "mem_read[0].val[0]", "mem_read[0].val[1]", "mem_read[0].val[2]", "mem_read[0].val[3]", "mem_read[1].val[0]", "mem_read[1].val[1]", "mem_read[1].val[2]", "mem_read[1].val[3]", "mem_read[2].val[0]", "mem_read[2].val[1]", "mem_read[2].val[2]", "mem_read[2].val[3]", "mem_read[3].val[0]", "mem_read[3].val[1]", "mem_read[3].val[2]", "mem_read[3].val[3]", "state_recv[0]", "state_recv[1]", "state_recv[3]"]
+def output_origins : List String := ["state_send[0]", "state_send[1]", "state_send[2]", "state_send[3]", "mem_write[0].addr", "mem_write[0].val[0]", "mem_write[0].val[1]", "mem_write[0].val[2]", "mem_write[0].val[3]", "mem_write[1].addr", "mem_write[1].val[0]", "mem_write[1].val[1]", "mem_write[1].val[2]", "mem_write[1].val[3]", "mem_write[2].addr", "mem_write[2].val[0]", "mem_write[2].val[1]", "mem_write[2].val[2]", "mem_write[2].val[3]", "mem_write[3].val[0]", "mem_write[3].val[1]", "mem_write[3].val[2]", "mem_write[3].val[3]"]
+def in_program_pc (w : W) : F := w.v0
+def in_program_opcode (w : W) : F := w.v48
+def in_program_op_a (w : W) : F := w.v49
+def in_program_op_b (w : W) : F := w.v50
+def in_program_op_c (w : W) : F := w.v51
+def in_program_op_a_0 (w : W) : F := w.v52
+def in_mem_read_0_val (w : W) : List F := [w.v63, w.v64, w.v65, w.v66]
+def in_mem_read_1_val (w : W) : List F := [w.v69, w.v70, w.v71, w.v72]
+def in_mem_read_2_val (w : W) : List F := [w.v53, w.v54, w.v55, w.v56]
+def in_mem_read_3_val (w : W) : List F := [w.v401, w.v402, w.v403, w.v404]
+def in_state_recv (w : W) : List F := [w.v45, w.v405, w.v1]
+def out_state_send (w : W) : List F := [w.v45, w.v399, w.v1, w.v400]
+def out_mem_write_0_addr (w : W) : F := w.v50
+def out_mem_write_0_val (w : W) : List F := [w.v63, w.v64, w.v65, w.v66]
+def out_mem_write_1_addr (w : W) : F := w.v51
+def out_mem_write_1_val (w : W) : List F := [w.v69, w.v70, w.v71, w.v72]
+def out_mem_write_2_addr (w : W) : F := w.v49
+def out_mem_write_2_val (w : W) : List F := [w.v57, w.v58, w.v59, w.v60]
+def out_mem_write_3_val (w : W) : List F := [w.v406, w.v407, w.v408, w.v409]
 
 def inputs (w : W) : List F :=
   [w.v0, w.v48, w.v49, w.v50, w.v51, w.v52, w.v63, w.v64, w.v65, w.v66, w.v69, w.v70, w.v71, w.v72, w.v53, w.v54, w.v55, w.v56, w.v401, w.v402, w.v403, w.v404, w.v45, w.v405, w.v1]
@@ -905,6 +955,31 @@ def constraints (w : W) : Prop :=
   constraints_1 w ∧
   constraints_2 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v0 = program.pc, v48 = program.opcode, v49 = program.op_a, v50 = program.op_b[0], v51 = program.op_c[0], v52 = program.op_a_0, v63 = mem_read[0].val[0], v64 = mem_read[0].val[1], v65 = mem_read[0].val[2], v66 = mem_read[0].val[3], v69 = mem_read[1].val[0], v70 = mem_read[1].val[1], v71 = mem_read[1].val[2], v72 = mem_read[1].val[3], v53 = mem_read[2].val[0], v54 = mem_read[2].val[1], v55 = mem_read[2].val[2], v56 = mem_read[2].val[3], v414 = mem_read[3].val[0], v415 = mem_read[3].val[1], v416 = mem_read[3].val[2], v417 = mem_read[3].val[3], v45 = state_recv[0], v418 = state_recv[1], v1 = state_recv[3]
+  outputs: v45 = state_send[0], v412 = state_send[1], v1 = state_send[2], v413 = state_send[3], v50 = mem_write[0].addr, v63 = mem_write[0].val[0], v64 = mem_write[0].val[1], v65 = mem_write[0].val[2], v66 = mem_write[0].val[3], v51 = mem_write[1].addr, v69 = mem_write[1].val[0], v70 = mem_write[1].val[1], v71 = mem_write[1].val[2], v72 = mem_write[1].val[3], v49 = mem_write[2].addr, v57 = mem_write[2].val[0], v58 = mem_write[2].val[1], v59 = mem_write[2].val[2], v60 = mem_write[2].val[3], v419 = mem_write[3].val[0], v420 = mem_write[3].val[1], v421 = mem_write[3].val[2], v422 = mem_write[3].val[3] -/
+def input_origins : List String := ["program.pc", "program.opcode", "program.op_a", "program.op_b[0]", "program.op_c[0]", "program.op_a_0", "mem_read[0].val[0]", "mem_read[0].val[1]", "mem_read[0].val[2]", "mem_read[0].val[3]", "mem_read[1].val[0]", "mem_read[1].val[1]", "mem_read[1].val[2]", "mem_read[1].val[3]", "mem_read[2].val[0]", "mem_read[2].val[1]", "mem_read[2].val[2]", "mem_read[2].val[3]", "mem_read[3].val[0]", "mem_read[3].val[1]", "mem_read[3].val[2]", "mem_read[3].val[3]", "state_recv[0]", "state_recv[1]", "state_recv[3]"]
+def output_origins : List String := ["state_send[0]", "state_send[1]", "state_send[2]", "state_send[3]", "mem_write[0].addr", "mem_write[0].val[0]", "mem_write[0].val[1]", "mem_write[0].val[2]", "mem_write[0].val[3]", "mem_write[1].addr", "mem_write[1].val[0]", "mem_write[1].val[1]", "mem_write[1].val[2]", "mem_write[1].val[3]", "mem_write[2].addr", "mem_write[2].val[0]", "mem_write[2].val[1]", "mem_write[2].val[2]", "mem_write[2].val[3]", "mem_write[3].val[0]", "mem_write[3].val[1]", "mem_write[3].val[2]", "mem_write[3].val[3]"]
+def in_program_pc (w : W) : F := w.v0
+def in_program_opcode (w : W) : F := w.v48
+def in_program_op_a (w : W) : F := w.v49
+def in_program_op_b (w : W) : F := w.v50
+def in_program_op_c (w : W) : F := w.v51
+def in_program_op_a_0 (w : W) : F := w.v52
+def in_mem_read_0_val (w : W) : List F := [w.v63, w.v64, w.v65, w.v66]
+def in_mem_read_1_val (w : W) : List F := [w.v69, w.v70, w.v71, w.v72]
+def in_mem_read_2_val (w : W) : List F := [w.v53, w.v54, w.v55, w.v56]
+def in_mem_read_3_val (w : W) : List F := [w.v414, w.v415, w.v416, w.v417]
+def in_state_recv (w : W) : List F := [w.v45, w.v418, w.v1]
+def out_state_send (w : W) : List F := [w.v45, w.v412, w.v1, w.v413]
+def out_mem_write_0_addr (w : W) : F := w.v50
+def out_mem_write_0_val (w : W) : List F := [w.v63, w.v64, w.v65, w.v66]
+def out_mem_write_1_addr (w : W) : F := w.v51
+def out_mem_write_1_val (w : W) : List F := [w.v69, w.v70, w.v71, w.v72]
+def out_mem_write_2_addr (w : W) : F := w.v49
+def out_mem_write_2_val (w : W) : List F := [w.v57, w.v58, w.v59, w.v60]
+def out_mem_write_3_val (w : W) : List F := [w.v419, w.v420, w.v421, w.v422]
+
 def inputs (w : W) : List F :=
   [w.v0, w.v48, w.v49, w.v50, w.v51, w.v52, w.v63, w.v64, w.v65, w.v66, w.v69, w.v70, w.v71, w.v72, w.v53, w.v54, w.v55, w.v56, w.v414, w.v415, w.v416, w.v417, w.v45, w.v418, w.v1]
 def outputs (w : W) : List F :=
@@ -1104,6 +1179,12 @@ def constraints_1 (w : W) : Prop :=
 def constraints (w : W) : Prop :=
   constraints_0 w ∧
   constraints_1 w
+
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  
+  outputs:  -/
+def input_origins : List String := ["column.pc_0"]
+def output_origins : List String := []
 
 def inputs (_w : W) : List F := []
 def outputs (w : W) : List F :=

@@ -578,6 +578,15 @@ def constraints (w : W) : Prop :=
   constraints_3 w ∧
   constraints_4 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v3 = memoryglobalfinalizecontrol_recv[0], v4 = memoryglobalfinalizecontrol_recv[1], v43 = memoryglobalfinalizecontrol_recv[2]
+  outputs: v0 = global_send[0], v1 = global_send[1], v2 = global_send[2], v542 = global_send[3], v543 = global_send[4], v544 = global_send[5], v545 = global_send[6], v546 = memoryglobalfinalizecontrol_send[0], v147 = memoryglobalfinalizecontrol_send[2] -/
+def input_origins : List String := ["memoryglobalfinalizecontrol_recv[0]", "memoryglobalfinalizecontrol_recv[1]", "memoryglobalfinalizecontrol_recv[2]"]
+def output_origins : List String := ["global_send[0]", "global_send[1]", "global_send[2]", "global_send[3]", "global_send[4]", "global_send[5]", "global_send[6]", "memoryglobalfinalizecontrol_send[0]", "memoryglobalfinalizecontrol_send[2]"]
+def in_memoryglobalfinalizecontrol_recv (w : W) : List F := [w.v3, w.v4, w.v43]
+def out_global_send (w : W) : List F := [w.v0, w.v1, w.v2, w.v542, w.v543, w.v544, w.v545]
+def out_memoryglobalfinalizecontrol_send (w : W) : List F := [w.v546, w.v147]
+
 def inputs (w : W) : List F :=
   [w.v3, w.v4, w.v43]
 def outputs (w : W) : List F :=

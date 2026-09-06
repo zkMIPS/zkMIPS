@@ -188,6 +188,12 @@ struct Emitter<'a> {
     aux_modules: BTreeMap<String, PicusModule>,
     inputs_seen: BTreeSet<String>,
     outputs_seen: BTreeSet<String>,
+    /// Where each interface port came from (`program.op_b[2]`, `mem_write[0].val[1]`, …), in
+    /// the order of `module.inputs` / `module.outputs`; consumed by the Lean backend.
+    input_origins: Vec<String>,
+    output_origins: Vec<String>,
+    mem_reads: usize,
+    mem_writes: usize,
 }
 
 impl<'a> Emitter<'a> {
@@ -204,16 +210,22 @@ impl<'a> Emitter<'a> {
     }
 
     fn push_port(&mut self, port: Port, expr: PicusExpr) {
+        self.push_port_from(port, expr, "annotation");
+    }
+
+    fn push_port_from(&mut self, port: Port, expr: PicusExpr, origin: &str) {
         let key = expr.to_string();
         match port {
             Port::Input => {
                 if self.inputs_seen.insert(key) {
                     self.module.inputs.push(expr);
+                    self.input_origins.push(origin.to_string());
                 }
             }
             Port::Output => {
                 if self.outputs_seen.insert(key) {
                     self.module.outputs.push(expr);
+                    self.output_origins.push(origin.to_string());
                 }
             }
         }
@@ -222,24 +234,32 @@ impl<'a> Emitter<'a> {
     /// Exposes `value * multiplicity` as a port.  A bare variable under multiplicity one is
     /// exposed directly; anything else is bound to a fresh variable first, because Picus ports
     /// must be variables.
-    fn bind_port(&mut self, port: Port, value: &PicusExpr, multiplicity: &PicusExpr) {
+    fn bind_port(&mut self, port: Port, value: &PicusExpr, multiplicity: &PicusExpr, origin: &str) {
         match (value, multiplicity) {
             (PicusExpr::Const(_), _) => {}
-            (PicusExpr::Var(_), PicusExpr::Const(1)) => self.push_port(port, value.clone()),
+            (PicusExpr::Var(_), PicusExpr::Const(1)) => {
+                self.push_port_from(port, value.clone(), origin)
+            }
             _ => {
                 let v = fresh_picus_expr();
                 self.push_constraint(PicusConstraint::new_equality(
                     v.clone(),
                     value.clone() * multiplicity.clone(),
                 ));
-                self.push_port(port, v);
+                self.push_port_from(port, v, origin);
             }
         }
     }
 
-    fn bind_ports(&mut self, port: Port, values: &[PicusExpr], multiplicity: &PicusExpr) {
-        for v in values {
-            self.bind_port(port, v, multiplicity);
+    fn bind_ports(
+        &mut self,
+        port: Port,
+        values: &[PicusExpr],
+        multiplicity: &PicusExpr,
+        origin: &str,
+    ) {
+        for (i, v) in values.iter().enumerate() {
+            self.bind_port(port, v, multiplicity, &format!("{origin}[{i}]"));
         }
     }
 
@@ -418,9 +438,16 @@ impl<'a> Emitter<'a> {
         }
         assert!(values.len() >= 4, "memory lookup must carry addr + value limbs");
         let port = if is_send { Port::Input } else { Port::Output };
-        self.bind_port(port, &values[2], &multiplicity);
-        for limb in &values[3..] {
-            self.bind_port(port, limb, &multiplicity);
+        let k = if is_send { self.mem_reads } else { self.mem_writes };
+        if is_send {
+            self.mem_reads += 1
+        } else {
+            self.mem_writes += 1
+        }
+        let tag = if is_send { "mem_read" } else { "mem_write" };
+        self.bind_port(port, &values[2], &multiplicity, &format!("{tag}[{k}].addr"));
+        for (i, limb) in values[3..].iter().enumerate() {
+            self.bind_port(port, limb, &multiplicity, &format!("{tag}[{k}].val[{i}]"));
             if is_send && !matches!(limb, PicusExpr::Const(_)) {
                 // Values entering the row from the memory argument are bytes.
                 self.push_constraint(PicusConstraint::new_leq(
@@ -436,17 +463,44 @@ impl<'a> Emitter<'a> {
         if matches!(multiplicity, PicusExpr::Const(0)) {
             return;
         }
-        self.bind_ports(Port::Input, values, &multiplicity);
+        const NAMES: [&str; 14] = [
+            "program.pc",
+            "program.opcode",
+            "program.op_a",
+            "program.op_b[0]",
+            "program.op_b[1]",
+            "program.op_b[2]",
+            "program.op_b[3]",
+            "program.op_c[0]",
+            "program.op_c[1]",
+            "program.op_c[2]",
+            "program.op_c[3]",
+            "program.op_a_0",
+            "program.imm_b",
+            "program.imm_c",
+        ];
+        for (i, v) in values.iter().enumerate() {
+            let origin =
+                NAMES.get(i).map(|s| s.to_string()).unwrap_or_else(|| format!("program[{i}]"));
+            self.bind_port(Port::Input, v, &multiplicity, &origin);
+        }
     }
 
     /// Generic chaining bus: what a row receives is its incoming state, what it sends is the
     /// state it hands to the next row (or table).
-    fn handle_chain(&mut self, multiplicity: PicusExpr, values: &[PicusExpr], is_send: bool) {
+    fn handle_chain(
+        &mut self,
+        kind: &str,
+        multiplicity: PicusExpr,
+        values: &[PicusExpr],
+        is_send: bool,
+    ) {
         if matches!(multiplicity, PicusExpr::Const(0)) {
             return;
         }
         let port = if is_send { Port::Output } else { Port::Input };
-        self.bind_ports(port, values, &multiplicity);
+        let dir = if is_send { "send" } else { "recv" };
+        self.bind_ports(port, values, &multiplicity, &format!("{kind}_{dir}"));
     }
 
     /// Syscall lookups are `[shard, clk, syscall_id, arg1, arg2]`; timing is routing metadata.
@@ -456,7 +510,8 @@ impl<'a> Emitter<'a> {
         }
         assert_eq!(values.len(), 5, "syscall lookup must carry 5 values");
         let port = if is_send { Port::Output } else { Port::Input };
-        self.bind_ports(port, &values[2..], &multiplicity);
+        let dir = if is_send { "send" } else { "recv" };
+        self.bind_ports(port, &values[2..], &multiplicity, &format!("syscall_{dir}"));
     }
 
     /// `[shard, clk, result_lo, result_hi, arg1_lo, arg1_hi, arg2_lo, arg2_hi]`: the result
@@ -466,8 +521,8 @@ impl<'a> Emitter<'a> {
             return;
         }
         assert_eq!(values.len(), 8, "syscall result lookup must carry 8 values");
-        self.bind_ports(Port::Output, &values[2..4], &multiplicity);
-        self.bind_ports(Port::Input, &values[4..8], &multiplicity);
+        self.bind_ports(Port::Output, &values[2..4], &multiplicity, "syscall_result.result");
+        self.bind_ports(Port::Input, &values[4..8], &multiplicity, "syscall_result.arg");
         for half in &values[4..8] {
             if !matches!(half, PicusExpr::Const(_)) {
                 self.push_constraint(PicusConstraint::new_leq(
@@ -504,9 +559,12 @@ impl<'a> Emitter<'a> {
                     self.module.name
                 )
             }
-            LookupKind::Range => self.handle_chain(m, v, is_send),
+            LookupKind::Range => self.handle_chain("range", m, v, is_send),
             // Global, State, GlobalAccumulation, MemoryGlobal*Control, PrecompileChain, …
-            _ => self.handle_chain(m, v, is_send),
+            other => {
+                let kind = format!("{other:?}").to_lowercase();
+                self.handle_chain(&kind, m, v, is_send)
+            }
         }
     }
 }
@@ -579,6 +637,10 @@ where
         aux_modules: BTreeMap::new(),
         inputs_seen: BTreeSet::new(),
         outputs_seen: BTreeSet::new(),
+        input_origins: Vec::new(),
+        output_origins: Vec::new(),
+        mem_reads: 0,
+        mem_writes: 0,
     };
 
     for c in constraints {
@@ -622,10 +684,12 @@ where
             .collect()
     };
     for col in annotated(&info.input_ranges) {
-        em.push_port(Port::Input, PicusExpr::Var(col));
+        let name = info.col_to_name.get(&col).cloned().unwrap_or_default();
+        em.push_port_from(Port::Input, PicusExpr::Var(col), &format!("column.{name}"));
     }
     for col in annotated(&info.output_ranges) {
-        em.push_port(Port::Output, PicusExpr::Var(col));
+        let name = info.col_to_name.get(&col).cloned().unwrap_or_default();
+        em.push_port_from(Port::Output, PicusExpr::Var(col), &format!("column.{name}"));
     }
     if cfg.column_output_mode == ColumnOutputMode::AllNonInputsAreOutputs {
         for col in 0..width {
@@ -639,5 +703,14 @@ where
         }
     }
 
+    PORT_ORIGINS
+        .lock()
+        .unwrap()
+        .insert(em.module.name.clone(), (em.input_origins.clone(), em.output_origins.clone()));
     (em.module, em.aux_modules)
 }
+
+/// Port origins of every module extracted in this process, by module name (see
+/// [`Emitter::input_origins`]).  The CLI hands them to the Lean backend.
+pub static PORT_ORIGINS: std::sync::Mutex<BTreeMap<String, (Vec<String>, Vec<String>)>> =
+    std::sync::Mutex::new(BTreeMap::new());

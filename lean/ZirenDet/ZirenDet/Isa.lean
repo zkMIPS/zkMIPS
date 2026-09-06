@@ -223,6 +223,86 @@ def swr (mem : Mem) (a : W) (v : W) : Mem :=
   let keep : W := if b = 0 then 0 else ((1 : W) <<< sh) - 1
   mem.writeWord base ((word &&& keep) ||| (v <<< sh))
 
+namespace Opc
+def ADD := 0
+def SUB := 1
+def MUL := 2
+def MULT := 3
+def MULTU := 4
+def DIV := 5
+def DIVU := 6
+def SLL := 9
+def SRL := 10
+def SRA := 11
+def ROR := 12
+def SLT := 13
+def SLTU := 14
+def AND := 15
+def OR := 16
+def XOR := 17
+def NOR := 18
+def CLZ := 19
+def CLO := 20
+def BEQ := 21
+def BGEZ := 22
+def BGTZ := 23
+def BLEZ := 24
+def BLTZ := 25
+def BNE := 26
+def Jump := 27
+def Jumpi := 28
+def JumpDirect := 29
+def LB := 31
+def LBU := 32
+def LH := 33
+def LHU := 34
+def LW := 35
+def LWL := 36
+def LWR := 37
+def LL := 38
+def SB := 39
+def SH := 40
+def SW := 41
+def SWL := 42
+def SWR := 43
+def SC := 44
+def INS := 45
+def MADDU := 46
+def MSUBU := 47
+def MADD := 48
+def MSUB := 49
+def MEQ := 50
+def MNE := 51
+def WSBH := 52
+def EXT := 53
+def TEQ := 54
+def SEXT := 55
+end Opc
+
+/-- The register-form ALU the instruction chips implement: `rd = alu op b c` with `b` the first
+and `c` the second operand *value* (the executor feeds an immediate as `c` when `imm_c` is set).
+Stated in the executor's opcode numbering so a chip module's functional theorem can be
+`toWord (out_a) = alu opcode (toWord in_b) (toWord in_c)`. -/
+def alu (op : Nat) (b c : W) : W :=
+  if op = Opc.ADD then b + c
+  else if op = Opc.SUB then b - c
+  else if op = Opc.AND then b &&& c
+  else if op = Opc.OR then b ||| c
+  else if op = Opc.XOR then b ^^^ c
+  else if op = Opc.NOR then ~~~(b ||| c)
+  else if op = Opc.SLT then (if b.slt c then 1 else 0)
+  else if op = Opc.SLTU then (if b.ult c then 1 else 0)
+  else if op = Opc.MUL then b * c
+  else if op = Opc.SLL then b <<< (c.extractLsb' 0 5).toNat
+  else if op = Opc.SRL then b >>> (c.extractLsb' 0 5).toNat
+  else if op = Opc.SRA then b.sshiftRight (c.extractLsb' 0 5).toNat
+  else if op = Opc.ROR then b.rotateRight (c.extractLsb' 0 5).toNat
+  else if op = Opc.CLZ then clz32 b
+  else if op = Opc.CLO then clo32 b
+  else if op = Opc.WSBH then (b.extractLsb' 16 8) ++ (b.extractLsb' 24 8) ++ (b.extractLsb' 0 8) ++ (b.extractLsb' 8 8)
+  else if op = Opc.SEXT then (if c = 0 then ((b.extractLsb' 0 8).signExtend 32) else ((b.extractLsb' 0 16).signExtend 32))
+  else 0
+
 /-- One instruction.  Returns the successor state; `nextPc` is advanced unless a branch or jump
 retargets it. -/
 def exec (s : State) (i : Insn) : State :=
@@ -236,30 +316,30 @@ def exec (s : State) (i : Insn) : State :=
   let addr (base : Fin 32) (off : BitVec 16) : W := r base + sext16 off
   let set (st : State) (rd : Fin 32) (v : W) : State := st.setReg rd v
   match i with
-  | .add rd rs rt | .addu rd rs rt => set seq rd (r rs + r rt)
-  | .sub rd rs rt | .subu rd rs rt => set seq rd (r rs - r rt)
-  | .and rd rs rt => set seq rd (r rs &&& r rt)
-  | .or rd rs rt => set seq rd (r rs ||| r rt)
-  | .xor rd rs rt => set seq rd (r rs ^^^ r rt)
-  | .nor rd rs rt => set seq rd (~~~(r rs ||| r rt))
-  | .slt rd rs rt => set seq rd (if (r rs).slt (r rt) then 1 else 0)
-  | .sltu rd rs rt => set seq rd (if (r rs).ult (r rt) then 1 else 0)
-  | .mul rd rs rt => set seq rd (r rs * r rt)
-  | .addi rt rs imm | .addiu rt rs imm => set seq rt (r rs + sext16 imm)
-  | .andi rt rs imm => set seq rt (r rs &&& zext16 imm)
-  | .ori rt rs imm => set seq rt (r rs ||| zext16 imm)
-  | .xori rt rs imm => set seq rt (r rs ^^^ zext16 imm)
-  | .slti rt rs imm => set seq rt (if (r rs).slt (sext16 imm) then 1 else 0)
-  | .sltiu rt rs imm => set seq rt (if (r rs).ult (sext16 imm) then 1 else 0)
+  | .add rd rs rt | .addu rd rs rt => set seq rd (alu Opc.ADD (r rs) (r rt))
+  | .sub rd rs rt | .subu rd rs rt => set seq rd (alu Opc.SUB (r rs) (r rt))
+  | .and rd rs rt => set seq rd (alu Opc.AND (r rs) (r rt))
+  | .or rd rs rt => set seq rd (alu Opc.OR (r rs) (r rt))
+  | .xor rd rs rt => set seq rd (alu Opc.XOR (r rs) (r rt))
+  | .nor rd rs rt => set seq rd (alu Opc.NOR (r rs) (r rt))
+  | .slt rd rs rt => set seq rd (alu Opc.SLT (r rs) (r rt))
+  | .sltu rd rs rt => set seq rd (alu Opc.SLTU (r rs) (r rt))
+  | .mul rd rs rt => set seq rd (alu Opc.MUL (r rt) (r rs))
+  | .addi rt rs imm | .addiu rt rs imm => set seq rt (alu Opc.ADD (r rs) (sext16 imm))
+  | .andi rt rs imm => set seq rt (alu Opc.AND (r rs) (zext16 imm))
+  | .ori rt rs imm => set seq rt (alu Opc.OR (r rs) (zext16 imm))
+  | .xori rt rs imm => set seq rt (alu Opc.XOR (r rs) (zext16 imm))
+  | .slti rt rs imm => set seq rt (alu Opc.SLT (r rs) (sext16 imm))
+  | .sltiu rt rs imm => set seq rt (alu Opc.SLTU (r rs) (sext16 imm))
   | .lui rt imm => set seq rt ((zext16 imm) <<< 16)
-  | .sll rd rt sa => set seq rd (r rt <<< sa.toNat)
-  | .srl rd rt sa => set seq rd (r rt >>> sa.toNat)
-  | .sra rd rt sa => set seq rd ((r rt).sshiftRight sa.toNat)
-  | .rotr rd rt sa => set seq rd ((r rt).rotateRight sa.toNat)
-  | .sllv rd rt rs => set seq rd (r rt <<< ((r rs).extractLsb' 0 5).toNat)
-  | .srlv rd rt rs => set seq rd (r rt >>> ((r rs).extractLsb' 0 5).toNat)
-  | .srav rd rt rs => set seq rd ((r rt).sshiftRight ((r rs).extractLsb' 0 5).toNat)
-  | .rotrv rd rt rs => set seq rd ((r rt).rotateRight ((r rs).extractLsb' 0 5).toNat)
+  | .sll rd rt sa => set seq rd (alu Opc.SLL (r rt) (sa.zeroExtend 32))
+  | .srl rd rt sa => set seq rd (alu Opc.SRL (r rt) (sa.zeroExtend 32))
+  | .sra rd rt sa => set seq rd (alu Opc.SRA (r rt) (sa.zeroExtend 32))
+  | .rotr rd rt sa => set seq rd (alu Opc.ROR (r rt) (sa.zeroExtend 32))
+  | .sllv rd rt rs => set seq rd (alu Opc.SLL (r rt) (r rs))
+  | .srlv rd rt rs => set seq rd (alu Opc.SRL (r rt) (r rs))
+  | .srav rd rt rs => set seq rd (alu Opc.SRA (r rt) (r rs))
+  | .rotrv rd rt rs => set seq rd (alu Opc.ROR (r rt) (r rs))
   | .beq rs rt off => branch (r rs == r rt) off
   | .bne rs rt off => branch (r rs != r rt) off
   | .bgez rs off => branch (!(r rs).msb) off
@@ -296,13 +376,11 @@ def exec (s : State) (i : Insn) : State :=
   | .maddu rs rt => setHiLo seq (hilo s + mul64u (r rs) (r rt))
   | .msub rs rt => setHiLo seq (hilo s - mul64s (r rs) (r rt))
   | .msubu rs rt => setHiLo seq (hilo s - mul64u (r rs) (r rt))
-  | .clo rd rs => set seq rd (clo32 (r rs))
-  | .clz rd rs => set seq rd (clz32 (r rs))
-  | .seb rd rt => set seq rd (((r rt).extractLsb' 0 8).signExtend 32)
-  | .seh rd rt => set seq rd (((r rt).extractLsb' 0 16).signExtend 32)
-  | .wsbh rd rt =>
-    let x := r rt
-    set seq rd ((x.extractLsb' 16 8) ++ (x.extractLsb' 24 8) ++ (x.extractLsb' 0 8) ++ (x.extractLsb' 8 8))
+  | .clo rd rs => set seq rd (alu Opc.CLO (r rs) 0)
+  | .clz rd rs => set seq rd (alu Opc.CLZ (r rs) 0)
+  | .seb rd rt => set seq rd (alu Opc.SEXT (r rt) 0)
+  | .seh rd rt => set seq rd (alu Opc.SEXT (r rt) 1)
+  | .wsbh rd rt => set seq rd (alu Opc.WSBH (r rt) 0)
   | .ext rt rs msbd lsb =>
     let size := msbd.toNat + 1
     let v := (r rs >>> lsb.toNat) &&& (((1 : W) <<< size) - 1)
@@ -378,61 +456,6 @@ structure Internal where
   immC : Bool
   deriving Repr, DecidableEq
 
-namespace Opc
-def ADD := 0
-def SUB := 1
-def MUL := 2
-def MULT := 3
-def MULTU := 4
-def DIV := 5
-def DIVU := 6
-def SLL := 9
-def SRL := 10
-def SRA := 11
-def ROR := 12
-def SLT := 13
-def SLTU := 14
-def AND := 15
-def OR := 16
-def XOR := 17
-def NOR := 18
-def CLZ := 19
-def CLO := 20
-def BEQ := 21
-def BGEZ := 22
-def BGTZ := 23
-def BLEZ := 24
-def BLTZ := 25
-def BNE := 26
-def Jump := 27
-def Jumpi := 28
-def JumpDirect := 29
-def LB := 31
-def LBU := 32
-def LH := 33
-def LHU := 34
-def LW := 35
-def LWL := 36
-def LWR := 37
-def LL := 38
-def SB := 39
-def SH := 40
-def SW := 41
-def SWL := 42
-def SWR := 43
-def SC := 44
-def INS := 45
-def MADDU := 46
-def MSUBU := 47
-def MADD := 48
-def MSUB := 49
-def MEQ := 50
-def MNE := 51
-def WSBH := 52
-def EXT := 53
-def TEQ := 54
-def SEXT := 55
-end Opc
 
 /-- Register index as the executor stores it (`$hi` = 33, `$lo` = 32). -/
 def regIdx (r : Fin 32) : Nat := r.val

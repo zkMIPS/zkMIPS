@@ -631,6 +631,23 @@ def constraints (w : W) : Prop :=
   constraints_6 w ∧
   constraints_7 w
 
+/-- Interface provenance (which lookup each port comes from).
+  inputs:  v438 = mem_read[0].val[0], v439 = mem_read[0].val[1], v440 = mem_read[0].val[2], v441 = mem_read[0].val[3], v442 = mem_read[1].val[0], v443 = mem_read[1].val[1], v444 = mem_read[1].val[2], v445 = mem_read[1].val[3], v446 = mem_read[2].val[0], v447 = mem_read[2].val[1], v448 = mem_read[2].val[2], v449 = mem_read[2].val[3], v29 = mem_read[3].val[0], v30 = mem_read[3].val[1], v31 = mem_read[3].val[2], v32 = mem_read[3].val[3], v2 = syscall_recv[0], v462 = syscall_recv[1], v463 = syscall_recv[2], v466 = syscall_result.arg[0], v467 = syscall_result.arg[1], v468 = syscall_result.arg[2], v469 = syscall_result.arg[3]
+  outputs: v450 = mem_write[0].val[0], v451 = mem_write[0].val[1], v452 = mem_write[0].val[2], v453 = mem_write[0].val[3], v454 = mem_write[1].val[0], v455 = mem_write[1].val[1], v456 = mem_write[1].val[2], v457 = mem_write[1].val[3], v458 = mem_write[2].val[0], v459 = mem_write[2].val[1], v460 = mem_write[2].val[2], v461 = mem_write[2].val[3], v33 = mem_write[3].val[0], v34 = mem_write[3].val[1], v35 = mem_write[3].val[2], v36 = mem_write[3].val[3], v464 = syscall_result.result[0], v465 = syscall_result.result[1] -/
+def input_origins : List String := ["mem_read[0].val[0]", "mem_read[0].val[1]", "mem_read[0].val[2]", "mem_read[0].val[3]", "mem_read[1].val[0]", "mem_read[1].val[1]", "mem_read[1].val[2]", "mem_read[1].val[3]", "mem_read[2].val[0]", "mem_read[2].val[1]", "mem_read[2].val[2]", "mem_read[2].val[3]", "mem_read[3].val[0]", "mem_read[3].val[1]", "mem_read[3].val[2]", "mem_read[3].val[3]", "syscall_recv[0]", "syscall_recv[1]", "syscall_recv[2]", "syscall_result.arg[0]", "syscall_result.arg[1]", "syscall_result.arg[2]", "syscall_result.arg[3]"]
+def output_origins : List String := ["mem_write[0].val[0]", "mem_write[0].val[1]", "mem_write[0].val[2]", "mem_write[0].val[3]", "mem_write[1].val[0]", "mem_write[1].val[1]", "mem_write[1].val[2]", "mem_write[1].val[3]", "mem_write[2].val[0]", "mem_write[2].val[1]", "mem_write[2].val[2]", "mem_write[2].val[3]", "mem_write[3].val[0]", "mem_write[3].val[1]", "mem_write[3].val[2]", "mem_write[3].val[3]", "syscall_result.result[0]", "syscall_result.result[1]"]
+def in_mem_read_0_val (w : W) : List F := [w.v438, w.v439, w.v440, w.v441]
+def in_mem_read_1_val (w : W) : List F := [w.v442, w.v443, w.v444, w.v445]
+def in_mem_read_2_val (w : W) : List F := [w.v446, w.v447, w.v448, w.v449]
+def in_mem_read_3_val (w : W) : List F := [w.v29, w.v30, w.v31, w.v32]
+def in_syscall_recv (w : W) : List F := [w.v2, w.v462, w.v463]
+def in_syscall_result_arg (w : W) : List F := [w.v466, w.v467, w.v468, w.v469]
+def out_mem_write_0_val (w : W) : List F := [w.v450, w.v451, w.v452, w.v453]
+def out_mem_write_1_val (w : W) : List F := [w.v454, w.v455, w.v456, w.v457]
+def out_mem_write_2_val (w : W) : List F := [w.v458, w.v459, w.v460, w.v461]
+def out_mem_write_3_val (w : W) : List F := [w.v33, w.v34, w.v35, w.v36]
+def out_syscall_result_result (w : W) : List F := [w.v464, w.v465]
+
 def inputs (w : W) : List F :=
   [w.v438, w.v439, w.v440, w.v441, w.v442, w.v443, w.v444, w.v445, w.v446, w.v447, w.v448, w.v449, w.v29, w.v30, w.v31, w.v32, w.v2, w.v462, w.v463, w.v466, w.v467, w.v468, w.v469]
 def outputs (w : W) : List F :=
