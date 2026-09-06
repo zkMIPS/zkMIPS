@@ -115,6 +115,15 @@ struct PendingEvent {
     weight: u32,
 }
 
+/// Whether to log one `DEFERRED_PLAN` line per cut (same switch as the
+/// executor's `SHARD_CLOSE` census: `ZIREN_SHARD_CLOSE_CENSUS=1`).
+fn deferred_census_enabled() -> bool {
+    static FLAG: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *FLAG.get_or_init(|| {
+        matches!(std::env::var("ZIREN_SHARD_CLOSE_CENSUS").ok().as_deref(), Some("1") | Some("true"))
+    })
+}
+
 /// The controller's mirror of the `deferred` record `split` consumes.
 #[derive(Debug)]
 pub struct DeferredPlanner {
@@ -235,6 +244,25 @@ impl DeferredPlanner {
                         last_finalize_addr_bits: fin_bits,
                     });
                 }
+                if deferred_census_enabled() {
+                    tracing::warn!(
+                        "DEFERRED_PLAN memory shards={n_chunks} init_events={n_init} finalize_events={n_fin} chunk={m}"
+                    );
+                }
+            }
+        }
+        if deferred_census_enabled() && !shards.is_empty() {
+            // One line per syscall code cut in this call: how many precompile shards the
+            // deferred-split thresholds produce (the executor's `SHARD_CLOSE` census covers
+            // only execution shards, so together they account for every core shard).
+            let mut per_code: BTreeMap<String, usize> = BTreeMap::new();
+            for shard in &shards {
+                if let DeferredShardPlan::Precompile { code, .. } = shard {
+                    *per_code.entry(format!("{code:?}")).or_insert(0) += 1;
+                }
+            }
+            for (code, n) in per_code {
+                tracing::warn!("DEFERRED_PLAN precompile code={code} shards={n} last={last}");
             }
         }
         shards
