@@ -646,7 +646,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1, constraints_2, constraints_3, constraints_4, constraints_5, constraints_6, constraints_7]
+  sorry -- comparison case-splits (Iff/Implies): automation skipped, left open
 
 end SysLinux
 

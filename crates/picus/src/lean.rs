@@ -241,8 +241,24 @@ fn write_module(
     // `sorry`.  Above the threshold the obligation is stated and left open explicitly.
     const AUTOMATION_MAX_CONJUNCTS: usize = 600;
     const AUTOMATION_MAX_VARS: usize = 400;
-    let automate = conj.len() <= AUTOMATION_MAX_CONJUNCTS && vars.len() <= AUTOMATION_MAX_VARS;
-    let tactic = if !automate {
+    // Comparison case-splits (`Iff` / `Implies` from the LTU and ShrCarry summaries) make the
+    // closer recurse until Lean's stack overflows, which cannot be caught either.
+    fn has_case_split(c: &PicusConstraint) -> bool {
+        match c {
+            PicusConstraint::Iff(..) | PicusConstraint::Implies(..) => true,
+            PicusConstraint::And(a, b) | PicusConstraint::Or(a, b) => {
+                has_case_split(a) || has_case_split(b)
+            }
+            PicusConstraint::Not(a) => has_case_split(a),
+            _ => false,
+        }
+    }
+    let case_splits = m.constraints.iter().any(has_case_split);
+    let automate =
+        conj.len() <= AUTOMATION_MAX_CONJUNCTS && vars.len() <= AUTOMATION_MAX_VARS && !case_splits;
+    let tactic = if case_splits {
+        "sorry -- comparison case-splits (Iff/Implies): automation skipped, left open".to_string()
+    } else if !automate {
         format!(
             "sorry -- {} conjuncts / {} variables: above the automation threshold, left open",
             conj.len(),

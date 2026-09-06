@@ -213,7 +213,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1]
+  sorry -- comparison case-splits (Iff/Implies): automation skipped, left open
 
 end Lt_is_slt
 
@@ -418,7 +418,7 @@ theorem deterministic
     (w w' : W) (hw : constraints w) (hw' : constraints w')
     (hin : inputs w = inputs w') (hassume : assumed w = assumed w') :
     outputs w = outputs w' := by
-  picus_det [constraints_0, constraints_1]
+  sorry -- comparison case-splits (Iff/Implies): automation skipped, left open
 
 end Lt_is_sltu
 
