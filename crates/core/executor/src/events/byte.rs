@@ -68,10 +68,10 @@ pub trait ByteRecord {
     }
 
     /// Adds a `ByteLookupEvent` to verify `a < 2^bits` against the dedicated
-    /// range table.  `bits` must be at most `MAX_RANGE_BITS` (9) — the table
+    /// range table.  `bits` must be at most `MAX_RANGE_BITS` (10) — the table
     /// is sized for the widths the machine actually emits.
     fn add_bit_range_check(&mut self, a: u16, bits: u8) {
-        debug_assert!(bits <= 9, "range table is sized for bits <= 9");
+        debug_assert!(bits <= 10, "range table is sized for bits <= 10");
         self.add_byte_lookup_event(ByteLookupEvent {
             opcode: ByteOpcode::Range,
             a1: a,
@@ -151,10 +151,7 @@ impl ByteRecord for Vec<ByteLookupEvent> {
         self.push(blu_event);
     }
 
-    fn add_byte_lookup_events_from_maps(
-        &mut self,
-        new_events: Vec<&crate::events::ByteLookupMap>,
-    ) {
+    fn add_byte_lookup_events_from_maps(&mut self, new_events: Vec<&crate::events::ByteLookupMap>) {
         for new_blu_map in new_events {
             for (blu_event, count) in new_blu_map.iter() {
                 self.extend(std::iter::repeat_n(*blu_event, *count));
@@ -169,10 +166,7 @@ impl ByteRecord for crate::events::ByteLookupMap {
         self.entry(blu_event).and_modify(|e| *e += 1).or_insert(1);
     }
 
-    fn add_byte_lookup_events_from_maps(
-        &mut self,
-        new_events: Vec<&crate::events::ByteLookupMap>,
-    ) {
+    fn add_byte_lookup_events_from_maps(&mut self, new_events: Vec<&crate::events::ByteLookupMap>) {
         for new_blu_map in new_events {
             for (blu_event, count) in new_blu_map.iter() {
                 *self.entry(*blu_event).or_insert(0) += count;

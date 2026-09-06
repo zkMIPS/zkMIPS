@@ -30,7 +30,10 @@ use zkm_derive::AlignedBorrow;
 use zkm_pcs::Word;
 
 use crate::{
-    air::{MemoryAirBuilder, WordAirBuilder, ZKMCoreAirBuilder},
+    air::{
+        MemoryAirBuilder, WordAirBuilder, ZKMCoreAirBuilder, TIMESTAMP_HIGH_LIMB_BITS,
+        TIMESTAMP_HIGH_LIMB_MASK,
+    },
     instruction::InstructionCols,
     memory::{RegisterCols, RegisterReadCols, RegisterReadWriteCols},
 };
@@ -48,12 +51,11 @@ pub struct InstructionFrameCols<T> {
     pub clk_16bit_limb: T,
     /// The middle 8 bit limb of clk.
     pub clk_high_limb: T,
-    /// The most significant bit of clk, i.e. bit 24.
-    ///
-    /// A per-shard `clk` runs to `2^25` (`CORE_SHARD_CLK_LIMIT`): the memory-argument ordering
+    /// (A per-shard `clk` runs to `2^26` = `CORE_SHARD_CLK_LIMIT`: the memory-argument ordering
     /// proof needs every timestamp it compares bounded by the same width it range-checks
-    /// differences to, and this bit is where that bound comes from on an instruction row.
-
+    /// differences to, and the `TIMESTAMP_HIGH_LIMB_BITS`-bit range check on `clk_high_limb` is
+    /// where that bound comes from on an instruction row.)
+    ///
     /// The decoded instruction, bound to `pc` through the `Program` bus.
     pub instruction: InstructionCols<T>,
 
@@ -81,8 +83,7 @@ impl<T: Copy> InstructionFrameCols<T> {
 /// memory chips' data access, the syscall table send) tie it to the frame with this expression —
 /// there is exactly one definition of what `clk` means so the two cannot drift.
 pub fn clk_from_frame<AB: AirBuilder>(frame: &InstructionFrameCols<AB::Var>) -> AB::Expr {
-    AB::Expr::from_u32(1u32 << 16) * frame.clk_high_limb
-        + frame.clk_16bit_limb
+    AB::Expr::from_u32(1u32 << 16) * frame.clk_high_limb + frame.clk_16bit_limb
 }
 
 /// Evaluate the frame: program fetch, register access, and `(clk, pc)` chaining.
@@ -153,11 +154,7 @@ pub fn eval_instruction_frame<AB>(
     // the limb bounds have to be paid: 16 + 8 bits from the byte table, and the top bit
     // constrained boolean.  The boolean assertion is unguarded — the column is zero on every
     // padding / dependency row — which keeps it degree 2.
-    builder.send_timestamp_range_checks(
-        frame.clk_16bit_limb,
-        frame.clk_high_limb,
-        is_real.clone(),
-    );
+    builder.send_timestamp_range_checks(frame.clk_16bit_limb, frame.clk_high_limb, is_real.clone());
 
     // Immediates bypass the register read.
     builder.when(frame.instruction.imm_b).assert_word_eq(frame.op_b_val(), frame.instruction.op_b);
@@ -261,7 +258,7 @@ impl<F: PrimeField32> InstructionFrameCols<F> {
     ) {
         self.shard = F::from_u32(shard);
         let clk_16 = (clk & 0xffff) as u16;
-        let clk_high = ((clk >> 16) & 0x1ff) as u16;
+        let clk_high = ((clk >> 16) & TIMESTAMP_HIGH_LIMB_MASK) as u16;
         self.clk_16bit_limb = F::from_u16(clk_16);
         self.clk_high_limb = F::from_u16(clk_high);
         blu.add_byte_lookup_event(ByteLookupEvent::new(
@@ -272,7 +269,13 @@ impl<F: PrimeField32> InstructionFrameCols<F> {
             0,
         ));
         blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::U16Range, clk_16, 0, 0, 0));
-        blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::Range, clk_high, 0, 9, 0));
+        blu.add_byte_lookup_event(ByteLookupEvent::new(
+            ByteOpcode::Range,
+            clk_high,
+            0,
+            TIMESTAMP_HIGH_LIMB_BITS,
+            0,
+        ));
 
         self.instruction.populate(&program.fetch(pc));
         let _ = recv_next_pc;
@@ -563,8 +566,7 @@ impl<T: Copy> ITypeFrameCols<T> {
 /// The frame's `clk`, reassembled from its three limbs — see
 /// [`clk_from_frame`], which this must agree with exactly.
 pub fn clk_from_i_type_frame<AB: AirBuilder>(frame: &ITypeFrameCols<AB::Var>) -> AB::Expr {
-    AB::Expr::from_u32(1u32 << 16) * frame.clk_high_limb
-        + frame.clk_16bit_limb
+    AB::Expr::from_u32(1u32 << 16) * frame.clk_high_limb + frame.clk_16bit_limb
 }
 
 /// Rebuild the universal `Program`-bus tuple from the narrow columns.
@@ -624,11 +626,7 @@ pub fn eval_i_type_frame<AB>(
         AB::Expr::ZERO,
         is_real.clone(),
     );
-    builder.send_timestamp_range_checks(
-        frame.clk_16bit_limb,
-        frame.clk_high_limb,
-        is_real.clone(),
-    );
+    builder.send_timestamp_range_checks(frame.clk_16bit_limb, frame.clk_high_limb, is_real.clone());
 
     // `op_b` is read from the register file; `op_c` is the immediate and needs
     // no access at all.
@@ -678,7 +676,7 @@ impl<F: PrimeField32> ITypeFrameCols<F> {
         let shard = event.shard;
         self.shard = F::from_u32(shard);
         let clk_16 = (event.clk & 0xffff) as u16;
-        let clk_high = ((event.clk >> 16) & 0x1ff) as u16;
+        let clk_high = ((event.clk >> 16) & TIMESTAMP_HIGH_LIMB_MASK) as u16;
         self.clk_16bit_limb = F::from_u16(clk_16);
         self.clk_high_limb = F::from_u16(clk_high);
         blu.add_byte_lookup_event(ByteLookupEvent::new(
@@ -689,7 +687,13 @@ impl<F: PrimeField32> ITypeFrameCols<F> {
             0,
         ));
         blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::U16Range, clk_16, 0, 0, 0));
-        blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::Range, clk_high, 0, 9, 0));
+        blu.add_byte_lookup_event(ByteLookupEvent::new(
+            ByteOpcode::Range,
+            clk_high,
+            0,
+            TIMESTAMP_HIGH_LIMB_BITS,
+            0,
+        ));
 
         let instruction = program.fetch(event.pc);
         // The shape this frame is specialised for.  A chip that ever violates
@@ -820,7 +824,7 @@ impl<F: PrimeField32> ITypeFrameCols<F> {
     ) {
         self.shard = F::from_u32(shard);
         let clk_16 = (clk & 0xffff) as u16;
-        let clk_high = ((clk >> 16) & 0x1ff) as u16;
+        let clk_high = ((clk >> 16) & TIMESTAMP_HIGH_LIMB_MASK) as u16;
         self.clk_16bit_limb = F::from_u16(clk_16);
         self.clk_high_limb = F::from_u16(clk_high);
         blu.add_byte_lookup_event(ByteLookupEvent::new(
@@ -831,7 +835,13 @@ impl<F: PrimeField32> ITypeFrameCols<F> {
             0,
         ));
         blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::U16Range, clk_16, 0, 0, 0));
-        blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::Range, clk_high, 0, 9, 0));
+        blu.add_byte_lookup_event(ByteLookupEvent::new(
+            ByteOpcode::Range,
+            clk_high,
+            0,
+            TIMESTAMP_HIGH_LIMB_BITS,
+            0,
+        ));
 
         let instruction = program.fetch(pc);
         // The shape this frame is specialised for — see
@@ -935,8 +945,7 @@ impl<T: Copy> RTypeFrameCols<T> {
 
 /// The frame's `clk` — see [`clk_from_frame`].
 pub fn clk_from_r_type_frame<AB: AirBuilder>(frame: &RTypeFrameCols<AB::Var>) -> AB::Expr {
-    AB::Expr::from_u32(1u32 << 16) * frame.clk_high_limb
-        + frame.clk_16bit_limb
+    AB::Expr::from_u32(1u32 << 16) * frame.clk_high_limb + frame.clk_16bit_limb
 }
 
 /// Rebuild the universal `Program`-bus tuple from the narrow columns — the
@@ -990,11 +999,7 @@ pub fn eval_r_type_frame<AB>(
         AB::Expr::ZERO,
         is_real.clone(),
     );
-    builder.send_timestamp_range_checks(
-        frame.clk_16bit_limb,
-        frame.clk_high_limb,
-        is_real.clone(),
-    );
+    builder.send_timestamp_range_checks(frame.clk_16bit_limb, frame.clk_high_limb, is_real.clone());
 
     // Both source operands are read from the register file.
     builder.eval_register_access(
@@ -1134,7 +1139,7 @@ impl<F: PrimeField32> RTypeFrameCols<F> {
     ) {
         self.shard = F::from_u32(shard);
         let clk_16 = (clk & 0xffff) as u16;
-        let clk_high = ((clk >> 16) & 0x1ff) as u16;
+        let clk_high = ((clk >> 16) & TIMESTAMP_HIGH_LIMB_MASK) as u16;
         self.clk_16bit_limb = F::from_u16(clk_16);
         self.clk_high_limb = F::from_u16(clk_high);
         blu.add_byte_lookup_event(ByteLookupEvent::new(
@@ -1145,7 +1150,13 @@ impl<F: PrimeField32> RTypeFrameCols<F> {
             0,
         ));
         blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::U16Range, clk_16, 0, 0, 0));
-        blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::Range, clk_high, 0, 9, 0));
+        blu.add_byte_lookup_event(ByteLookupEvent::new(
+            ByteOpcode::Range,
+            clk_high,
+            0,
+            TIMESTAMP_HIGH_LIMB_BITS,
+            0,
+        ));
 
         let instruction = program.fetch(pc);
         // The shape this frame is specialised for — see
@@ -1246,8 +1257,7 @@ impl<T: Copy> ShamtFrameCols<T> {
 
 /// The frame's `clk` — see [`clk_from_frame`].
 pub fn clk_from_shamt_frame<AB: AirBuilder>(frame: &ShamtFrameCols<AB::Var>) -> AB::Expr {
-    AB::Expr::from_u32(1u32 << 16) * frame.clk_high_limb
-        + frame.clk_16bit_limb
+    AB::Expr::from_u32(1u32 << 16) * frame.clk_high_limb + frame.clk_16bit_limb
 }
 
 /// Rebuild the universal `Program`-bus tuple from the narrow columns — the
@@ -1299,11 +1309,7 @@ pub fn eval_shamt_frame<AB>(
         AB::Expr::ZERO,
         is_real.clone(),
     );
-    builder.send_timestamp_range_checks(
-        frame.clk_16bit_limb,
-        frame.clk_high_limb,
-        is_real.clone(),
-    );
+    builder.send_timestamp_range_checks(frame.clk_16bit_limb, frame.clk_high_limb, is_real.clone());
 
     // `op_b` is read from the register file; the shamt needs no access.
     builder.eval_register_access(
@@ -1351,7 +1357,7 @@ impl<F: PrimeField32> ShamtFrameCols<F> {
     ) {
         self.shard = F::from_u32(shard);
         let clk_16 = (event.clk & 0xffff) as u16;
-        let clk_high = ((event.clk >> 16) & 0x1ff) as u16;
+        let clk_high = ((event.clk >> 16) & TIMESTAMP_HIGH_LIMB_MASK) as u16;
         self.clk_16bit_limb = F::from_u16(clk_16);
         self.clk_high_limb = F::from_u16(clk_high);
         blu.add_byte_lookup_event(ByteLookupEvent::new(
@@ -1362,7 +1368,13 @@ impl<F: PrimeField32> ShamtFrameCols<F> {
             0,
         ));
         blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::U16Range, clk_16, 0, 0, 0));
-        blu.add_byte_lookup_event(ByteLookupEvent::new(ByteOpcode::Range, clk_high, 0, 9, 0));
+        blu.add_byte_lookup_event(ByteLookupEvent::new(
+            ByteOpcode::Range,
+            clk_high,
+            0,
+            TIMESTAMP_HIGH_LIMB_BITS,
+            0,
+        ));
 
         let instruction = program.fetch(event.pc);
         // The shape this frame is specialised for — see

@@ -414,7 +414,7 @@ impl ShardSplitAccumulator {
     /// in the HEIGHT cap either: the cap's job is keeping every REAL chip under the
     /// recursion row cube, and the Cpu pseudo-term only bounded clk — which the
     /// executor's `clk_exit` fence (`CORE_SHARD_CLK_LIMIT`, the width the frame's
-    /// 25-bit clk decomposition range-checks) bounds independently and terminally.
+    /// 26-bit clk decomposition range-checks) bounds independently and terminally.
     /// Measured Aug24 (block 21M): the pseudo-term closed 43 of 48 shards while the
     /// tallest REAL chip sat at 25% of the cap.  Removing it moves shards to the
     /// AREA fence — see `ELEMENT_THRESHOLD` for the budget that keeps the biggest

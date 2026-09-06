@@ -12,10 +12,10 @@ use crate::{utils::zeroed_f_vec, CoreChipError};
 
 /// 1 + sum over bits of 2^bits slots, laid out at row index `2^bits + a`.
 /// Sized for `bits <= MAX_RANGE_BITS` — the only widths the machine emits
-/// (the 9-bit clk/diff high limbs); 16-bit checks already have `U16Range`.
-/// 2^10 rows instead of SP1's 2^17: the table rides in EVERY shard, so its
-/// height is a per-shard fixed cost worth keeping tiny.
-pub const MAX_RANGE_BITS: usize = 9;
+/// (the 10-bit clk/diff high limbs, `TIMESTAMP_HIGH_LIMB_BITS`); 16-bit checks
+/// already have `U16Range`.  2^11 rows instead of SP1's 2^17: the table rides in
+/// EVERY shard, so its height is a per-shard fixed cost worth keeping tiny.
+pub const MAX_RANGE_BITS: usize = 10;
 pub const NUM_RANGE_ROWS: usize = 1 << (MAX_RANGE_BITS + 1);
 
 pub const NUM_RANGE_PREPROCESSED_COLS: usize = size_of::<RangePreprocessedCols<u8>>();
@@ -92,8 +92,10 @@ impl<F: PrimeField32> MachineAir<F> for RangeChip<F> {
         input: &ExecutionRecord,
         _output: &mut ExecutionRecord,
     ) -> Result<RowMajorMatrix<F>, Self::Error> {
-        let mut trace =
-            RowMajorMatrix::new(zeroed_f_vec(NUM_RANGE_MULT_COLS * NUM_RANGE_ROWS), NUM_RANGE_MULT_COLS);
+        let mut trace = RowMajorMatrix::new(
+            zeroed_f_vec(NUM_RANGE_MULT_COLS * NUM_RANGE_ROWS),
+            NUM_RANGE_MULT_COLS,
+        );
         for (lookup, mult) in input.byte_lookups.iter() {
             if lookup.opcode != ByteOpcode::Range {
                 continue;
@@ -127,6 +129,12 @@ impl<AB: ZKMAirBuilder<F: Field>> Air<AB> for RangeChip<AB::F> {
         let local: &RangePreprocessedCols<AB::Var> = (*prep).borrow();
 
         let field_op = ByteOpcode::Range.as_field::<AB::F>();
-        builder.receive_byte(field_op, local.a, local.bits, AB::Expr::ZERO, local_mult.multiplicity);
+        builder.receive_byte(
+            field_op,
+            local.a,
+            local.bits,
+            AB::Expr::ZERO,
+            local_mult.multiplicity,
+        );
     }
 }

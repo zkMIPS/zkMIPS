@@ -7,6 +7,7 @@ use super::{
     MemoryAccessCols, MemoryReadCols, MemoryReadWriteCols, MemoryWriteCols, RegisterAccessCols,
     RegisterReadCols, RegisterReadWriteCols,
 };
+use crate::air::{TIMESTAMP_HIGH_LIMB_BITS, TIMESTAMP_HIGH_LIMB_MASK};
 
 /// Which memory words a `populate_access` records byte range checks for; mirrors the
 /// sends of `eval_memory_access` (`Both`/`ValueOnly`) and `eval_memory_access_trusted`
@@ -121,7 +122,10 @@ impl<F: PrimeField32> RegisterAccessCols<F> {
         self.diff_16bit_limb = F::from_u16(diff_16bit_limb);
 
         output.add_u16_range_check(diff_16bit_limb);
-        output.add_bit_range_check(((diff_minus_one >> 16) & 0x1ff) as u16, 9);
+        output.add_bit_range_check(
+            ((diff_minus_one >> 16) & TIMESTAMP_HIGH_LIMB_MASK) as u16,
+            TIMESTAMP_HIGH_LIMB_BITS,
+        );
     }
 
     /// Populate a register access.
@@ -154,7 +158,10 @@ impl<F: PrimeField32> RegisterAccessCols<F> {
 
         // The 9-bit high limb is a recovered linear expression in the AIR, not
         // a column; it is checked against the parametric range table.
-        output.add_bit_range_check(((diff_minus_one >> 16) & 0x1ff) as u16, 9);
+        output.add_bit_range_check(
+            ((diff_minus_one >> 16) & TIMESTAMP_HIGH_LIMB_MASK) as u16,
+            TIMESTAMP_HIGH_LIMB_BITS,
+        );
     }
 }
 
@@ -281,7 +288,9 @@ impl<F: PrimeField32> MemoryAccessCols<F> {
                 output.add_u8_range_checks(&prev_record.value.to_le_bytes());
                 output.add_u8_range_checks(&current_record.value.to_le_bytes());
             }
-            ByteChecks::ValueOnly => output.add_u8_range_checks(&current_record.value.to_le_bytes()),
+            ByteChecks::ValueOnly => {
+                output.add_u8_range_checks(&current_record.value.to_le_bytes())
+            }
             ByteChecks::None => {}
         }
 
@@ -300,14 +309,13 @@ impl<F: PrimeField32> MemoryAccessCols<F> {
         let diff_minus_one = (current_time_value - prev_time_value).wrapping_sub(1);
         let diff_16bit_limb = (diff_minus_one & 0xffff) as u16;
         self.diff_16bit_limb = F::from_u16(diff_16bit_limb);
-        let diff_8bit_limb = (diff_minus_one >> 16) & 0xff;
-        self.diff_8bit_limb = F::from_u32(diff_8bit_limb);
-        self.diff_24bit_limb = F::from_u32((diff_minus_one >> 24) & 1);
+        let diff_high_limb = ((diff_minus_one >> 16) & TIMESTAMP_HIGH_LIMB_MASK) as u16;
+        self.diff_high_limb = F::from_u16(diff_high_limb);
 
         // Add a byte table lookup with the 16Range op.
         output.add_u16_range_check(diff_16bit_limb);
 
-        // Add a byte table lookup with the U8Range op.
-        output.add_u8_range_check(0, diff_8bit_limb as u8);
+        // Bound the high limb against the parametric range table.
+        output.add_bit_range_check(diff_high_limb, TIMESTAMP_HIGH_LIMB_BITS);
     }
 }

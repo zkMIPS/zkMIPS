@@ -49,7 +49,7 @@ pub const UNUSED_PC: u32 = 1;
 ///     `2^CORE_MAX_LOG_ROW_COUNT` — see [`CORE_SHARD_HEIGHT_THRESHOLD`].
 ///  2. Every per-shard `clk` (timestamp) must fit the width the memory argument range-checks
 ///     timestamp differences to — see
-///     `crates/core/machine/src/air/memory.rs::eval_range_check_25bits` and
+///     `crates/core/machine/src/air/memory.rs::send_timestamp_range_checks` and
 ///     `eval_memory_access_timestamp`, and [`CORE_SHARD_CLK_LIMIT`].
 ///
 /// `SHARD_SIZE` is stored as `cycles * 4` and the cycle exit fires at `clk >= 4 * SHARD_SIZE`,
@@ -79,9 +79,10 @@ const CORE_SHARD_HEIGHT_THRESHOLD: u64 = (1 << CORE_MAX_LOG_ROW_COUNT) - CORE_SH
 /// The `clk` (timestamp) ceiling for a single core shard.
 ///
 /// This is the executor half of ONE argument whose other half is
-/// `MemoryAirBuilder::eval_range_check_25bits`. The memory argument orders two accesses to the
-/// same address by range-checking `current - prev - 1` to `2^25`, which proves `current > prev`
-/// only when BOTH comparands are themselves bounded by `2^25` and the field is large enough that
+/// `MemoryAirBuilder::send_timestamp_range_checks` (`TIMESTAMP_HIGH_LIMB_BITS`). The memory
+/// argument orders two accesses to the same address by range-checking `current - prev - 1` to
+/// `2^26`, which proves `current > prev`
+/// only when BOTH comparands are themselves bounded by `2^26` and the field is large enough that
 /// an underflow cannot land back inside the range (`p >= 2^26`; KoalaBear's
 /// `p = 2^31 - 2^24 + 1` allows widths up to 29 bits). The AIR supplies the bound on each
 /// comparand — 16- and 8-bit limbs from the byte table plus a boolean top bit — and this
@@ -97,9 +98,11 @@ const CORE_SHARD_HEIGHT_THRESHOLD: u64 = (1 << CORE_MAX_LOG_ROW_COUNT) - CORE_SH
 /// further timestamps. Subtracting both keeps every timestamp that reaches the memory argument
 /// strictly under the fence.
 ///
-/// At `clk += 5` per instruction this caps any shard at `2^25 / 5 ≈ 6.71 M` cycles.
-/// `ELEMENT_THRESHOLD` (trace area) closes shards before that on today's workloads.
-pub(crate) const CORE_SHARD_CLK_LIMIT: u32 = 1 << 25;
+/// At `clk += 5` per instruction this caps any shard at `2^26 / 5 ≈ 13.4 M` cycles.
+/// Measured Sep 6 at 25 bits (8 M shards, reth): the clk fence closed 29 of 48 execution shards
+/// at 6.71 M cycles with only ~363 M of the 460 M-cell area budget used, so the width was the
+/// binding fence; at 26 bits `ELEMENT_THRESHOLD` (trace area) binds again.
+pub(crate) const CORE_SHARD_CLK_LIMIT: u32 = 1 << 26;
 
 /// Whether to log one `SHARD_CLOSE` line per closed core shard, naming the
 /// fence that closed it.  Read once; off unless `ZIREN_SHARD_CLOSE_CENSUS` is
@@ -535,7 +538,6 @@ impl<'a> Executor<'a> {
         opts: ZKMCoreOpts,
         context: ZKMContext<'a>,
     ) -> Self {
-
         // Create a default record with the program. Pre-allocate hot event Vecs
         // sized at `shard_size / 8`, avoiding the
         // single-thread realloc storm on the trace-emit hot path.
@@ -645,11 +647,7 @@ impl<'a> Executor<'a> {
     /// As [`Self::recover`], for a caller that already holds an `Arc<Program>`
     /// — see [`Self::with_context_shared`].
     #[must_use]
-    pub fn recover_shared(
-        program: Arc<Program>,
-        state: ExecutionState,
-        opts: ZKMCoreOpts,
-    ) -> Self {
+    pub fn recover_shared(program: Arc<Program>, state: ExecutionState, opts: ZKMCoreOpts) -> Self {
         let mut runtime = Self::with_context_shared(program, opts, ZKMContext::default());
         runtime.state = state;
         // Disable deferred proof verification since we're recovering from a checkpoint, and the
@@ -1730,14 +1728,7 @@ impl<'a> Executor<'a> {
     /// and the whole `MemoryAccessRecord` too, costing a move per cycle for no
     /// reader.
     #[inline]
-    fn emit_cpu(
-        &mut self,
-        clk: u32,
-        pc: u32,
-        next_pc: u32,
-        next_next_pc: u32,
-        exit_code: u32,
-    ) {
+    fn emit_cpu(&mut self, clk: u32, pc: u32, next_pc: u32, next_next_pc: u32, exit_code: u32) {
         self.record.cpu_events.push(CpuEvent { clk, pc, next_pc, next_next_pc, exit_code });
     }
 
@@ -3010,10 +3001,8 @@ impl<'a> Executor<'a> {
                 // The next chunk's buffer is sized like this one so the
                 // oracle grows without a realloc copy per doubling.
                 let cap = self.recording_chunk_mem_reads.len();
-                let drained = std::mem::replace(
-                    &mut self.recording_chunk_mem_reads,
-                    Vec::with_capacity(cap),
-                );
+                let drained =
+                    std::mem::replace(&mut self.recording_chunk_mem_reads, Vec::with_capacity(cap));
                 prev.mem_reads = std::sync::Arc::new(drained);
                 // The hint window this chunk consumed. Final as of now: the
                 // cursor has passed it, and neither `FD_HINT` (pushes at the
@@ -3184,8 +3173,7 @@ impl<'a> Executor<'a> {
         let Some(trace) = self.minimal_trace_collector.as_mut() else {
             return Vec::new();
         };
-        let keep =
-            usize::from(trace.chunks.last().is_some_and(|c| c.clk_end == u64::MAX));
+        let keep = usize::from(trace.chunks.last().is_some_and(|c| c.clk_end == u64::MAX));
         if trace.chunks.len() <= keep {
             return Vec::new();
         }
@@ -3347,8 +3335,12 @@ impl<'a> Executor<'a> {
                         .memory
                         .insert(addr, MemoryRecord { value: *value, shard: 0, timestamp: 0 });
                 } else {
-                    *flat.get_mut(addr) =
-                        crate::flat_mem::FlatEntry { value: *value, timestamp: 0, shard: 0, _pad: 0 };
+                    *flat.get_mut(addr) = crate::flat_mem::FlatEntry {
+                        value: *value,
+                        timestamp: 0,
+                        shard: 0,
+                        _pad: 0,
+                    };
                 }
             }
         } else {
@@ -3770,25 +3762,25 @@ impl<'a> Executor<'a> {
         if let Some(batch_done) = crate::jit_producer::run(self, &mut num_shards_executed)? {
             done = batch_done;
         } else {
-        loop {
-            if self.execute_cycle()? {
-                done = true;
-                break;
-            }
-
-            // We restrict the execution of branch/jump and its delay slot to be in the same shard.
-            if self.shard_batch_size > 0
-                && !self.unconstrained
-                && !self.state.next_is_delayslot
-                && self.inc_shard_if_need()
-            {
-                num_shards_executed += 1;
-                self.bump_record();
-                if num_shards_executed >= self.shard_batch_size {
+            loop {
+                if self.execute_cycle()? {
+                    done = true;
                     break;
                 }
+
+                // We restrict the execution of branch/jump and its delay slot to be in the same shard.
+                if self.shard_batch_size > 0
+                    && !self.unconstrained
+                    && !self.state.next_is_delayslot
+                    && self.inc_shard_if_need()
+                {
+                    num_shards_executed += 1;
+                    self.bump_record();
+                    if num_shards_executed >= self.shard_batch_size {
+                        break;
+                    }
+                }
             }
-        }
         }
 
         // Option 2 State bus: stamp the final shard's last_timestamp.  No
@@ -3861,9 +3853,7 @@ impl<'a> Executor<'a> {
     /// with `lde_size_check` off and `maximal_shapes` unset.
     pub(crate) fn shard_fence_due(&self) -> bool {
         let cpu_exit = self.max_syscall_cycles + self.state.clk >= self.shard_size;
-        let clk_exit = self.state.clk
-            + self.max_syscall_cycles
-            + MemoryAccessPosition::HI as u32
+        let clk_exit = self.state.clk + self.max_syscall_cycles + MemoryAccessPosition::HI as u32
             >= CORE_SHARD_CLK_LIMIT;
         let (area_split, height_split) =
             self.split_acct.check_shard_limit((self.state.clk / 5) as u64);
@@ -3896,9 +3886,7 @@ impl<'a> Executor<'a> {
         // the memory argument range-checks its differences to — see [`CORE_SHARD_CLK_LIMIT`].
         // The next instruction runs at `clk` and its accesses sit at `clk + 1 ..= clk + 4`, and
         // a syscall consumes up to `max_syscall_cycles` more, so both are subtracted here.
-        let clk_exit = self.state.clk
-            + self.max_syscall_cycles
-            + MemoryAccessPosition::HI as u32
+        let clk_exit = self.state.clk + self.max_syscall_cycles + MemoryAccessPosition::HI as u32
             >= CORE_SHARD_CLK_LIMIT;
 
         // The `Cpu` chip charges one row per cycle and `clk` advances by 5 per cycle, so this
@@ -4207,11 +4195,8 @@ pub(crate) fn charge_instruction(acct: &mut ShardSplitAccumulator, instruction: 
     // the opcode->air map cannot see the form, so route here via the
     // immediate-form map.  The synthetic charges below (a branch's
     // internal add, etc.) stay on the register-form airs.
-    let imm_air = if instruction.imm_c {
-        crate::mips_imm_air_from_opcode(instruction.opcode)
-    } else {
-        None
-    };
+    let imm_air =
+        if instruction.imm_c { crate::mips_imm_air_from_opcode(instruction.opcode) } else { None };
     if let Some(air) = imm_air {
         acct.add_air(air, 1);
     } else {

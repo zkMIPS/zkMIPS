@@ -29,9 +29,8 @@ __ZKM_HOSTDEV__ __ZKM_INLINE__ void populate_access(
     const uint32_t diff_minus_one = current_time_value - prev_time_value - 1;
     const uint16_t diff_16bit_limb = (uint16_t)(diff_minus_one & 0xffff);
     self.diff_16bit_limb = F::from_canonical_u16(diff_16bit_limb).val;
-    const uint8_t diff_8bit_limb = (uint8_t)((diff_minus_one >> 16) & 0xff);
-    self.diff_8bit_limb = F::from_canonical_u32(diff_8bit_limb);
-    self.diff_24bit_limb = F::from_canonical_u32((diff_minus_one >> 24) & 1);
+    // High limb: bits 16..26 (TIMESTAMP_HIGH_LIMB_BITS = 10, CORE_SHARD_CLK_LIMIT = 2^26).
+    self.diff_high_limb = F::from_canonical_u16((uint16_t)((diff_minus_one >> 16) & 0x3ff));
 }
 
 // ---------------------------------------------------------------------------
@@ -40,8 +39,8 @@ __ZKM_HOSTDEV__ __ZKM_INLINE__ void populate_access(
 // The `MemoryBump` chip guarantees `prev_shard == shard` for every register
 // access (it inserts a shadow read at `(shard, 0)` on the register's first
 // touch in the shard).  So a register access witnesses neither `prev_shard`
-// nor `compare_clk` nor the middle limb of the timestamp difference -- the
-// middle limb is a linear expression in the AIR.  10 columns -> 7.
+// nor `compare_clk` nor the high limb of the timestamp difference -- the
+// high limb is a linear expression in the AIR.  9 columns -> 6.
 // ---------------------------------------------------------------------------
 
 template<class F>

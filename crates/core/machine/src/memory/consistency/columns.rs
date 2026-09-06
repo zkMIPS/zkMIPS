@@ -45,18 +45,14 @@ pub struct MemoryAccessCols<T> {
     /// timestamp.
     pub diff_16bit_limb: T,
 
-    /// This column is the middle 8 bit limb of current access timestamp - prev access
-    /// timestamp.
-    pub diff_8bit_limb: T,
-
-    /// The most significant bit (bit 24) of that difference.
+    /// The high limb of that difference: bits 16..26, range-checked to
+    /// `TIMESTAMP_HIGH_LIMB_BITS` (10) against the parametric range table, so the
+    /// difference is bounded by `2^26` = `CORE_SHARD_CLK_LIMIT`.
     ///
     /// Witnessed rather than recovered as the residual of the reconstruction equality: the
     /// comparands here come out of an `if_else` on `compare_clk` and are therefore already
-    /// degree 2, so a residual would put a `do_check`-guarded boolean assertion at degree 5 and
-    /// double the chip's quotient. As a column the equality stays at the degree it had at 24
-    /// bits, and the boolean assertion is degree 2 and needs no guard.
-    pub diff_24bit_limb: T,
+    /// degree 2, so the reconstruction equality stays at degree 2 with the limb as a column.
+    pub diff_high_limb: T,
 }
 
 /// Register access.
@@ -70,11 +66,10 @@ pub struct MemoryAccessCols<T> {
 /// That guarantee removes three columns relative to [`MemoryAccessCols`]:
 ///  * `prev_shard` — it is `shard`, which the caller already has;
 ///  * `compare_clk` — it is always 1, so the timestamp check is unconditionally a clk comparison;
-///  * `diff_8bit_limb` — the middle limb of `clk - prev_clk - 1` is re-derived as the linear
-///    expression `(clk - prev_clk - 1 - diff_16bit_limb - diff_24bit_limb * 2^24) / 2^16` and
-///    range-checked in place.
+///  * `diff_high_limb` — the high limb of `clk - prev_clk - 1` is re-derived as the linear
+///    expression `(clk - prev_clk - 1 - diff_16bit_limb) / 2^16` and range-checked in place.
 ///
-/// 10 columns -> 7, on every register access of every cycle.
+/// 9 columns -> 6, on every register access of every cycle.
 #[derive(AlignedBorrow, Default, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct RegisterAccessCols<T> {
@@ -84,8 +79,8 @@ pub struct RegisterAccessCols<T> {
     /// The clk of the previous access to this register.  Always in the current shard.
     pub prev_clk: T,
 
-    /// The least significant 16 bit limb of `clk - prev_clk - 1`.  The 9-bit
-    /// high limb (a per-shard `clk` runs to `2^25`) is recovered as a linear
+    /// The least significant 16 bit limb of `clk - prev_clk - 1`.  The 10-bit
+    /// high limb (a per-shard `clk` runs to `2^26`) is recovered as a linear
     /// expression and checked against the parametric range table — ONE
     /// witnessed limb per access.
     pub diff_16bit_limb: T,
